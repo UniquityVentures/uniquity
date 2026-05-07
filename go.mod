@@ -1,4 +1,4 @@
-module github.com/UniquityVentures/lago/deployments/uniquity_ventures
+module github.com/UniquityVentures/lago/deployments/uniquity
 
 go 1.26.1
 
@@ -10,8 +10,8 @@ require (
 	github.com/UniquityVentures/lago/plugins/p_otp v0.2.0
 	github.com/UniquityVentures/lago/plugins/p_pwa v0.2.0
 	github.com/UniquityVentures/lago/plugins/p_users v0.2.0
-	github.com/UniquityVentures/uniquity_ventures/plugins/p_uniquity_employees v0.0.0
-	github.com/UniquityVentures/uniquity_ventures/plugins/p_uniquity_video v0.0.0
+	github.com/UniquityVentures/uniquity/plugins/p_uniquity_employees v0.0.0
+	github.com/UniquityVentures/uniquity/plugins/p_uniquity_video v0.0.0
 )
 
 require (

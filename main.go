@@ -11,12 +11,12 @@ import (
 	_ "github.com/UniquityVentures/lago/plugins/p_otp"
 	_ "github.com/UniquityVentures/lago/plugins/p_pwa"
 	_ "github.com/UniquityVentures/lago/plugins/p_users"
-	_ "github.com/UniquityVentures/uniquity_ventures/plugins/p_uniquity_employees"
-	_ "github.com/UniquityVentures/uniquity_ventures/plugins/p_uniquity_video"
+	_ "github.com/UniquityVentures/uniquity/plugins/p_uniquity_employees"
+	_ "github.com/UniquityVentures/uniquity/plugins/p_uniquity_video"
 )
 
 func main() {
-	config, err := lago.LoadConfigFromFile("uniquity_ventures.toml")
+	config, err := lago.LoadConfigFromFile("uniquity.toml")
 	if err != nil {
 		panic(err)
 	}

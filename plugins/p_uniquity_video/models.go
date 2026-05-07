@@ -3,7 +3,7 @@ package p_uniquity_video
 import (
 	"github.com/UniquityVentures/lago/lago"
 	"github.com/UniquityVentures/lago/plugins/p_filesystem"
-	uniqempl "github.com/UniquityVentures/uniquity_ventures/plugins/p_uniquity_employees"
+	uniqempl "github.com/UniquityVentures/uniquity/plugins/p_uniquity_employees"
 	"gorm.io/gorm"
 )
 

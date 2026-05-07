@@ -1,4 +1,4 @@
-module github.com/UniquityVentures/uniquity_ventures/plugins/p_uniquity_video
+module github.com/UniquityVentures/uniquity/plugins/p_uniquity_video
 
 go 1.26.1
 
@@ -10,7 +10,7 @@ require (
 	github.com/UniquityVentures/lago/plugins/p_users v0.2.0
 	github.com/UniquityVentures/lago/registry v0.2.0
 	github.com/UniquityVentures/lago/views v0.2.0
-	github.com/UniquityVentures/uniquity_ventures/plugins/p_uniquity_employees v0.0.0
+	github.com/UniquityVentures/uniquity/plugins/p_uniquity_employees v0.0.0
 	gorm.io/gorm v1.31.1
 )
 
@@ -110,4 +110,4 @@ require (
 	maragu.dev/gomponents v1.3.0 // indirect
 )
 
-replace github.com/UniquityVentures/uniquity_ventures/plugins/p_uniquity_employees => ../p_uniquity_employees
+replace github.com/UniquityVentures/uniquity/plugins/p_uniquity_employees => ../p_uniquity_employees

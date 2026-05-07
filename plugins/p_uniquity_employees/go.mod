@@ -1,4 +1,4 @@
-module github.com/UniquityVentures/uniquity_ventures/plugins/p_uniquity_employees
+module github.com/UniquityVentures/uniquity/plugins/p_uniquity_employees
 
 go 1.26.1
 
