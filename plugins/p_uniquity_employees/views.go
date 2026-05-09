@@ -1,6 +1,7 @@
 package p_uniquity_employees
 
 import (
+	"context"
 	"errors"
 	"log/slog"
 	"net/http"
@@ -13,18 +14,55 @@ import (
 	"gorm.io/gorm"
 )
 
-// superuserOnlyLayer returns 401 unless the authenticated user is a superuser.
-type superuserOnlyLayer struct{}
+// SuperuserOnlyLayer returns 401 unless the authenticated user is a superuser.
+type SuperuserOnlyLayer struct{}
 
-func (superuserOnlyLayer) Next(_ views.View, next http.Handler) http.Handler {
+func (SuperuserOnlyLayer) Next(_ views.View, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		user := p_users.UserFromContext(r.Context(), "employees.superuserOnlyLayer")
+		user := p_users.UserFromContext(r.Context(), "employees.SuperuserOnlyLayer")
 		if !user.IsSuperuser {
-			slog.Error("employees.superuserOnlyLayer: forbidden", "user_id", user.ID)
+			slog.Error("employees.SuperuserOnlyLayer: forbidden", "user_id", user.ID)
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
 		next.ServeHTTP(w, r)
+	})
+}
+
+// employeePointsTotalContextKey is where [employeeDetailPointsTotalLayer] stores the
+// display string for SUM(points) (must not contain '.' — [getters.Key] path rules).
+const employeePointsTotalContextKey = "employeePointsTotal"
+
+// employeeDetailPointsTotalLayer attaches the employee’s lifetime points total for the detail page.
+type employeeDetailPointsTotalLayer struct{}
+
+func (employeeDetailPointsTotalLayer) Next(_ views.View, next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		emp, err := getters.Key[Employee]("employee")(ctx)
+		if err != nil {
+			next.ServeHTTP(w, r)
+			return
+		}
+		db, err := getters.DBFromContext(ctx)
+		if err != nil {
+			slog.Error("employees.employee_points_total: db", "error", err)
+			ctx = context.WithValue(ctx, employeePointsTotalContextKey, "—")
+			next.ServeHTTP(w, r.WithContext(ctx))
+			return
+		}
+		var row struct {
+			Sum PointsDecimal `gorm:"column:sum"`
+		}
+		q := db.Model(&PointsTransaction{}).Where("to_employee_id = ?", emp.ID)
+		if err := q.Select("COALESCE(SUM(points), 0) AS sum").Scan(&row).Error; err != nil {
+			slog.Error("employees.employee_points_total: query", "error", err, "employeeID", emp.ID)
+			ctx = context.WithValue(ctx, employeePointsTotalContextKey, "—")
+			next.ServeHTTP(w, r.WithContext(ctx))
+			return
+		}
+		ctx = context.WithValue(ctx, employeePointsTotalContextKey, row.Sum.String())
+		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 
@@ -46,10 +84,11 @@ func (pointsDetailPreload) Patch(_ views.View, _ *http.Request, query gorm.Chain
 	return query.Preload("FromUser", nil).Preload("ToEmployee", nil).Preload("ToEmployee.User", nil)
 }
 
-type pointsFormFromUserPatcher struct{}
+// PointsFormFromUserPatcher sets FromUserID from the signed-in superuser when creating a points transaction.
+type PointsFormFromUserPatcher struct{}
 
-func (pointsFormFromUserPatcher) Patch(_ views.View, r *http.Request, formData map[string]any, formErrors map[string]error) (map[string]any, map[string]error) {
-	user := p_users.UserFromContext(r.Context(), "pointsFormFromUserPatcher")
+func (PointsFormFromUserPatcher) Patch(_ views.View, r *http.Request, formData map[string]any, formErrors map[string]error) (map[string]any, map[string]error) {
+	user := p_users.UserFromContext(r.Context(), "employees.PointsFormFromUserPatcher")
 	if !user.IsSuperuser {
 		formErrors["_form"] = errors.New("only superusers can create points transactions")
 		return formData, formErrors
@@ -63,7 +102,7 @@ func init() {
 	lago.RegistryView.Register("employees.EmployeeListView",
 		lago.GetPageView("employees.EmployeeTable").
 			WithLayer("users.auth", p_users.AuthenticationLayer{}).
-			WithLayer("employees.superuser", superuserOnlyLayer{}).
+			WithLayer("employees.superuser", SuperuserOnlyLayer{}).
 			WithLayer("employees.employee_list", views.LayerList[Employee]{
 				Key: getters.Static("employees"),
 				QueryPatchers: views.QueryPatchers[Employee]{
@@ -74,19 +113,20 @@ func init() {
 	lago.RegistryView.Register("employees.EmployeeDetailView",
 		lago.GetPageView("employees.EmployeeDetail").
 			WithLayer("users.auth", p_users.AuthenticationLayer{}).
-			WithLayer("employees.superuser", superuserOnlyLayer{}).
+			WithLayer("employees.superuser", SuperuserOnlyLayer{}).
 			WithLayer("employees.employee_detail", views.LayerDetail[Employee]{
 				Key:          getters.Static("employee"),
 				PathParamKey: getters.Static("id"),
 				QueryPatchers: views.QueryPatchers[Employee]{
 					registry.Pair[string, views.QueryPatcher[Employee]]{Key: "employees.preload_user", Value: employeeListPreload{}},
 				},
-			}))
+			}).
+			WithLayer("employees.employee_points_total", employeeDetailPointsTotalLayer{}))
 
 	lago.RegistryView.Register("employees.EmployeeCreateView",
 		lago.GetPageView("employees.EmployeeCreateForm").
 			WithLayer("users.auth", p_users.AuthenticationLayer{}).
-			WithLayer("employees.superuser", superuserOnlyLayer{}).
+			WithLayer("employees.superuser", SuperuserOnlyLayer{}).
 			WithLayer("employees.employee_create", views.LayerCreate[Employee]{
 				SuccessURL: lago.RoutePath("employees.EmployeeDetailRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("$id")),
@@ -96,7 +136,7 @@ func init() {
 	lago.RegistryView.Register("employees.EmployeeUpdateView",
 		lago.GetPageView("employees.EmployeeUpdateForm").
 			WithLayer("users.auth", p_users.AuthenticationLayer{}).
-			WithLayer("employees.superuser", superuserOnlyLayer{}).
+			WithLayer("employees.superuser", SuperuserOnlyLayer{}).
 			WithLayer("employees.employee_detail", views.LayerDetail[Employee]{
 				Key:          getters.Static("employee"),
 				PathParamKey: getters.Static("id"),
@@ -112,7 +152,7 @@ func init() {
 	lago.RegistryView.Register("employees.EmployeeDeleteView",
 		lago.GetPageView("employees.EmployeeDeleteForm").
 			WithLayer("users.auth", p_users.AuthenticationLayer{}).
-			WithLayer("employees.superuser", superuserOnlyLayer{}).
+			WithLayer("employees.superuser", SuperuserOnlyLayer{}).
 			WithLayer("employees.employee_detail", views.LayerDetail[Employee]{
 				Key:          getters.Static("employee"),
 				PathParamKey: getters.Static("id"),
@@ -128,7 +168,7 @@ func init() {
 	lago.RegistryView.Register("employees.EmployeeSelectView",
 		lago.GetPageView("employees.EmployeeSelectionTable").
 			WithLayer("users.auth", p_users.AuthenticationLayer{}).
-			WithLayer("employees.superuser", superuserOnlyLayer{}).
+			WithLayer("employees.superuser", SuperuserOnlyLayer{}).
 			WithLayer("employees.employee_select_list", views.LayerList[Employee]{
 				Key: getters.Static("employees"),
 				QueryPatchers: views.QueryPatchers[Employee]{
@@ -140,7 +180,7 @@ func init() {
 	lago.RegistryView.Register("employees.PointsListView",
 		lago.GetPageView("employees.PointsTransactionTable").
 			WithLayer("users.auth", p_users.AuthenticationLayer{}).
-			WithLayer("employees.superuser", superuserOnlyLayer{}).
+			WithLayer("employees.superuser", SuperuserOnlyLayer{}).
 			WithLayer("employees.points_list", views.LayerList[PointsTransaction]{
 				Key: getters.Static("pointsTransactions"),
 				QueryPatchers: views.QueryPatchers[PointsTransaction]{
@@ -151,7 +191,7 @@ func init() {
 	lago.RegistryView.Register("employees.PointsDetailView",
 		lago.GetPageView("employees.PointsTransactionDetail").
 			WithLayer("users.auth", p_users.AuthenticationLayer{}).
-			WithLayer("employees.superuser", superuserOnlyLayer{}).
+			WithLayer("employees.superuser", SuperuserOnlyLayer{}).
 			WithLayer("employees.points_detail", views.LayerDetail[PointsTransaction]{
 				Key:          getters.Static("pointsTransaction"),
 				PathParamKey: getters.Static("id"),
@@ -163,13 +203,13 @@ func init() {
 	lago.RegistryView.Register("employees.PointsCreateView",
 		lago.GetPageView("employees.PointsTransactionCreateForm").
 			WithLayer("users.auth", p_users.AuthenticationLayer{}).
-			WithLayer("employees.superuser", superuserOnlyLayer{}).
+			WithLayer("employees.superuser", SuperuserOnlyLayer{}).
 			WithLayer("employees.points_create", views.LayerCreate[PointsTransaction]{
 				SuccessURL: lago.RoutePath("employees.PointsDetailRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("$id")),
 				}),
 				FormPatchers: views.FormPatchers{
-					registry.Pair[string, views.FormPatcher]{Key: "employees.points_from_user", Value: pointsFormFromUserPatcher{}},
+					registry.Pair[string, views.FormPatcher]{Key: "employees.points_from_user", Value: PointsFormFromUserPatcher{}},
 				},
 			}))
 }

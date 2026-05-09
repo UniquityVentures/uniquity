@@ -5,9 +5,3 @@ use (
 	./plugins/p_uniquity_employees
 	./plugins/p_uniquity_video
 )
-
-// Required: this import path is interpreted as a submodule of a remote repo;
-// pin v0.0.0 to the local directory (no go.mod replace).
-replace github.com/UniquityVentures/uniquity/plugins/p_uniquity_employees v0.0.0 => ./plugins/p_uniquity_employees
-
-replace github.com/UniquityVentures/uniquity/plugins/p_uniquity_video v0.0.0 => ./plugins/p_uniquity_video

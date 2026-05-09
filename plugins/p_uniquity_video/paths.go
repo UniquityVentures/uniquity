@@ -31,6 +31,10 @@ func registerRawRoutes() {
 		Path:    raw + "select/",
 		Handler: lago.NewDynamicView("video.RawSelectView"),
 	})
+	_ = lago.RegistryRoute.Register("video.EmployeeSelectRoute", lago.Route{
+		Path:    raw + "select-employee/",
+		Handler: lago.NewDynamicView("video.EmployeeSelectView"),
+	})
 	_ = lago.RegistryRoute.Register("video.RawDetailRoute", lago.Route{
 		Path:    rawR + "{id}/",
 		Handler: lago.NewDynamicView("video.RawDetailView"),
@@ -92,6 +96,10 @@ func registerPublishedRoutes() {
 	_ = lago.RegistryRoute.Register("video.PublishedDetailRoute", lago.Route{
 		Path:    pubR + "{id}/",
 		Handler: lago.NewDynamicView("video.PublishedDetailView"),
+	})
+	_ = lago.RegistryRoute.Register("video.PublishedEditorPointsCreateRoute", lago.Route{
+		Path:    pubR + "{id}/editor-points/",
+		Handler: lago.NewDynamicView("video.PublishedEditorPointsCreateView"),
 	})
 	_ = lago.RegistryRoute.Register("video.PublishedUpdateRoute", lago.Route{
 		Path:    pubR + "{id}/edit/",

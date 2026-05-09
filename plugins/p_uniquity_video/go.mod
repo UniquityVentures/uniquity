@@ -3,15 +3,17 @@ module github.com/UniquityVentures/uniquity/plugins/p_uniquity_video
 go 1.26.1
 
 require (
-	github.com/UniquityVentures/lago/components v0.2.0
-	github.com/UniquityVentures/lago/getters v0.2.0
-	github.com/UniquityVentures/lago/lago v0.2.0
-	github.com/UniquityVentures/lago/plugins/p_filesystem v0.2.0
-	github.com/UniquityVentures/lago/plugins/p_users v0.2.0
-	github.com/UniquityVentures/lago/registry v0.2.0
-	github.com/UniquityVentures/lago/views v0.2.0
-	github.com/UniquityVentures/uniquity/plugins/p_uniquity_employees v0.0.0
+	github.com/UniquityVentures/lago/components v0.3.11
+	github.com/UniquityVentures/lago/getters v0.3.11
+	github.com/UniquityVentures/lago/lago v0.3.11
+	github.com/UniquityVentures/lago/plugins/p_filesystem v0.3.11
+	github.com/UniquityVentures/lago/plugins/p_users v0.3.11
+	github.com/UniquityVentures/lago/registry v0.3.11
+	github.com/UniquityVentures/lago/views v0.3.11
+	github.com/UniquityVentures/uniquity/plugins/p_uniquity_employees v0.0.0-20260507062621-1d72bed26409
+	google.golang.org/api v0.278.0
 	gorm.io/gorm v1.31.1
+	maragu.dev/gomponents v1.3.0
 )
 
 require (
@@ -97,7 +99,6 @@ require (
 	golang.org/x/sys v0.43.0 // indirect
 	golang.org/x/text v0.36.0 // indirect
 	golang.org/x/time v0.15.0 // indirect
-	google.golang.org/api v0.277.0 // indirect
 	google.golang.org/genproto v0.0.0-20260319201613-d00831a3d3e7 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20260401024825-9d38bb4040a9 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260427160629-7cedc36a6bc4 // indirect
@@ -107,7 +108,4 @@ require (
 	gorm.io/driver/mysql v1.6.0 // indirect
 	gorm.io/driver/postgres v1.5.0 // indirect
 	gorm.io/driver/sqlite v1.6.0 // indirect
-	maragu.dev/gomponents v1.3.0 // indirect
 )
-
-replace github.com/UniquityVentures/uniquity/plugins/p_uniquity_employees => ../p_uniquity_employees

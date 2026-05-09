@@ -40,3 +40,21 @@ func TestCleanYouTubeVideoID(t *testing.T) {
 		}
 	}
 }
+
+func TestYouTubeWatchURL(t *testing.T) {
+	if u := YouTubeWatchURL("dQw4w9WgXcQ"); u != "https://www.youtube.com/watch?v=dQw4w9WgXcQ" {
+		t.Fatalf("got %q", u)
+	}
+	if YouTubeWatchURL("") != "" || YouTubeWatchURL("short") != "" {
+		t.Fatal("expected empty for invalid")
+	}
+}
+
+func TestYouTubeStudioVideoURL(t *testing.T) {
+	if u := YouTubeStudioVideoURL("dQw4w9WgXcQ"); u != "https://studio.youtube.com/video/dQw4w9WgXcQ/edit" {
+		t.Fatalf("got %q", u)
+	}
+	if YouTubeStudioVideoURL("") != "" || YouTubeStudioVideoURL("bad") != "" {
+		t.Fatal("expected empty for invalid")
+	}
+}

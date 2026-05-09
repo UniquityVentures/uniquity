@@ -25,6 +25,12 @@ func pointsDecimalStringGetter(ctxKey string) getters.Getter[string] {
 	}
 }
 
+func pointsDecimalGetter(ctxKey string) getters.Getter[PointsDecimal] {
+	return func(ctx context.Context) (PointsDecimal, error) {
+		return getters.Key[PointsDecimal](ctxKey)(ctx)
+	}
+}
+
 func registerMenuPages() {
 	lago.RegistryPage.Register("employees.MainMenu", &components.SidebarMenu{
 		Title: getters.Static("Employees & points"),
@@ -243,6 +249,12 @@ func registerEmployeePages() {
 									&components.FieldText{Getter: getters.Key[string]("$in.User.Email")},
 								},
 							},
+							&components.LabelInline{
+								Title: "Total points (all time)",
+								Children: []components.PageInterface{
+									&components.FieldText{Getter: getters.Key[string](employeePointsTotalContextKey)},
+								},
+							},
 						},
 					},
 				},
@@ -284,11 +296,11 @@ func registerPointsPages() {
 		Getter:      getters.Association[Employee, uint](getters.Key[uint]("$in.ToEmployeeID")),
 	}
 
-	pointsInput := &components.InputText{
+	pointsInput := &InputPointsDecimal{
 		Label:    "Points",
 		Name:     "Points",
 		Required: true,
-		Getter:   pointsDecimalStringGetter("$in.Points"),
+		Getter:   pointsDecimalGetter("$in.Points"),
 	}
 
 	lago.RegistryPage.Register("employees.PointsTransactionTable", &components.ShellScaffold{

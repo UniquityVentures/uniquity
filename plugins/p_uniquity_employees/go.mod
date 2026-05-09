@@ -3,13 +3,14 @@ module github.com/UniquityVentures/uniquity/plugins/p_uniquity_employees
 go 1.26.1
 
 require (
-	github.com/UniquityVentures/lago/components v0.2.0
-	github.com/UniquityVentures/lago/getters v0.2.0
-	github.com/UniquityVentures/lago/lago v0.2.0
-	github.com/UniquityVentures/lago/plugins/p_users v0.2.0
-	github.com/UniquityVentures/lago/registry v0.2.0
-	github.com/UniquityVentures/lago/views v0.2.0
+	github.com/UniquityVentures/lago/components v0.3.11
+	github.com/UniquityVentures/lago/getters v0.3.11
+	github.com/UniquityVentures/lago/lago v0.3.11
+	github.com/UniquityVentures/lago/plugins/p_users v0.3.11
+	github.com/UniquityVentures/lago/registry v0.3.11
+	github.com/UniquityVentures/lago/views v0.3.11
 	gorm.io/gorm v1.31.1
+	maragu.dev/gomponents v1.3.0
 )
 
 require (
@@ -64,5 +65,4 @@ require (
 	gorm.io/driver/mysql v1.6.0 // indirect
 	gorm.io/driver/postgres v1.5.0 // indirect
 	gorm.io/driver/sqlite v1.6.0 // indirect
-	maragu.dev/gomponents v1.3.0 // indirect
 )

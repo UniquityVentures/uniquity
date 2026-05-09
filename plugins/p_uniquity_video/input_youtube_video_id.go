@@ -89,6 +89,26 @@ func cleanYouTubeVideoID(raw string) (string, error) {
 	return "", fmt.Errorf("could not parse a YouTube video id from the URL")
 }
 
+// YouTubeWatchURL returns a standard https://www.youtube.com/watch?v=… URL for a stored
+// 11-character video id, or "" if the value is empty or not a valid id.
+func YouTubeWatchURL(videoID string) string {
+	s := strings.TrimSpace(videoID)
+	if s == "" || !ytVideoIDRe.MatchString(s) {
+		return ""
+	}
+	return "https://www.youtube.com/watch?v=" + s
+}
+
+// YouTubeStudioVideoURL returns the YouTube Studio edit URL for a video id, or "" if invalid.
+// The link opens in Studio when the signed-in Google account owns or can manage the video.
+func YouTubeStudioVideoURL(videoID string) string {
+	s := strings.TrimSpace(videoID)
+	if s == "" || !ytVideoIDRe.MatchString(s) {
+		return ""
+	}
+	return "https://studio.youtube.com/video/" + s + "/edit"
+}
+
 // InputYouTubeVideoID is a text field like [components.InputText] that accepts either a bare
 // 11-character YouTube video id or a watch / shorts / embed / youtu.be URL and stores the id.
 type InputYouTubeVideoID struct {
