@@ -11,7 +11,12 @@ require (
 	github.com/UniquityVentures/lamu/plugins/p_pwa v0.4.7
 	github.com/UniquityVentures/lamu/plugins/p_users v0.4.7
 	github.com/UniquityVentures/uniquity/plugins/p_uniquity_accounting v0.0.0-20260513102927-cdb93eedcc69
+	github.com/UniquityVentures/uniquity/plugins/p_uniquity_currencies v0.0.0
 	github.com/UniquityVentures/uniquity/plugins/p_uniquity_employees v0.0.0-20260509035636-50c64227b4a6
+	github.com/UniquityVentures/uniquity/plugins/p_uniquity_entities v0.0.0
+	github.com/UniquityVentures/uniquity/plugins/p_uniquity_invoices v0.0.0
+	github.com/UniquityVentures/uniquity/plugins/p_uniquity_products v0.0.0
+	github.com/UniquityVentures/uniquity/plugins/p_uniquity_tax_rates v0.0.0
 	github.com/UniquityVentures/uniquity/plugins/p_uniquity_video v0.0.0-20260509035636-50c64227b4a6
 )
 
@@ -115,3 +120,13 @@ require (
 	gorm.io/gorm v1.31.1 // indirect
 	maragu.dev/gomponents v1.3.0 // indirect
 )
+
+replace github.com/UniquityVentures/uniquity/plugins/p_uniquity_entities => ./plugins/p_uniquity_entities
+
+replace github.com/UniquityVentures/uniquity/plugins/p_uniquity_currencies => ./plugins/p_uniquity_currencies
+
+replace github.com/UniquityVentures/uniquity/plugins/p_uniquity_invoices => ./plugins/p_uniquity_invoices
+
+replace github.com/UniquityVentures/uniquity/plugins/p_uniquity_products => ./plugins/p_uniquity_products
+
+replace github.com/UniquityVentures/uniquity/plugins/p_uniquity_tax_rates => ./plugins/p_uniquity_tax_rates

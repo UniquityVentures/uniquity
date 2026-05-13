@@ -9,7 +9,9 @@ func pluginModels() lamu.PluginFeatures[any] {
 	return lamu.PluginFeatures[any]{
 		Entries: []registry.Pair[string, any]{
 			{Key: "p_uniquity_accounting.Account", Value: Account{}},
-			{Key: "p_uniquity_accounting.Posting", Value: Posting{}},
+			{Key: "p_uniquity_accounting.Journal", Value: Journal{}},
+			{Key: "p_uniquity_accounting.JournalEntry", Value: JournalEntry{}},
+			{Key: "p_uniquity_accounting.JournalEntryItem", Value: JournalEntryItem{}},
 		},
 	}
 }

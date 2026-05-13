@@ -3,6 +3,11 @@ go 1.26.1
 use (
 	.
 	./plugins/p_uniquity_accounting
+	./plugins/p_uniquity_currencies
 	./plugins/p_uniquity_employees
+	./plugins/p_uniquity_entities
+	./plugins/p_uniquity_invoices
+	./plugins/p_uniquity_products
+	./plugins/p_uniquity_tax_rates
 	./plugins/p_uniquity_video
 )

@@ -1,12 +1,15 @@
-module github.com/UniquityVentures/uniquity/plugins/p_uniquity_accounting
+module github.com/UniquityVentures/uniquity/plugins/p_uniquity_invoices
 
 go 1.26.1
 
 require (
 	github.com/UniquityVentures/lamu v0.4.7
 	github.com/UniquityVentures/lamu/plugins/p_users v0.4.7
+	github.com/UniquityVentures/uniquity/plugins/p_uniquity_accounting v0.0.0
 	github.com/UniquityVentures/uniquity/plugins/p_uniquity_currencies v0.0.0
 	github.com/UniquityVentures/uniquity/plugins/p_uniquity_entities v0.0.0
+	github.com/UniquityVentures/uniquity/plugins/p_uniquity_products v0.0.0
+	github.com/UniquityVentures/uniquity/plugins/p_uniquity_tax_rates v0.0.0
 	gorm.io/gorm v1.31.1
 	maragu.dev/gomponents v1.3.0
 )
@@ -70,6 +73,9 @@ require (
 )
 
 replace (
+	github.com/UniquityVentures/uniquity/plugins/p_uniquity_accounting => ../p_uniquity_accounting
 	github.com/UniquityVentures/uniquity/plugins/p_uniquity_currencies => ../p_uniquity_currencies
 	github.com/UniquityVentures/uniquity/plugins/p_uniquity_entities => ../p_uniquity_entities
+	github.com/UniquityVentures/uniquity/plugins/p_uniquity_products => ../p_uniquity_products
+	github.com/UniquityVentures/uniquity/plugins/p_uniquity_tax_rates => ../p_uniquity_tax_rates
 )
