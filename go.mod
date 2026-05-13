@@ -3,13 +3,14 @@ module github.com/UniquityVentures/uniquity
 go 1.26.1
 
 require (
-	github.com/UniquityVentures/lamu v0.4.5
-	github.com/UniquityVentures/lamu/plugins/p_dashboard v0.4.5
-	github.com/UniquityVentures/lamu/plugins/p_filesystem v0.4.5
-	github.com/UniquityVentures/lamu/plugins/p_livereloading v0.4.5
-	github.com/UniquityVentures/lamu/plugins/p_otp v0.4.5
-	github.com/UniquityVentures/lamu/plugins/p_pwa v0.4.5
-	github.com/UniquityVentures/lamu/plugins/p_users v0.4.5
+	github.com/UniquityVentures/lamu v0.4.7
+	github.com/UniquityVentures/lamu/plugins/p_dashboard v0.4.7
+	github.com/UniquityVentures/lamu/plugins/p_filesystem v0.4.7
+	github.com/UniquityVentures/lamu/plugins/p_livereloading v0.4.7
+	github.com/UniquityVentures/lamu/plugins/p_otp v0.4.7
+	github.com/UniquityVentures/lamu/plugins/p_pwa v0.4.7
+	github.com/UniquityVentures/lamu/plugins/p_users v0.4.7
+	github.com/UniquityVentures/uniquity/plugins/p_uniquity_accounting v0.0.0-20260513102927-cdb93eedcc69
 	github.com/UniquityVentures/uniquity/plugins/p_uniquity_employees v0.0.0-20260509035636-50c64227b4a6
 	github.com/UniquityVentures/uniquity/plugins/p_uniquity_video v0.0.0-20260509035636-50c64227b4a6
 )
@@ -71,11 +72,14 @@ require (
 	github.com/lucasb-eyer/go-colorful v1.4.0 // indirect
 	github.com/mattn/go-runewidth v0.0.23 // indirect
 	github.com/mattn/go-sqlite3 v1.14.22 // indirect
+	github.com/mfridman/interpolate v0.0.2 // indirect
 	github.com/mitchellh/hashstructure/v2 v2.0.2 // indirect
 	github.com/muesli/cancelreader v0.2.2 // indirect
 	github.com/nyaruka/phonenumbers v1.7.4 // indirect
 	github.com/planetscale/vtprotobuf v0.6.1-0.20240319094008-0393e58bdf10 // indirect
+	github.com/pressly/goose/v3 v3.27.1 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
+	github.com/sethvargo/go-retry v0.3.0 // indirect
 	github.com/spf13/cobra v1.10.2 // indirect
 	github.com/spf13/pflag v1.0.9 // indirect
 	github.com/spiffe/go-spiffe/v2 v2.6.0 // indirect
@@ -83,12 +87,13 @@ require (
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
 	go.opentelemetry.io/contrib/detectors/gcp v1.39.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.67.0 // indirect
-	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.67.0 // indirect
+	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.68.0 // indirect
 	go.opentelemetry.io/otel v1.43.0 // indirect
 	go.opentelemetry.io/otel/metric v1.43.0 // indirect
 	go.opentelemetry.io/otel/sdk v1.43.0 // indirect
 	go.opentelemetry.io/otel/sdk/metric v1.43.0 // indirect
 	go.opentelemetry.io/otel/trace v1.43.0 // indirect
+	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/crypto v0.51.0 // indirect
 	golang.org/x/exp v0.0.0-20260508232706-74f9aab9d74a // indirect
 	golang.org/x/net v0.54.0 // indirect

@@ -1,25 +1,36 @@
 package p_uniquity_accounting
 
 import (
+	"slices"
+
 	"github.com/UniquityVentures/lamu/components"
 	"github.com/UniquityVentures/lamu/getters"
 	"github.com/UniquityVentures/lamu/lamu"
 	"github.com/UniquityVentures/lamu/registry"
 )
 
+const accountingMainMenuTransactionsKey = "accounting.MainMenu.item.transactions"
+
 func patchAccountingMainMenuTransactions(p components.PageInterface) components.PageInterface {
-	menu, ok := p.(components.MutableParentInterface)
+	m, ok := p.(*components.SidebarMenu)
 	if !ok {
-		panic("menu is not a MutableParentInterface, for some reason")
+		panic("accounting.MainMenu patch expected *components.SidebarMenu")
 	}
-	children := menu.GetChildren()
-	children = append(children, &components.SidebarMenuItem{
-		Title: getters.Static("Transactions"),
-		Url:   lamu.RoutePath("accounting.TransactionListRoute", nil),
-		Icon:  "arrows-right-left",
-	})
-	menu.SetChildren(children)
-	return p
+	children := slices.Clone(m.Children)
+	if !accountingSidebarHasChildKey(children, accountingMainMenuTransactionsKey) {
+		children = append(children, &components.SidebarMenuItem{
+			Page:  components.Page{Key: accountingMainMenuTransactionsKey},
+			Title: getters.Static("Transactions"),
+			Url:   lamu.RoutePath("accounting.TransactionListRoute", nil),
+			Icon:  "arrows-right-left",
+		})
+	}
+	return &components.SidebarMenu{
+		Page:     m.Page,
+		Title:    m.Title,
+		Back:     m.Back,
+		Children: children,
+	}
 }
 
 func pageEntriesTransactionPages() []registry.Pair[string, components.PageInterface] {

@@ -27,6 +27,7 @@ func GetPlugin() registry.Pair[string, lamu.Plugin] {
 			Pages:       pluginPages,
 			Routes:      pluginRoutes,
 			Models:      pluginModels,
+			Migrations:  pluginMigrations,
 			Configs:     pluginConfigs,
 		},
 	}
