@@ -3,7 +3,8 @@ package p_uniquity_video
 import (
 	"strings"
 
-	"github.com/UniquityVentures/lago/lago"
+	"github.com/UniquityVentures/lamu/lamu"
+	"github.com/UniquityVentures/lamu/registry"
 )
 
 // PluginConfig is loaded from TOML [Plugins.p_uniquity_video].
@@ -32,6 +33,10 @@ func requireYouTubeAPIKey(apiKey string) {
 	}
 }
 
-func init() {
-	lago.RegistryConfig.Register("p_uniquity_video", VideoPluginConfig)
+func pluginConfigs() lamu.PluginFeatures[lamu.Config] {
+	return lamu.PluginFeatures[lamu.Config]{
+		Entries: []registry.Pair[string, lamu.Config]{
+			{Key: "p_uniquity_video", Value: VideoPluginConfig},
+		},
+	}
 }

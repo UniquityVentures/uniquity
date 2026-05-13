@@ -6,11 +6,12 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/UniquityVentures/lago/getters"
-	"github.com/UniquityVentures/lago/lago"
-	"github.com/UniquityVentures/lago/plugins/p_users"
-	"github.com/UniquityVentures/lago/registry"
-	"github.com/UniquityVentures/lago/views"
+	"github.com/UniquityVentures/lamu/fields"
+	"github.com/UniquityVentures/lamu/getters"
+	"github.com/UniquityVentures/lamu/lamu"
+	"github.com/UniquityVentures/lamu/plugins/p_users"
+	"github.com/UniquityVentures/lamu/registry"
+	"github.com/UniquityVentures/lamu/views"
 	"gorm.io/gorm"
 )
 
@@ -52,7 +53,7 @@ func (employeeDetailPointsTotalLayer) Next(_ views.View, next http.Handler) http
 			return
 		}
 		var row struct {
-			Sum PointsDecimal `gorm:"column:sum"`
+			Sum fields.DecimalSix `gorm:"column:sum"`
 		}
 		q := db.Model(&PointsTransaction{}).Where("to_employee_id = ?", emp.ID)
 		if err := q.Select("COALESCE(SUM(points), 0) AS sum").Scan(&row).Error; err != nil {
@@ -97,119 +98,131 @@ func (PointsFormFromUserPatcher) Patch(_ views.View, r *http.Request, formData m
 	return formData, formErrors
 }
 
-func init() {
-	// --- Employee ---
-	lago.RegistryView.Register("employees.EmployeeListView",
-		lago.GetPageView("employees.EmployeeTable").
-			WithLayer("users.auth", p_users.AuthenticationLayer{}).
-			WithLayer("employees.superuser", SuperuserOnlyLayer{}).
-			WithLayer("employees.employee_list", views.LayerList[Employee]{
-				Key: getters.Static("employees"),
-				QueryPatchers: views.QueryPatchers[Employee]{
-					registry.Pair[string, views.QueryPatcher[Employee]]{Key: "employees.preload_user", Value: employeeListPreload{}},
-				},
-			}))
-
-	lago.RegistryView.Register("employees.EmployeeDetailView",
-		lago.GetPageView("employees.EmployeeDetail").
-			WithLayer("users.auth", p_users.AuthenticationLayer{}).
-			WithLayer("employees.superuser", SuperuserOnlyLayer{}).
-			WithLayer("employees.employee_detail", views.LayerDetail[Employee]{
-				Key:          getters.Static("employee"),
-				PathParamKey: getters.Static("id"),
-				QueryPatchers: views.QueryPatchers[Employee]{
-					registry.Pair[string, views.QueryPatcher[Employee]]{Key: "employees.preload_user", Value: employeeListPreload{}},
-				},
-			}).
-			WithLayer("employees.employee_points_total", employeeDetailPointsTotalLayer{}))
-
-	lago.RegistryView.Register("employees.EmployeeCreateView",
-		lago.GetPageView("employees.EmployeeCreateForm").
-			WithLayer("users.auth", p_users.AuthenticationLayer{}).
-			WithLayer("employees.superuser", SuperuserOnlyLayer{}).
-			WithLayer("employees.employee_create", views.LayerCreate[Employee]{
-				SuccessURL: lago.RoutePath("employees.EmployeeDetailRoute", map[string]getters.Getter[any]{
-					"id": getters.Any(getters.Key[uint]("$id")),
-				}),
-			}))
-
-	lago.RegistryView.Register("employees.EmployeeUpdateView",
-		lago.GetPageView("employees.EmployeeUpdateForm").
-			WithLayer("users.auth", p_users.AuthenticationLayer{}).
-			WithLayer("employees.superuser", SuperuserOnlyLayer{}).
-			WithLayer("employees.employee_detail", views.LayerDetail[Employee]{
-				Key:          getters.Static("employee"),
-				PathParamKey: getters.Static("id"),
-				QueryPatchers: views.QueryPatchers[Employee]{
-					registry.Pair[string, views.QueryPatcher[Employee]]{Key: "employees.preload_user", Value: employeeListPreload{}},
-				},
-			}).
-			WithLayer("employees.employee_update", views.LayerUpdate[Employee]{
-				Key:        getters.Static("employee"),
-				SuccessURL: lago.RoutePath("employees.DefaultRoute", nil),
-			}))
-
-	lago.RegistryView.Register("employees.EmployeeDeleteView",
-		lago.GetPageView("employees.EmployeeDeleteForm").
-			WithLayer("users.auth", p_users.AuthenticationLayer{}).
-			WithLayer("employees.superuser", SuperuserOnlyLayer{}).
-			WithLayer("employees.employee_detail", views.LayerDetail[Employee]{
-				Key:          getters.Static("employee"),
-				PathParamKey: getters.Static("id"),
-				QueryPatchers: views.QueryPatchers[Employee]{
-					registry.Pair[string, views.QueryPatcher[Employee]]{Key: "employees.preload_user", Value: employeeListPreload{}},
-				},
-			}).
-			WithLayer("employees.employee_delete", views.LayerDelete[Employee]{
-				Key:        getters.Static("employee"),
-				SuccessURL: lago.RoutePath("employees.DefaultRoute", nil),
-			}))
-
-	lago.RegistryView.Register("employees.EmployeeSelectView",
-		lago.GetPageView("employees.EmployeeSelectionTable").
-			WithLayer("users.auth", p_users.AuthenticationLayer{}).
-			WithLayer("employees.superuser", SuperuserOnlyLayer{}).
-			WithLayer("employees.employee_select_list", views.LayerList[Employee]{
-				Key: getters.Static("employees"),
-				QueryPatchers: views.QueryPatchers[Employee]{
-					registry.Pair[string, views.QueryPatcher[Employee]]{Key: "employees.preload_user", Value: employeeListPreload{}},
-				},
-			}))
-
-	// --- Points (no update view) ---
-	lago.RegistryView.Register("employees.PointsListView",
-		lago.GetPageView("employees.PointsTransactionTable").
-			WithLayer("users.auth", p_users.AuthenticationLayer{}).
-			WithLayer("employees.superuser", SuperuserOnlyLayer{}).
-			WithLayer("employees.points_list", views.LayerList[PointsTransaction]{
-				Key: getters.Static("pointsTransactions"),
-				QueryPatchers: views.QueryPatchers[PointsTransaction]{
-					registry.Pair[string, views.QueryPatcher[PointsTransaction]]{Key: "employees.points_preload", Value: pointsListPreload{}},
-				},
-			}))
-
-	lago.RegistryView.Register("employees.PointsDetailView",
-		lago.GetPageView("employees.PointsTransactionDetail").
-			WithLayer("users.auth", p_users.AuthenticationLayer{}).
-			WithLayer("employees.superuser", SuperuserOnlyLayer{}).
-			WithLayer("employees.points_detail", views.LayerDetail[PointsTransaction]{
-				Key:          getters.Static("pointsTransaction"),
-				PathParamKey: getters.Static("id"),
-				QueryPatchers: views.QueryPatchers[PointsTransaction]{
-					registry.Pair[string, views.QueryPatcher[PointsTransaction]]{Key: "employees.points_preload", Value: pointsDetailPreload{}},
-				},
-			}))
-
-	lago.RegistryView.Register("employees.PointsCreateView",
-		lago.GetPageView("employees.PointsTransactionCreateForm").
-			WithLayer("users.auth", p_users.AuthenticationLayer{}).
-			WithLayer("employees.superuser", SuperuserOnlyLayer{}).
-			WithLayer("employees.points_create", views.LayerCreate[PointsTransaction]{
-				SuccessURL: lago.RoutePath("employees.PointsDetailRoute", map[string]getters.Getter[any]{
-					"id": getters.Any(getters.Key[uint]("$id")),
-				}),
-				FormPatchers: views.FormPatchers{
-					registry.Pair[string, views.FormPatcher]{Key: "employees.points_from_user", Value: PointsFormFromUserPatcher{}},
-				},
-			}))
+func pluginViews() lamu.PluginFeatures[*views.View] {
+	return lamu.PluginFeatures[*views.View]{
+		Entries: []registry.Pair[string, *views.View]{
+			{
+				Key: "employees.EmployeeListView",
+				Value: lamu.GetPageView("employees.EmployeeTable").
+					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
+					WithLayer("employees.superuser", SuperuserOnlyLayer{}).
+					WithLayer("employees.employee_list", views.LayerList[Employee]{
+						Key: getters.Static("employees"),
+						QueryPatchers: views.QueryPatchers[Employee]{
+							{Key: "employees.preload_user", Value: employeeListPreload{}},
+						},
+					}),
+			},
+			{
+				Key: "employees.EmployeeDetailView",
+				Value: lamu.GetPageView("employees.EmployeeDetail").
+					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
+					WithLayer("employees.superuser", SuperuserOnlyLayer{}).
+					WithLayer("employees.employee_detail", views.LayerDetail[Employee]{
+						Key:          getters.Static("employee"),
+						PathParamKey: getters.Static("id"),
+						QueryPatchers: views.QueryPatchers[Employee]{
+							{Key: "employees.preload_user", Value: employeeListPreload{}},
+						},
+					}).
+					WithLayer("employees.employee_points_total", employeeDetailPointsTotalLayer{}),
+			},
+			{
+				Key: "employees.EmployeeCreateView",
+				Value: lamu.GetPageView("employees.EmployeeCreateForm").
+					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
+					WithLayer("employees.superuser", SuperuserOnlyLayer{}).
+					WithLayer("employees.employee_create", views.LayerCreate[Employee]{
+						SuccessURL: lamu.RoutePath("employees.EmployeeDetailRoute", map[string]getters.Getter[any]{
+							"id": getters.Any(getters.Key[uint]("$id")),
+						}),
+					}),
+			},
+			{
+				Key: "employees.EmployeeUpdateView",
+				Value: lamu.GetPageView("employees.EmployeeUpdateForm").
+					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
+					WithLayer("employees.superuser", SuperuserOnlyLayer{}).
+					WithLayer("employees.employee_detail", views.LayerDetail[Employee]{
+						Key:          getters.Static("employee"),
+						PathParamKey: getters.Static("id"),
+						QueryPatchers: views.QueryPatchers[Employee]{
+							{Key: "employees.preload_user", Value: employeeListPreload{}},
+						},
+					}).
+					WithLayer("employees.employee_update", views.LayerUpdate[Employee]{
+						Key:        getters.Static("employee"),
+						SuccessURL: lamu.RoutePath("employees.DefaultRoute", nil),
+					}),
+			},
+			{
+				Key: "employees.EmployeeDeleteView",
+				Value: lamu.GetPageView("employees.EmployeeDeleteForm").
+					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
+					WithLayer("employees.superuser", SuperuserOnlyLayer{}).
+					WithLayer("employees.employee_detail", views.LayerDetail[Employee]{
+						Key:          getters.Static("employee"),
+						PathParamKey: getters.Static("id"),
+						QueryPatchers: views.QueryPatchers[Employee]{
+							{Key: "employees.preload_user", Value: employeeListPreload{}},
+						},
+					}).
+					WithLayer("employees.employee_delete", views.LayerDelete[Employee]{
+						Key:        getters.Static("employee"),
+						SuccessURL: lamu.RoutePath("employees.DefaultRoute", nil),
+					}),
+			},
+			{
+				Key: "employees.EmployeeSelectView",
+				Value: lamu.GetPageView("employees.EmployeeSelectionTable").
+					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
+					WithLayer("employees.superuser", SuperuserOnlyLayer{}).
+					WithLayer("employees.employee_select_list", views.LayerList[Employee]{
+						Key: getters.Static("employees"),
+						QueryPatchers: views.QueryPatchers[Employee]{
+							{Key: "employees.preload_user", Value: employeeListPreload{}},
+						},
+					}),
+			},
+			{
+				Key: "employees.PointsListView",
+				Value: lamu.GetPageView("employees.PointsTransactionTable").
+					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
+					WithLayer("employees.superuser", SuperuserOnlyLayer{}).
+					WithLayer("employees.points_list", views.LayerList[PointsTransaction]{
+						Key: getters.Static("pointsTransactions"),
+						QueryPatchers: views.QueryPatchers[PointsTransaction]{
+							{Key: "employees.points_preload", Value: pointsListPreload{}},
+						},
+					}),
+			},
+			{
+				Key: "employees.PointsDetailView",
+				Value: lamu.GetPageView("employees.PointsTransactionDetail").
+					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
+					WithLayer("employees.superuser", SuperuserOnlyLayer{}).
+					WithLayer("employees.points_detail", views.LayerDetail[PointsTransaction]{
+						Key:          getters.Static("pointsTransaction"),
+						PathParamKey: getters.Static("id"),
+						QueryPatchers: views.QueryPatchers[PointsTransaction]{
+							{Key: "employees.points_preload", Value: pointsDetailPreload{}},
+						},
+					}),
+			},
+			{
+				Key: "employees.PointsCreateView",
+				Value: lamu.GetPageView("employees.PointsTransactionCreateForm").
+					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
+					WithLayer("employees.superuser", SuperuserOnlyLayer{}).
+					WithLayer("employees.points_create", views.LayerCreate[PointsTransaction]{
+						SuccessURL: lamu.RoutePath("employees.PointsDetailRoute", map[string]getters.Getter[any]{
+							"id": getters.Any(getters.Key[uint]("$id")),
+						}),
+						FormPatchers: views.FormPatchers{
+							{Key: "employees.points_from_user", Value: PointsFormFromUserPatcher{}},
+						},
+					}),
+			},
+		},
+	}
 }

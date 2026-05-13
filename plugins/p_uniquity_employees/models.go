@@ -3,10 +3,10 @@ package p_uniquity_employees
 import (
 	"errors"
 	"fmt"
-	"math/big"
 
-	"github.com/UniquityVentures/lago/lago"
-	"github.com/UniquityVentures/lago/plugins/p_users"
+	"github.com/UniquityVentures/lamu/fields"
+	"github.com/UniquityVentures/lamu/lamu"
+	"github.com/UniquityVentures/lamu/plugins/p_users"
 	"gorm.io/gorm"
 )
 
@@ -14,7 +14,7 @@ import (
 type Employee struct {
 	gorm.Model
 
-	UserID uint        `gorm:"unique;not null"`
+	UserID uint         `gorm:"unique;not null"`
 	User   p_users.User `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT"`
 }
 
@@ -22,7 +22,7 @@ type Employee struct {
 type PointsTransaction struct {
 	gorm.Model
 
-	Points PointsDecimal `gorm:"type:numeric(19,2);not null"`
+	Points fields.DecimalSix `gorm:"type:numeric(19,2);not null"`
 
 	FromUserID uint         `gorm:"not null"`
 	FromUser   p_users.User `gorm:"foreignKey:FromUserID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT"`
@@ -32,11 +32,7 @@ type PointsTransaction struct {
 }
 
 func (p *PointsTransaction) BeforeCreate(tx *gorm.DB) error {
-	if p.Points.R != nil {
-		p.Points.R = roundRatTo2Decimals(p.Points.R)
-	} else {
-		p.Points.R = big.NewRat(0, 1)
-	}
+	p.Points = p.Points.NormalizeDecimals()
 	var from p_users.User
 	if err := tx.First(&from, p.FromUserID).Error; err != nil {
 		return fmt.Errorf("from user: %w", err)
@@ -52,20 +48,13 @@ func (*PointsTransaction) BeforeUpdate(_ *gorm.DB) error {
 }
 
 func init() {
-	lago.OnDBInit("p_uniquity_employees.models", func(d *gorm.DB) *gorm.DB {
-		lago.RegisterModel[Employee](d)
-		lago.RegisterModel[PointsTransaction](d)
-		installPointsTransactionSuperuserTrigger(d)
-		return d
-	})
-
-	lago.RegistryAdmin.Register("p_uniquity_employees_staff", lago.AdminPanel[Employee]{
+	lamu.RegistryAdmin.Register("p_uniquity_employees_staff", lamu.AdminPanel[Employee]{
 		SearchField: "User.Name",
 		ListFields:  []string{"User.Name", "User.Email", "UpdatedAt"},
 		Preload:     []string{"User"},
 	})
 
-	lago.RegistryAdmin.Register("p_uniquity_employees_points", lago.AdminPanel[PointsTransaction]{
+	lamu.RegistryAdmin.Register("p_uniquity_employees_points", lamu.AdminPanel[PointsTransaction]{
 		SearchField: "FromUser.Name",
 		ListFields: []string{
 			"Points",

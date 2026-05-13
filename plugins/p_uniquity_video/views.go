@@ -5,11 +5,11 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/UniquityVentures/lago/getters"
-	"github.com/UniquityVentures/lago/lago"
-	"github.com/UniquityVentures/lago/plugins/p_users"
-	"github.com/UniquityVentures/lago/registry"
-	"github.com/UniquityVentures/lago/views"
+	"github.com/UniquityVentures/lamu/getters"
+	"github.com/UniquityVentures/lamu/lamu"
+	"github.com/UniquityVentures/lamu/plugins/p_users"
+	"github.com/UniquityVentures/lamu/registry"
+	"github.com/UniquityVentures/lamu/views"
 	uniqempl "github.com/UniquityVentures/uniquity/plugins/p_uniquity_employees"
 	"gorm.io/gorm"
 )
@@ -90,256 +90,279 @@ func (publishedVideoEditorPointsToEmployeePatcher) Patch(_ views.View, r *http.R
 	return formData, formErrors
 }
 
-func init() {
+func pluginViews() lamu.PluginFeatures[*views.View] {
 	auth := p_users.AuthenticationLayer{}
 
-	lago.RegistryView.Register("video.HubView",
-		lago.GetPageView("video.HubPage").
-			WithLayer("users.auth", auth))
-
-	// --- Raw footage ---
-	lago.RegistryView.Register("video.RawListView",
-		lago.GetPageView("video.RawFootageTable").
-			WithLayer("users.auth", auth).
-			WithLayer("video.raw_list", views.LayerList[RawFootage]{
-				Key: getters.Static("rawFootages"),
-				QueryPatchers: views.QueryPatchers[RawFootage]{
-					registry.Pair[string, views.QueryPatcher[RawFootage]]{Key: "video.raw_preload", Value: rawPreload{}},
-				},
-			}))
-
-	lago.RegistryView.Register("video.RawDetailView",
-		lago.GetPageView("video.RawFootageDetail").
-			WithLayer("users.auth", auth).
-			WithLayer("video.raw_detail", views.LayerDetail[RawFootage]{
-				Key:          getters.Static("rawFootage"),
-				PathParamKey: getters.Static("id"),
-				QueryPatchers: views.QueryPatchers[RawFootage]{
-					registry.Pair[string, views.QueryPatcher[RawFootage]]{Key: "video.raw_preload", Value: rawPreload{}},
-				},
-			}))
-
-	lago.RegistryView.Register("video.RawCreateView",
-		lago.GetPageView("video.RawFootageCreateForm").
-			WithLayer("users.auth", auth).
-			WithLayer("video.raw_create", views.LayerCreate[RawFootage]{
-				SuccessURL: lago.RoutePath("video.RawDetailRoute", map[string]getters.Getter[any]{
-					"id": getters.Any(getters.Key[uint]("$id")),
-				}),
-			}))
-
-	lago.RegistryView.Register("video.RawUpdateView",
-		lago.GetPageView("video.RawFootageUpdateForm").
-			WithLayer("users.auth", auth).
-			WithLayer("video.raw_detail", views.LayerDetail[RawFootage]{
-				Key:          getters.Static("rawFootage"),
-				PathParamKey: getters.Static("id"),
-				QueryPatchers: views.QueryPatchers[RawFootage]{
-					registry.Pair[string, views.QueryPatcher[RawFootage]]{Key: "video.raw_preload", Value: rawPreload{}},
-				},
-			}).
-			WithLayer("video.raw_update", views.LayerUpdate[RawFootage]{
-				Key:        getters.Static("rawFootage"),
-				SuccessURL: lago.RoutePath("video.RawListRoute", nil),
-			}))
-
-	lago.RegistryView.Register("video.RawDeleteView",
-		lago.GetPageView("video.RawFootageDeleteForm").
-			WithLayer("users.auth", auth).
-			WithLayer("video.raw_detail", views.LayerDetail[RawFootage]{
-				Key:          getters.Static("rawFootage"),
-				PathParamKey: getters.Static("id"),
-				QueryPatchers: views.QueryPatchers[RawFootage]{
-					registry.Pair[string, views.QueryPatcher[RawFootage]]{Key: "video.raw_preload", Value: rawPreload{}},
-				},
-			}).
-			WithLayer("video.raw_delete", views.LayerDelete[RawFootage]{
-				Key:        getters.Static("rawFootage"),
-				SuccessURL: lago.RoutePath("video.RawListRoute", nil),
-			}))
-
-	lago.RegistryView.Register("video.RawSelectView",
-		lago.GetPageView("video.RawFootageSelectionTable").
-			WithLayer("users.auth", auth).
-			WithLayer("video.raw_select", views.LayerList[RawFootage]{
-				Key: getters.Static("rawFootages"),
-				QueryPatchers: views.QueryPatchers[RawFootage]{
-					registry.Pair[string, views.QueryPatcher[RawFootage]]{Key: "video.raw_select_assigned", Value: rawSelectAssignedFilter{}},
-					registry.Pair[string, views.QueryPatcher[RawFootage]]{Key: "video.raw_preload", Value: rawPreload{}},
-				},
-			}))
-
-	lago.RegistryView.Register("video.EmployeeSelectView",
-		lago.GetPageView("video.EmployeeSelectionTable").
-			WithLayer("users.auth", auth).
-			WithLayer("video.employee_select", views.LayerList[uniqempl.Employee]{
-				Key: getters.Static("employees"),
-				QueryPatchers: views.QueryPatchers[uniqempl.Employee]{
-					registry.Pair[string, views.QueryPatcher[uniqempl.Employee]]{Key: "video.employee_select_preload", Value: employeeSelectPreload{}},
-				},
-			}))
-
-	// --- Edited videos ---
-	lago.RegistryView.Register("video.EditedListView",
-		lago.GetPageView("video.EditedVideoTable").
-			WithLayer("users.auth", auth).
-			WithLayer("video.edited_list", views.LayerList[EditedVideo]{
-				Key: getters.Static("editedVideos"),
-				QueryPatchers: views.QueryPatchers[EditedVideo]{
-					registry.Pair[string, views.QueryPatcher[EditedVideo]]{Key: "video.edited_preload", Value: editedPreload{}},
-				},
-			}))
-
-	lago.RegistryView.Register("video.EditedDetailView",
-		lago.GetPageView("video.EditedVideoDetail").
-			WithLayer("users.auth", auth).
-			WithLayer("video.edited_detail", views.LayerDetail[EditedVideo]{
-				Key:          getters.Static("editedVideo"),
-				PathParamKey: getters.Static("id"),
-				QueryPatchers: views.QueryPatchers[EditedVideo]{
-					registry.Pair[string, views.QueryPatcher[EditedVideo]]{Key: "video.edited_preload", Value: editedPreload{}},
-				},
-			}))
-
-	lago.RegistryView.Register("video.EditedCreateView",
-		lago.GetPageView("video.EditedVideoCreateForm").
-			WithLayer("users.auth", auth).
-			WithLayer("video.edited_create", views.LayerCreate[EditedVideo]{
-				SuccessURL: lago.RoutePath("video.EditedDetailRoute", map[string]getters.Getter[any]{
-					"id": getters.Any(getters.Key[uint]("$id")),
-				}),
-			}))
-
-	lago.RegistryView.Register("video.EditedUpdateView",
-		lago.GetPageView("video.EditedVideoUpdateForm").
-			WithLayer("users.auth", auth).
-			WithLayer("video.edited_detail", views.LayerDetail[EditedVideo]{
-				Key:          getters.Static("editedVideo"),
-				PathParamKey: getters.Static("id"),
-				QueryPatchers: views.QueryPatchers[EditedVideo]{
-					registry.Pair[string, views.QueryPatcher[EditedVideo]]{Key: "video.edited_preload", Value: editedPreload{}},
-				},
-			}).
-			WithLayer("video.edited_update", views.LayerUpdate[EditedVideo]{
-				Key:        getters.Static("editedVideo"),
-				SuccessURL: lago.RoutePath("video.EditedListRoute", nil),
-			}))
-
-	lago.RegistryView.Register("video.EditedDeleteView",
-		lago.GetPageView("video.EditedVideoDeleteForm").
-			WithLayer("users.auth", auth).
-			WithLayer("video.edited_detail", views.LayerDetail[EditedVideo]{
-				Key:          getters.Static("editedVideo"),
-				PathParamKey: getters.Static("id"),
-				QueryPatchers: views.QueryPatchers[EditedVideo]{
-					registry.Pair[string, views.QueryPatcher[EditedVideo]]{Key: "video.edited_preload", Value: editedPreload{}},
-				},
-			}).
-			WithLayer("video.edited_delete", views.LayerDelete[EditedVideo]{
-				Key:        getters.Static("editedVideo"),
-				SuccessURL: lago.RoutePath("video.EditedListRoute", nil),
-			}))
-
-	lago.RegistryView.Register("video.EditedSelectView",
-		lago.GetPageView("video.EditedVideoSelectionTable").
-			WithLayer("users.auth", auth).
-			WithLayer("video.edited_select", views.LayerList[EditedVideo]{
-				Key: getters.Static("editedVideos"),
-				QueryPatchers: views.QueryPatchers[EditedVideo]{
-					registry.Pair[string, views.QueryPatcher[EditedVideo]]{Key: "video.edited_preload", Value: editedPreload{}},
-				},
-			}))
-
-	// --- Published videos ---
-	lago.RegistryView.Register("video.PublishedListView",
-		lago.GetPageView("video.PublishedVideoTable").
-			WithLayer("users.auth", auth).
-			WithLayer("video.published_list", views.LayerList[PublishedVideo]{
-				Key: getters.Static("publishedVideos"),
-				QueryPatchers: views.QueryPatchers[PublishedVideo]{
-					registry.Pair[string, views.QueryPatcher[PublishedVideo]]{Key: "video.published_preload", Value: publishedPreload{}},
-				},
-			}))
-
-	lago.RegistryView.Register("video.PublishedDetailView",
-		lago.GetPageView("video.PublishedVideoDetail").
-			WithLayer("users.auth", auth).
-			WithLayer("video.published_detail", views.LayerDetail[PublishedVideo]{
-				Key:          getters.Static("publishedVideo"),
-				PathParamKey: getters.Static("id"),
-				QueryPatchers: views.QueryPatchers[PublishedVideo]{
-					registry.Pair[string, views.QueryPatcher[PublishedVideo]]{Key: "video.published_preload", Value: publishedPreload{}},
-				},
-			}).
-			WithLayer("video.published_youtube_meta", youtubePublishedMetaLayer{}))
-
-	lago.RegistryView.Register("video.PublishedEditorPointsCreateView",
-		lago.GetPageView("video.PublishedEditorPointsForm").
-			WithLayer("users.auth", auth).
-			WithLayer("employees.superuser", uniqempl.SuperuserOnlyLayer{}).
-			WithLayer("video.published_detail", views.LayerDetail[PublishedVideo]{
-				Key:          getters.Static("publishedVideo"),
-				PathParamKey: getters.Static("id"),
-				QueryPatchers: views.QueryPatchers[PublishedVideo]{
-					registry.Pair[string, views.QueryPatcher[PublishedVideo]]{Key: "video.published_preload", Value: publishedPreload{}},
-				},
-			}).
-			WithLayer("video.published_editor_points_create", views.LayerCreate[uniqempl.PointsTransaction]{
-				SuccessURL: lago.RoutePath("employees.PointsDetailRoute", map[string]getters.Getter[any]{
-					"id": getters.Any(getters.Key[uint]("$id")),
-				}),
-				FormPatchers: views.FormPatchers{
-					registry.Pair[string, views.FormPatcher]{Key: "employees.points_from_user", Value: uniqempl.PointsFormFromUserPatcher{}},
-					registry.Pair[string, views.FormPatcher]{Key: "video.published_editor_points_to", Value: publishedVideoEditorPointsToEmployeePatcher{}},
-				},
-			}))
-
-	lago.RegistryView.Register("video.PublishedCreateView",
-		lago.GetPageView("video.PublishedVideoCreateForm").
-			WithLayer("users.auth", auth).
-			WithLayer("video.published_create", views.LayerCreate[PublishedVideo]{
-				SuccessURL: lago.RoutePath("video.PublishedDetailRoute", map[string]getters.Getter[any]{
-					"id": getters.Any(getters.Key[uint]("$id")),
-				}),
-			}))
-
-	lago.RegistryView.Register("video.PublishedUpdateView",
-		lago.GetPageView("video.PublishedVideoUpdateForm").
-			WithLayer("users.auth", auth).
-			WithLayer("video.published_detail", views.LayerDetail[PublishedVideo]{
-				Key:          getters.Static("publishedVideo"),
-				PathParamKey: getters.Static("id"),
-				QueryPatchers: views.QueryPatchers[PublishedVideo]{
-					registry.Pair[string, views.QueryPatcher[PublishedVideo]]{Key: "video.published_preload", Value: publishedPreload{}},
-				},
-			}).
-			WithLayer("video.published_update", views.LayerUpdate[PublishedVideo]{
-				Key:        getters.Static("publishedVideo"),
-				SuccessURL: lago.RoutePath("video.PublishedListRoute", nil),
-			}))
-
-	lago.RegistryView.Register("video.PublishedDeleteView",
-		lago.GetPageView("video.PublishedVideoDeleteForm").
-			WithLayer("users.auth", auth).
-			WithLayer("video.published_detail", views.LayerDetail[PublishedVideo]{
-				Key:          getters.Static("publishedVideo"),
-				PathParamKey: getters.Static("id"),
-				QueryPatchers: views.QueryPatchers[PublishedVideo]{
-					registry.Pair[string, views.QueryPatcher[PublishedVideo]]{Key: "video.published_preload", Value: publishedPreload{}},
-				},
-			}).
-			WithLayer("video.published_delete", views.LayerDelete[PublishedVideo]{
-				Key:        getters.Static("publishedVideo"),
-				SuccessURL: lago.RoutePath("video.PublishedListRoute", nil),
-			}))
-
-	lago.RegistryView.Register("video.PublishedSelectView",
-		lago.GetPageView("video.PublishedVideoSelectionTable").
-			WithLayer("users.auth", auth).
-			WithLayer("video.published_select", views.LayerList[PublishedVideo]{
-				Key: getters.Static("publishedVideos"),
-				QueryPatchers: views.QueryPatchers[PublishedVideo]{
-					registry.Pair[string, views.QueryPatcher[PublishedVideo]]{Key: "video.published_preload", Value: publishedPreload{}},
-				},
-			}))
+	return lamu.PluginFeatures[*views.View]{
+		Entries: []registry.Pair[string, *views.View]{
+			{
+				Key: "video.HubView",
+				Value: lamu.GetPageView("video.HubPage").
+					WithLayer("p_users.auth", auth),
+			},
+			{
+				Key: "video.RawListView",
+				Value: lamu.GetPageView("video.RawFootageTable").
+					WithLayer("p_users.auth", auth).
+					WithLayer("video.raw_list", views.LayerList[RawFootage]{
+						Key: getters.Static("rawFootages"),
+						QueryPatchers: views.QueryPatchers[RawFootage]{
+							registry.Pair[string, views.QueryPatcher[RawFootage]]{Key: "video.raw_preload", Value: rawPreload{}},
+						},
+					}),
+			},
+			{
+				Key: "video.RawDetailView",
+				Value: lamu.GetPageView("video.RawFootageDetail").
+					WithLayer("p_users.auth", auth).
+					WithLayer("video.raw_detail", views.LayerDetail[RawFootage]{
+						Key:          getters.Static("rawFootage"),
+						PathParamKey: getters.Static("id"),
+						QueryPatchers: views.QueryPatchers[RawFootage]{
+							registry.Pair[string, views.QueryPatcher[RawFootage]]{Key: "video.raw_preload", Value: rawPreload{}},
+						},
+					}),
+			},
+			{
+				Key: "video.RawCreateView",
+				Value: lamu.GetPageView("video.RawFootageCreateForm").
+					WithLayer("p_users.auth", auth).
+					WithLayer("video.raw_create", views.LayerCreate[RawFootage]{
+						SuccessURL: lamu.RoutePath("video.RawDetailRoute", map[string]getters.Getter[any]{
+							"id": getters.Any(getters.Key[uint]("$id")),
+						}),
+					}),
+			},
+			{
+				Key: "video.RawUpdateView",
+				Value: lamu.GetPageView("video.RawFootageUpdateForm").
+					WithLayer("p_users.auth", auth).
+					WithLayer("video.raw_detail", views.LayerDetail[RawFootage]{
+						Key:          getters.Static("rawFootage"),
+						PathParamKey: getters.Static("id"),
+						QueryPatchers: views.QueryPatchers[RawFootage]{
+							registry.Pair[string, views.QueryPatcher[RawFootage]]{Key: "video.raw_preload", Value: rawPreload{}},
+						},
+					}).
+					WithLayer("video.raw_update", views.LayerUpdate[RawFootage]{
+						Key:        getters.Static("rawFootage"),
+						SuccessURL: lamu.RoutePath("video.RawListRoute", nil),
+					}),
+			},
+			{
+				Key: "video.RawDeleteView",
+				Value: lamu.GetPageView("video.RawFootageDeleteForm").
+					WithLayer("p_users.auth", auth).
+					WithLayer("video.raw_detail", views.LayerDetail[RawFootage]{
+						Key:          getters.Static("rawFootage"),
+						PathParamKey: getters.Static("id"),
+						QueryPatchers: views.QueryPatchers[RawFootage]{
+							registry.Pair[string, views.QueryPatcher[RawFootage]]{Key: "video.raw_preload", Value: rawPreload{}},
+						},
+					}).
+					WithLayer("video.raw_delete", views.LayerDelete[RawFootage]{
+						Key:        getters.Static("rawFootage"),
+						SuccessURL: lamu.RoutePath("video.RawListRoute", nil),
+					}),
+			},
+			{
+				Key: "video.RawSelectView",
+				Value: lamu.GetPageView("video.RawFootageSelectionTable").
+					WithLayer("p_users.auth", auth).
+					WithLayer("video.raw_select", views.LayerList[RawFootage]{
+						Key: getters.Static("rawFootages"),
+						QueryPatchers: views.QueryPatchers[RawFootage]{
+							registry.Pair[string, views.QueryPatcher[RawFootage]]{Key: "video.raw_select_assigned", Value: rawSelectAssignedFilter{}},
+							registry.Pair[string, views.QueryPatcher[RawFootage]]{Key: "video.raw_preload", Value: rawPreload{}},
+						},
+					}),
+			},
+			{
+				Key: "video.EmployeeSelectView",
+				Value: lamu.GetPageView("video.EmployeeSelectionTable").
+					WithLayer("p_users.auth", auth).
+					WithLayer("video.employee_select", views.LayerList[uniqempl.Employee]{
+						Key: getters.Static("employees"),
+						QueryPatchers: views.QueryPatchers[uniqempl.Employee]{
+							registry.Pair[string, views.QueryPatcher[uniqempl.Employee]]{Key: "video.employee_select_preload", Value: employeeSelectPreload{}},
+						},
+					}),
+			},
+			{
+				Key: "video.EditedListView",
+				Value: lamu.GetPageView("video.EditedVideoTable").
+					WithLayer("p_users.auth", auth).
+					WithLayer("video.edited_list", views.LayerList[EditedVideo]{
+						Key: getters.Static("editedVideos"),
+						QueryPatchers: views.QueryPatchers[EditedVideo]{
+							registry.Pair[string, views.QueryPatcher[EditedVideo]]{Key: "video.edited_preload", Value: editedPreload{}},
+						},
+					}),
+			},
+			{
+				Key: "video.EditedDetailView",
+				Value: lamu.GetPageView("video.EditedVideoDetail").
+					WithLayer("p_users.auth", auth).
+					WithLayer("video.edited_detail", views.LayerDetail[EditedVideo]{
+						Key:          getters.Static("editedVideo"),
+						PathParamKey: getters.Static("id"),
+						QueryPatchers: views.QueryPatchers[EditedVideo]{
+							registry.Pair[string, views.QueryPatcher[EditedVideo]]{Key: "video.edited_preload", Value: editedPreload{}},
+						},
+					}),
+			},
+			{
+				Key: "video.EditedCreateView",
+				Value: lamu.GetPageView("video.EditedVideoCreateForm").
+					WithLayer("p_users.auth", auth).
+					WithLayer("video.edited_create", views.LayerCreate[EditedVideo]{
+						SuccessURL: lamu.RoutePath("video.EditedDetailRoute", map[string]getters.Getter[any]{
+							"id": getters.Any(getters.Key[uint]("$id")),
+						}),
+					}),
+			},
+			{
+				Key: "video.EditedUpdateView",
+				Value: lamu.GetPageView("video.EditedVideoUpdateForm").
+					WithLayer("p_users.auth", auth).
+					WithLayer("video.edited_detail", views.LayerDetail[EditedVideo]{
+						Key:          getters.Static("editedVideo"),
+						PathParamKey: getters.Static("id"),
+						QueryPatchers: views.QueryPatchers[EditedVideo]{
+							registry.Pair[string, views.QueryPatcher[EditedVideo]]{Key: "video.edited_preload", Value: editedPreload{}},
+						},
+					}).
+					WithLayer("video.edited_update", views.LayerUpdate[EditedVideo]{
+						Key:        getters.Static("editedVideo"),
+						SuccessURL: lamu.RoutePath("video.EditedListRoute", nil),
+					}),
+			},
+			{
+				Key: "video.EditedDeleteView",
+				Value: lamu.GetPageView("video.EditedVideoDeleteForm").
+					WithLayer("p_users.auth", auth).
+					WithLayer("video.edited_detail", views.LayerDetail[EditedVideo]{
+						Key:          getters.Static("editedVideo"),
+						PathParamKey: getters.Static("id"),
+						QueryPatchers: views.QueryPatchers[EditedVideo]{
+							registry.Pair[string, views.QueryPatcher[EditedVideo]]{Key: "video.edited_preload", Value: editedPreload{}},
+						},
+					}).
+					WithLayer("video.edited_delete", views.LayerDelete[EditedVideo]{
+						Key:        getters.Static("editedVideo"),
+						SuccessURL: lamu.RoutePath("video.EditedListRoute", nil),
+					}),
+			},
+			{
+				Key: "video.EditedSelectView",
+				Value: lamu.GetPageView("video.EditedVideoSelectionTable").
+					WithLayer("p_users.auth", auth).
+					WithLayer("video.edited_select", views.LayerList[EditedVideo]{
+						Key: getters.Static("editedVideos"),
+						QueryPatchers: views.QueryPatchers[EditedVideo]{
+							registry.Pair[string, views.QueryPatcher[EditedVideo]]{Key: "video.edited_preload", Value: editedPreload{}},
+						},
+					}),
+			},
+			{
+				Key: "video.PublishedListView",
+				Value: lamu.GetPageView("video.PublishedVideoTable").
+					WithLayer("p_users.auth", auth).
+					WithLayer("video.published_list", views.LayerList[PublishedVideo]{
+						Key: getters.Static("publishedVideos"),
+						QueryPatchers: views.QueryPatchers[PublishedVideo]{
+							registry.Pair[string, views.QueryPatcher[PublishedVideo]]{Key: "video.published_preload", Value: publishedPreload{}},
+						},
+					}),
+			},
+			{
+				Key: "video.PublishedDetailView",
+				Value: lamu.GetPageView("video.PublishedVideoDetail").
+					WithLayer("p_users.auth", auth).
+					WithLayer("video.published_detail", views.LayerDetail[PublishedVideo]{
+						Key:          getters.Static("publishedVideo"),
+						PathParamKey: getters.Static("id"),
+						QueryPatchers: views.QueryPatchers[PublishedVideo]{
+							registry.Pair[string, views.QueryPatcher[PublishedVideo]]{Key: "video.published_preload", Value: publishedPreload{}},
+						},
+					}).
+					WithLayer("video.published_youtube_meta", youtubePublishedMetaLayer{}),
+			},
+			{
+				Key: "video.PublishedEditorPointsCreateView",
+				Value: lamu.GetPageView("video.PublishedEditorPointsForm").
+					WithLayer("p_users.auth", auth).
+					WithLayer("employees.superuser", uniqempl.SuperuserOnlyLayer{}).
+					WithLayer("video.published_detail", views.LayerDetail[PublishedVideo]{
+						Key:          getters.Static("publishedVideo"),
+						PathParamKey: getters.Static("id"),
+						QueryPatchers: views.QueryPatchers[PublishedVideo]{
+							registry.Pair[string, views.QueryPatcher[PublishedVideo]]{Key: "video.published_preload", Value: publishedPreload{}},
+						},
+					}).
+					WithLayer("video.published_editor_points_create", views.LayerCreate[uniqempl.PointsTransaction]{
+						SuccessURL: lamu.RoutePath("employees.PointsDetailRoute", map[string]getters.Getter[any]{
+							"id": getters.Any(getters.Key[uint]("$id")),
+						}),
+						FormPatchers: views.FormPatchers{
+							registry.Pair[string, views.FormPatcher]{Key: "employees.points_from_user", Value: uniqempl.PointsFormFromUserPatcher{}},
+							registry.Pair[string, views.FormPatcher]{Key: "video.published_editor_points_to", Value: publishedVideoEditorPointsToEmployeePatcher{}},
+						},
+					}),
+			},
+			{
+				Key: "video.PublishedCreateView",
+				Value: lamu.GetPageView("video.PublishedVideoCreateForm").
+					WithLayer("p_users.auth", auth).
+					WithLayer("video.published_create", views.LayerCreate[PublishedVideo]{
+						SuccessURL: lamu.RoutePath("video.PublishedDetailRoute", map[string]getters.Getter[any]{
+							"id": getters.Any(getters.Key[uint]("$id")),
+						}),
+					}),
+			},
+			{
+				Key: "video.PublishedUpdateView",
+				Value: lamu.GetPageView("video.PublishedVideoUpdateForm").
+					WithLayer("p_users.auth", auth).
+					WithLayer("video.published_detail", views.LayerDetail[PublishedVideo]{
+						Key:          getters.Static("publishedVideo"),
+						PathParamKey: getters.Static("id"),
+						QueryPatchers: views.QueryPatchers[PublishedVideo]{
+							registry.Pair[string, views.QueryPatcher[PublishedVideo]]{Key: "video.published_preload", Value: publishedPreload{}},
+						},
+					}).
+					WithLayer("video.published_update", views.LayerUpdate[PublishedVideo]{
+						Key:        getters.Static("publishedVideo"),
+						SuccessURL: lamu.RoutePath("video.PublishedListRoute", nil),
+					}),
+			},
+			{
+				Key: "video.PublishedDeleteView",
+				Value: lamu.GetPageView("video.PublishedVideoDeleteForm").
+					WithLayer("p_users.auth", auth).
+					WithLayer("video.published_detail", views.LayerDetail[PublishedVideo]{
+						Key:          getters.Static("publishedVideo"),
+						PathParamKey: getters.Static("id"),
+						QueryPatchers: views.QueryPatchers[PublishedVideo]{
+							registry.Pair[string, views.QueryPatcher[PublishedVideo]]{Key: "video.published_preload", Value: publishedPreload{}},
+						},
+					}).
+					WithLayer("video.published_delete", views.LayerDelete[PublishedVideo]{
+						Key:        getters.Static("publishedVideo"),
+						SuccessURL: lamu.RoutePath("video.PublishedListRoute", nil),
+					}),
+			},
+			{
+				Key: "video.PublishedSelectView",
+				Value: lamu.GetPageView("video.PublishedVideoSelectionTable").
+					WithLayer("p_users.auth", auth).
+					WithLayer("video.published_select", views.LayerList[PublishedVideo]{
+						Key: getters.Static("publishedVideos"),
+						QueryPatchers: views.QueryPatchers[PublishedVideo]{
+							registry.Pair[string, views.QueryPatcher[PublishedVideo]]{Key: "video.published_preload", Value: publishedPreload{}},
+						},
+					}),
+			},
+		},
+	}
 }

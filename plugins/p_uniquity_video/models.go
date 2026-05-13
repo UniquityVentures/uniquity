@@ -1,8 +1,8 @@
 package p_uniquity_video
 
 import (
-	"github.com/UniquityVentures/lago/lago"
-	"github.com/UniquityVentures/lago/plugins/p_filesystem"
+	"github.com/UniquityVentures/lamu/lamu"
+	"github.com/UniquityVentures/lamu/plugins/p_filesystem"
 	uniqempl "github.com/UniquityVentures/uniquity/plugins/p_uniquity_employees"
 	"gorm.io/gorm"
 )
@@ -11,10 +11,10 @@ import (
 type RawFootage struct {
 	gorm.Model
 
-	Title string `gorm:"not null"`
+	Title string               `gorm:"not null"`
 	Files []p_filesystem.VNode `gorm:"many2many:raw_footage_files;"`
 
-	AssignedToID uint            `gorm:"not null"`
+	AssignedToID uint              `gorm:"not null"`
 	AssignedTo   uniqempl.Employee `gorm:"foreignKey:AssignedToID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT"`
 }
 
@@ -40,26 +40,19 @@ type PublishedVideo struct {
 }
 
 func init() {
-	lago.OnDBInit("p_uniquity_video.models", func(d *gorm.DB) *gorm.DB {
-		lago.RegisterModel[RawFootage](d)
-		lago.RegisterModel[EditedVideo](d)
-		lago.RegisterModel[PublishedVideo](d)
-		return d
-	})
-
-	lago.RegistryAdmin.Register("p_uniquity_video_raw", lago.AdminPanel[RawFootage]{
+	lamu.RegistryAdmin.Register("p_uniquity_video_raw", lamu.AdminPanel[RawFootage]{
 		SearchField: "Title",
 		ListFields:  []string{"Title", "AssignedTo.User.Name", "UpdatedAt"},
 		Preload:     []string{"Files", "AssignedTo", "AssignedTo.User"},
 	})
 
-	lago.RegistryAdmin.Register("p_uniquity_video_edited", lago.AdminPanel[EditedVideo]{
+	lamu.RegistryAdmin.Register("p_uniquity_video_edited", lamu.AdminPanel[EditedVideo]{
 		SearchField: "RawFootage.Title",
 		ListFields:  []string{"RawFootage.Title", "EditedVNode.Name", "UpdatedAt"},
 		Preload:     []string{"RawFootage", "EditedVNode"},
 	})
 
-	lago.RegistryAdmin.Register("p_uniquity_video_published", lago.AdminPanel[PublishedVideo]{
+	lamu.RegistryAdmin.Register("p_uniquity_video_published", lamu.AdminPanel[PublishedVideo]{
 		SearchField: "YouTubeVideoID",
 		ListFields:  []string{"YouTubeVideoID", "EditedVideo.RawFootage.Title", "UpdatedAt"},
 		Preload:     []string{"EditedVideo", "EditedVideo.RawFootage"},

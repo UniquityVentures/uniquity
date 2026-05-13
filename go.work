@@ -2,6 +2,7 @@ go 1.26.1
 
 use (
 	.
+	./plugins/p_uniquity_accounting
 	./plugins/p_uniquity_employees
 	./plugins/p_uniquity_video
 )

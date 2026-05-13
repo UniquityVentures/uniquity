@@ -1,55 +1,24 @@
 package p_uniquity_employees
 
-import "github.com/UniquityVentures/lago/lago"
+import (
+	"github.com/UniquityVentures/lamu/lamu"
+	"github.com/UniquityVentures/lamu/registry"
+)
 
-func init() {
-	registerEmployeeRoutes()
-	registerPointsRoutes()
-}
-
-func registerEmployeeRoutes() {
-	// List / create / select live directly under AppUrl. Per-record routes use
-	// /employees/emp/{id}/... so they cannot collide with /employees/points/...
-	// (e.g. /employees/points/delete/ vs /employees/{id}/delete/).
+func pluginRoutes() lamu.PluginFeatures[lamu.Route] {
 	emp := AppUrl + "emp/"
-	_ = lago.RegistryRoute.Register("employees.DefaultRoute", lago.Route{
-		Path:    AppUrl,
-		Handler: lago.NewDynamicView("employees.EmployeeListView"),
-	})
-	_ = lago.RegistryRoute.Register("employees.EmployeeCreateRoute", lago.Route{
-		Path:    AppUrl + "create/",
-		Handler: lago.NewDynamicView("employees.EmployeeCreateView"),
-	})
-	_ = lago.RegistryRoute.Register("employees.EmployeeSelectRoute", lago.Route{
-		Path:    AppUrl + "select/",
-		Handler: lago.NewDynamicView("employees.EmployeeSelectView"),
-	})
-	_ = lago.RegistryRoute.Register("employees.EmployeeDetailRoute", lago.Route{
-		Path:    emp + "{id}/",
-		Handler: lago.NewDynamicView("employees.EmployeeDetailView"),
-	})
-	_ = lago.RegistryRoute.Register("employees.EmployeeUpdateRoute", lago.Route{
-		Path:    emp + "{id}/edit/",
-		Handler: lago.NewDynamicView("employees.EmployeeUpdateView"),
-	})
-	_ = lago.RegistryRoute.Register("employees.EmployeeDeleteRoute", lago.Route{
-		Path:    emp + "{id}/delete/",
-		Handler: lago.NewDynamicView("employees.EmployeeDeleteView"),
-	})
-}
-
-func registerPointsRoutes() {
-	base := AppUrl + "points/"
-	_ = lago.RegistryRoute.Register("employees.PointsListRoute", lago.Route{
-		Path:    base,
-		Handler: lago.NewDynamicView("employees.PointsListView"),
-	})
-	_ = lago.RegistryRoute.Register("employees.PointsCreateRoute", lago.Route{
-		Path:    base + "create/",
-		Handler: lago.NewDynamicView("employees.PointsCreateView"),
-	})
-	_ = lago.RegistryRoute.Register("employees.PointsDetailRoute", lago.Route{
-		Path:    base + "{id}/",
-		Handler: lago.NewDynamicView("employees.PointsDetailView"),
-	})
+	basePts := AppUrl + "points/"
+	return lamu.PluginFeatures[lamu.Route]{
+		Entries: []registry.Pair[string, lamu.Route]{
+			{Key: "employees.DefaultRoute", Value: lamu.Route{Path: AppUrl, Handler: lamu.NewDynamicView("employees.EmployeeListView")}},
+			{Key: "employees.EmployeeCreateRoute", Value: lamu.Route{Path: AppUrl + "create/", Handler: lamu.NewDynamicView("employees.EmployeeCreateView")}},
+			{Key: "employees.EmployeeSelectRoute", Value: lamu.Route{Path: AppUrl + "select/", Handler: lamu.NewDynamicView("employees.EmployeeSelectView")}},
+			{Key: "employees.EmployeeDetailRoute", Value: lamu.Route{Path: emp + "{id}/", Handler: lamu.NewDynamicView("employees.EmployeeDetailView")}},
+			{Key: "employees.EmployeeUpdateRoute", Value: lamu.Route{Path: emp + "{id}/edit/", Handler: lamu.NewDynamicView("employees.EmployeeUpdateView")}},
+			{Key: "employees.EmployeeDeleteRoute", Value: lamu.Route{Path: emp + "{id}/delete/", Handler: lamu.NewDynamicView("employees.EmployeeDeleteView")}},
+			{Key: "employees.PointsListRoute", Value: lamu.Route{Path: basePts, Handler: lamu.NewDynamicView("employees.PointsListView")}},
+			{Key: "employees.PointsCreateRoute", Value: lamu.Route{Path: basePts + "create/", Handler: lamu.NewDynamicView("employees.PointsCreateView")}},
+			{Key: "employees.PointsDetailRoute", Value: lamu.Route{Path: basePts + "{id}/", Handler: lamu.NewDynamicView("employees.PointsDetailView")}},
+		},
+	}
 }

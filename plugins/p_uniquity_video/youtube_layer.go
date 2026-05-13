@@ -3,7 +3,7 @@ package p_uniquity_video
 import (
 	"net/http"
 
-	"github.com/UniquityVentures/lago/views"
+	"github.com/UniquityVentures/lamu/views"
 )
 
 type youtubePublishedMetaLayer struct{}
