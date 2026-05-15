@@ -24,11 +24,11 @@ func GetPlugin() registry.Pair[string, lamu.Plugin] {
 			URL:         u,
 			VerboseName: "Finance customers",
 			Roles:       []string{"superuser"},
-			Views:       pluginViews,
-			Pages:       pluginPages,
-			Routes:      pluginRoutes,
-			Migrations:  pluginMigrations,
-			Models:      pluginModels,
+			Views:       lamu.PluginStages(pluginViews),
+			Pages:       lamu.PluginStages(pluginPages),
+			Routes:      lamu.PluginStages(pluginRoutes),
+			Migrations:  lamu.PluginStages(pluginMigrations),
+			Models:      lamu.PluginStages(pluginModels),
 		},
 	}
 }

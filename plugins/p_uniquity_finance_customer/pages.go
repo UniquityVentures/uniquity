@@ -10,6 +10,7 @@ import (
 func pluginPages() lamu.PluginFeatures[components.PageInterface] {
 	e := pageEntriesCustomerMenus()
 	e = append(e, pageEntriesCustomerPages()...)
+	e = append(e, pageEntriesCustomerFkSelectPages()...)
 	return lamu.PluginFeatures[components.PageInterface]{Entries: e}
 }
 

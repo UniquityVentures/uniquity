@@ -1,4 +1,4 @@
-package p_uniquity_employees
+package p_uniquity_finance_taxes
 
 import (
 	"log"
@@ -8,7 +8,7 @@ import (
 	"github.com/UniquityVentures/lamu/registry"
 )
 
-const AppUrl = "/employees/"
+const AppUrl = "/finance-taxes/"
 
 // GetPlugin returns registry contributions for [lamu.BuildAllRegistries].
 func GetPlugin() registry.Pair[string, lamu.Plugin] {
@@ -17,19 +17,18 @@ func GetPlugin() registry.Pair[string, lamu.Plugin] {
 		log.Panic(err)
 	}
 	return registry.Pair[string, lamu.Plugin]{
-		Key: "p_uniquity_employees",
+		Key: "p_uniquity_finance_taxes",
 		Value: lamu.Plugin{
 			Type:        lamu.PluginTypeApp,
-			Icon:        "users",
+			Icon:        "calculator",
 			URL:         u,
-			VerboseName: "Employees & points",
+			VerboseName: "Finance taxes",
 			Roles:       []string{"superuser"},
 			Views:       lamu.PluginStages(pluginViews),
 			Pages:       lamu.PluginStages(pluginPages),
 			Routes:      lamu.PluginStages(pluginRoutes),
-			Models:      lamu.PluginStages(pluginModels),
 			Migrations:  lamu.PluginStages(pluginMigrations),
-			DBInitHooks: lamu.PluginStages(pluginDBInitHooks),
+			Models:      lamu.PluginStages(pluginModels),
 		},
 	}
 }

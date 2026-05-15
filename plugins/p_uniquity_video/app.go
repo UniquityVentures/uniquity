@@ -23,12 +23,12 @@ func GetPlugin() registry.Pair[string, lamu.Plugin] {
 			Icon:        "film",
 			URL:         u,
 			VerboseName: "Video editors",
-			Views:       pluginViews,
-			Pages:       pluginPages,
-			Routes:      pluginRoutes,
-			Models:      pluginModels,
-			Migrations:  pluginMigrations,
-			Configs:     pluginConfigs,
+			Views:       lamu.PluginStages(pluginViews),
+			Pages:       lamu.PluginStages(pluginPages),
+			Routes:      lamu.PluginStages(pluginRoutes),
+			Models:      lamu.PluginStages(pluginModels),
+			Migrations:  lamu.PluginStages(pluginMigrations),
+			Configs:     lamu.PluginStages(pluginConfigs),
 		},
 	}
 }
