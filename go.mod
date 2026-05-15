@@ -10,13 +10,9 @@ require (
 	github.com/UniquityVentures/lamu/plugins/p_otp v0.4.7
 	github.com/UniquityVentures/lamu/plugins/p_pwa v0.4.7
 	github.com/UniquityVentures/lamu/plugins/p_users v0.4.7
-	github.com/UniquityVentures/uniquity/plugins/p_uniquity_accounting v0.0.0-20260513102927-cdb93eedcc69
-	github.com/UniquityVentures/uniquity/plugins/p_uniquity_currencies v0.0.0
 	github.com/UniquityVentures/uniquity/plugins/p_uniquity_employees v0.0.0-20260509035636-50c64227b4a6
-	github.com/UniquityVentures/uniquity/plugins/p_uniquity_entities v0.0.0
-	github.com/UniquityVentures/uniquity/plugins/p_uniquity_invoices v0.0.0
-	github.com/UniquityVentures/uniquity/plugins/p_uniquity_products v0.0.0
-	github.com/UniquityVentures/uniquity/plugins/p_uniquity_tax_rates v0.0.0
+	github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_accounts v0.0.0
+	github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_customer v0.0.0
 	github.com/UniquityVentures/uniquity/plugins/p_uniquity_video v0.0.0-20260509035636-50c64227b4a6
 )
 
@@ -38,6 +34,13 @@ require (
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/detectors/gcp v1.31.0 // indirect
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/metric v0.55.0 // indirect
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/internal/resourcemapping v0.55.0 // indirect
+	github.com/UniquityVentures/lago/components v0.3.11 // indirect
+	github.com/UniquityVentures/lago/getters v0.3.11 // indirect
+	github.com/UniquityVentures/lago/lago v0.3.11 // indirect
+	github.com/UniquityVentures/lago/plugins/p_filesystem v0.3.11 // indirect
+	github.com/UniquityVentures/lago/plugins/p_users v0.3.11 // indirect
+	github.com/UniquityVentures/lago/registry v0.3.11 // indirect
+	github.com/UniquityVentures/lago/views v0.3.11 // indirect
 	github.com/atotto/clipboard v0.1.4 // indirect
 	github.com/catppuccin/go v0.2.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
@@ -122,6 +125,10 @@ require (
 )
 
 replace github.com/UniquityVentures/uniquity/plugins/p_uniquity_entities => ./plugins/p_uniquity_entities
+
+replace github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_accounts => ./plugins/p_uniquity_finance_accounts
+
+replace github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_customer => ./plugins/p_uniquity_finance_customer
 
 replace github.com/UniquityVentures/uniquity/plugins/p_uniquity_currencies => ./plugins/p_uniquity_currencies
 
