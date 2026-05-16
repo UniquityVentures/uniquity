@@ -2,19 +2,50 @@ package p_uniquity_finance_products
 
 import (
 	"context"
+	"strings"
 
 	"github.com/UniquityVentures/lamu/components"
 	"github.com/UniquityVentures/lamu/fields"
 	"github.com/UniquityVentures/lamu/getters"
 	"github.com/UniquityVentures/lamu/lamu"
 	"github.com/UniquityVentures/lamu/registry"
+	finance_accounts "github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_accounts"
 	finance_taxes "github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_taxes"
 )
+
+const financeAccountsMainMenuProductsLinkKey = "finance_products.FinanceAccountsMainMenuLink"
+
+func patchFinanceAccountsMainMenuForProducts(page components.PageInterface) components.PageInterface {
+	menu, ok := page.(*components.SidebarMenu)
+	if !ok {
+		panic("p_uniquity_finance_products: finance_accounts.MainMenu must be *components.SidebarMenu")
+	}
+	for _, ch := range menu.Children {
+		if item, ok := ch.(*components.SidebarMenuItem); ok && item.GetKey() == financeAccountsMainMenuProductsLinkKey {
+			return menu
+		}
+	}
+	newChildren := append([]components.PageInterface{}, menu.Children...)
+	newChildren = append(newChildren, &components.SidebarMenuItem{
+		Page:  components.Page{Key: financeAccountsMainMenuProductsLinkKey, Roles: []string{"superuser"}},
+		Title: getters.Static("Products"),
+		Url:   lamu.RoutePath("finance_products.DefaultRoute", nil),
+		Icon:  "cube",
+	})
+	cloned := *menu
+	cloned.Children = newChildren
+	return &cloned
+}
 
 func pluginPages() lamu.PluginFeatures[components.PageInterface] {
 	e := pageEntriesProductMenus()
 	e = append(e, pageEntriesProductPages()...)
-	return lamu.PluginFeatures[components.PageInterface]{Entries: e}
+	return lamu.PluginFeatures[components.PageInterface]{
+		Entries: e,
+		Patches: []registry.Pair[string, func(components.PageInterface) components.PageInterface]{
+			{Key: "finance_accounts.MainMenu", Value: patchFinanceAccountsMainMenuForProducts},
+		},
+	}
 }
 
 func productDecimalStringGetter(ctxKey string) getters.Getter[string] {
@@ -35,21 +66,6 @@ func productDecimalGetter(ctxKey string) getters.Getter[fields.DecimalSix] {
 
 func pageEntriesProductMenus() []registry.Pair[string, components.PageInterface] {
 	return []registry.Pair[string, components.PageInterface]{
-		{Key: "finance_products.MainMenu", Value: &components.SidebarMenu{
-			Title: getters.Static("Finance products"),
-			Back: &components.SidebarMenuItem{
-				Title: getters.Static("Back to Home"),
-				Url:   lamu.RoutePath("dashboard.AppsPage", nil),
-			},
-			Children: []components.PageInterface{
-				&components.SidebarMenuItem{
-					Page:  components.Page{Roles: []string{"superuser"}},
-					Title: getters.Static("Products"),
-					Url:   lamu.RoutePath("finance_products.DefaultRoute", nil),
-					Icon:  "cube",
-				},
-			},
-		}},
 		{Key: "finance_products.ProductDetailMenu", Value: &components.SidebarMenu{
 			Title: getters.Format("%s", getters.Any(getters.Key[string]("product.Name"))),
 			Back: &components.SidebarMenuItem{
@@ -122,6 +138,45 @@ func productCreateFormInputs() []components.PageInterface {
 				&components.InputNumber[int64]{Label: "HSN code", Name: "HSNCode", Required: true},
 			},
 		},
+		&components.ContainerError{
+			Error: getters.Key[error]("$error.InventoryAccountID"),
+			Children: []components.PageInterface{
+				&components.InputForeignKey[finance_accounts.Account]{
+					Label:       "Inventory account",
+					Name:        "InventoryAccountID",
+					Url:         lamu.RoutePath("finance_accounts.AccountSelectRoute", nil),
+					Display:     getters.Format("%s (#%d)", getters.Any(getters.Key[string]("$in.Name")), getters.Any(getters.Key[uint]("$in.ID"))),
+					Placeholder: "Select…",
+					Getter:      getters.Association[finance_accounts.Account, uint](getters.Key[uint]("$in.InventoryAccountID")),
+				},
+			},
+		},
+		&components.ContainerError{
+			Error: getters.Key[error]("$error.CostOfSalesAcctID"),
+			Children: []components.PageInterface{
+				&components.InputForeignKey[finance_accounts.Account]{
+					Label:       "Cost of sales account",
+					Name:        "CostOfSalesAcctID",
+					Url:         lamu.RoutePath("finance_accounts.AccountSelectRoute", nil),
+					Display:     getters.Format("%s (#%d)", getters.Any(getters.Key[string]("$in.Name")), getters.Any(getters.Key[uint]("$in.ID"))),
+					Placeholder: "Select…",
+					Getter:      getters.Association[finance_accounts.Account, uint](getters.Key[uint]("$in.CostOfSalesAcctID")),
+				},
+			},
+		},
+		&components.ContainerError{
+			Error: getters.Key[error]("$error.InputTaxAccountID"),
+			Children: []components.PageInterface{
+				&components.InputForeignKey[finance_accounts.Account]{
+					Label:       "Input tax (ITC) account",
+					Name:        "InputTaxAccountID",
+					Url:         lamu.RoutePath("finance_accounts.AccountSelectRoute", nil),
+					Display:     getters.Format("%s (#%d)", getters.Any(getters.Key[string]("$in.Name")), getters.Any(getters.Key[uint]("$in.ID"))),
+					Placeholder: "Optional",
+					Getter:      getters.Association[finance_accounts.Account, uint](getters.Key[uint]("$in.InputTaxAccountID")),
+				},
+			},
+		},
 	}
 }
 
@@ -175,6 +230,45 @@ func productUpdateFormInputs() []components.PageInterface {
 				&components.InputNumber[int64]{Label: "HSN code", Name: "HSNCode", Required: true, Getter: getters.Key[int64]("$in.HSNCode")},
 			},
 		},
+		&components.ContainerError{
+			Error: getters.Key[error]("$error.InventoryAccountID"),
+			Children: []components.PageInterface{
+				&components.InputForeignKey[finance_accounts.Account]{
+					Label:       "Inventory account",
+					Name:        "InventoryAccountID",
+					Url:         lamu.RoutePath("finance_accounts.AccountSelectRoute", nil),
+					Display:     getters.Format("%s (#%d)", getters.Any(getters.Key[string]("$in.Name")), getters.Any(getters.Key[uint]("$in.ID"))),
+					Placeholder: "Select…",
+					Getter:      getters.Association[finance_accounts.Account, uint](getters.Key[uint]("$in.InventoryAccountID")),
+				},
+			},
+		},
+		&components.ContainerError{
+			Error: getters.Key[error]("$error.CostOfSalesAcctID"),
+			Children: []components.PageInterface{
+				&components.InputForeignKey[finance_accounts.Account]{
+					Label:       "Cost of sales account",
+					Name:        "CostOfSalesAcctID",
+					Url:         lamu.RoutePath("finance_accounts.AccountSelectRoute", nil),
+					Display:     getters.Format("%s (#%d)", getters.Any(getters.Key[string]("$in.Name")), getters.Any(getters.Key[uint]("$in.ID"))),
+					Placeholder: "Select…",
+					Getter:      getters.Association[finance_accounts.Account, uint](getters.Key[uint]("$in.CostOfSalesAcctID")),
+				},
+			},
+		},
+		&components.ContainerError{
+			Error: getters.Key[error]("$error.InputTaxAccountID"),
+			Children: []components.PageInterface{
+				&components.InputForeignKey[finance_accounts.Account]{
+					Label:       "Input tax (ITC) account",
+					Name:        "InputTaxAccountID",
+					Url:         lamu.RoutePath("finance_accounts.AccountSelectRoute", nil),
+					Display:     getters.Format("%s (#%d)", getters.Any(getters.Key[string]("$in.Name")), getters.Any(getters.Key[uint]("$in.ID"))),
+					Placeholder: "Optional",
+					Getter:      getters.Association[finance_accounts.Account, uint](getters.Key[uint]("$in.InputTaxAccountID")),
+				},
+			},
+		},
 	}
 }
 
@@ -185,7 +279,7 @@ func pageEntriesProductPages() []registry.Pair[string, components.PageInterface]
 
 	return []registry.Pair[string, components.PageInterface]{
 		{Key: "finance_products.ProductTable", Value: &components.ShellScaffold{
-			Sidebar: []components.PageInterface{lamu.DynamicPage{Name: "finance_products.MainMenu"}},
+			Sidebar: []components.PageInterface{lamu.DynamicPage{Name: "finance_accounts.MainMenu"}},
 			Children: []components.PageInterface{
 				&components.DataTable[Product]{
 					UID:     "finance-product-table",
@@ -219,7 +313,7 @@ func pageEntriesProductPages() []registry.Pair[string, components.PageInterface]
 		}},
 		{Key: "finance_products.ProductCreateForm", Value: &components.ShellScaffold{
 			Page:    components.Page{Roles: []string{"superuser"}},
-			Sidebar: []components.PageInterface{lamu.DynamicPage{Name: "finance_products.MainMenu"}},
+			Sidebar: []components.PageInterface{lamu.DynamicPage{Name: "finance_accounts.MainMenu"}},
 			Children: []components.PageInterface{
 				&components.FormListenBoostedPost{
 					Name:      createName,
@@ -323,11 +417,30 @@ func pageEntriesProductPages() []registry.Pair[string, components.PageInterface]
 								&components.LabelInline{Title: "HSN code", Children: []components.PageInterface{
 									&components.FieldText{Getter: getters.Format("%d", getters.Any(getters.Key[int64]("$in.HSNCode")))},
 								}},
+								&components.LabelInline{Title: "Inventory GL", Children: []components.PageInterface{
+									&components.FieldText{Getter: getters.Format("%s", getters.Any(accountNameOrDash("$in.InventoryAccount.Name")))},
+								}},
+								&components.LabelInline{Title: "COGS GL", Children: []components.PageInterface{
+									&components.FieldText{Getter: getters.Format("%s", getters.Any(accountNameOrDash("$in.CostOfSalesAccount.Name")))},
+								}},
+								&components.LabelInline{Title: "Input tax GL", Children: []components.PageInterface{
+									&components.FieldText{Getter: getters.Format("%s", getters.Any(accountNameOrDash("$in.InputTaxAccount.Name")))},
+								}},
 							},
 						},
 					},
 				},
 			},
 		}},
+	}
+}
+
+func accountNameOrDash(ctxKey string) getters.Getter[string] {
+	return func(ctx context.Context) (string, error) {
+		s, err := getters.Key[string](ctxKey)(ctx)
+		if err != nil || strings.TrimSpace(s) == "" {
+			return "—", nil
+		}
+		return s, nil
 	}
 }

@@ -19,7 +19,7 @@ func GetPlugin() registry.Pair[string, lamu.Plugin] {
 	return registry.Pair[string, lamu.Plugin]{
 		Key: "p_uniquity_finance_products",
 		Value: lamu.Plugin{
-			Type:        lamu.PluginTypeApp,
+			Type:        lamu.PluginTypeAddon,
 			Icon:        "cube",
 			URL:         u,
 			VerboseName: "Finance products",

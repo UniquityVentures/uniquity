@@ -19,7 +19,7 @@ func GetPlugin() registry.Pair[string, lamu.Plugin] {
 	return registry.Pair[string, lamu.Plugin]{
 		Key: "p_uniquity_finance_taxes",
 		Value: lamu.Plugin{
-			Type:        lamu.PluginTypeApp,
+			Type:        lamu.PluginTypeAddon,
 			Icon:        "calculator",
 			URL:         u,
 			VerboseName: "Finance taxes",

@@ -5,6 +5,7 @@ use (
 	./plugins/p_uniquity_employees
 	./plugins/p_uniquity_finance_accounts
 	./plugins/p_uniquity_finance_customer
+	./plugins/p_uniquity_finance_fiscal_year
 	./plugins/p_uniquity_finance_taxes
 	./plugins/p_uniquity_finance_products
 	./plugins/p_uniquity_video

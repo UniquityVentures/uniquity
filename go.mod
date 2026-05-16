@@ -3,18 +3,20 @@ module github.com/UniquityVentures/uniquity
 go 1.26.1
 
 require (
-	github.com/UniquityVentures/lamu v0.4.7
+	github.com/UniquityVentures/lamu v0.4.8
 	github.com/UniquityVentures/lamu/plugins/p_dashboard v0.4.7
 	github.com/UniquityVentures/lamu/plugins/p_filesystem v0.4.7
 	github.com/UniquityVentures/lamu/plugins/p_livereloading v0.4.7
 	github.com/UniquityVentures/lamu/plugins/p_otp v0.4.7
 	github.com/UniquityVentures/lamu/plugins/p_pwa v0.4.7
-	github.com/UniquityVentures/lamu/plugins/p_users v0.4.7
+	github.com/UniquityVentures/lamu/plugins/p_users v0.4.8
 	github.com/UniquityVentures/uniquity/plugins/p_uniquity_employees v0.0.0-20260509035636-50c64227b4a6
 	github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_accounts v0.0.0
+	github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_creditnotes v0.0.0
 	github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_customer v0.0.0
-	github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_products v0.0.0
+	github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_fiscal_year v0.0.0
 	github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_invoices v0.0.0
+	github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_products v0.0.0
 	github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_taxes v0.0.0
 	github.com/UniquityVentures/uniquity/plugins/p_uniquity_video v0.0.0-20260509035636-50c64227b4a6
 )
@@ -145,7 +147,11 @@ replace github.com/UniquityVentures/uniquity/plugins/p_uniquity_entities => ./pl
 
 replace github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_accounts => ./plugins/p_uniquity_finance_accounts
 
+replace github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_creditnotes => ./plugins/p_uniquity_finance_creditnotes
+
 replace github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_customer => ./plugins/p_uniquity_finance_customer
+
+replace github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_fiscal_year => ./plugins/p_uniquity_finance_fiscal_year
 
 replace github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_taxes => ./plugins/p_uniquity_finance_taxes
 

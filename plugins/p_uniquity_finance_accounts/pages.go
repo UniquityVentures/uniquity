@@ -116,6 +116,7 @@ func pluginPages() lamu.PluginFeatures[components.PageInterface] {
 	entries = append(entries, pageJournalCRUD()...)
 	entries = append(entries, pageJournalEntryCreatePages()...)
 	entries = append(entries, pageJournalEntryDetailPages()...)
+	entries = append(entries, pageAccountingPreferencesPages()...)
 	return lamu.PluginFeatures[components.PageInterface]{Entries: entries}
 }
 
@@ -145,6 +146,12 @@ func pageMenus() []registry.Pair[string, components.PageInterface] {
 					Title: getters.Static("Journals"),
 					Url:   lamu.RoutePath("finance_accounts.JournalListRoute", nil),
 					Icon:  "book-open",
+				},
+				&components.SidebarMenuItem{
+					Page:  components.Page{Roles: []string{"superuser"}},
+					Title: getters.Static("Accounting preferences"),
+					Url:   lamu.RoutePath("finance_accounts.AccountingPreferencesRoute", nil),
+					Icon:  "adjustments-horizontal",
 				},
 			},
 		}},

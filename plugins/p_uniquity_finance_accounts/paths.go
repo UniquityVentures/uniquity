@@ -31,6 +31,7 @@ func pluginRoutes() lamu.PluginFeatures[lamu.Route] {
 			{Key: "finance_accounts.JournalEntryDetailRoute", Value: lamu.Route{Path: AppUrl + "journal-entries/{id}/", Handler: lamu.NewDynamicView("finance_accounts.JournalEntryDetailView")}},
 			{Key: "finance_accounts.JournalUpdateRoute", Value: lamu.Route{Path: AppUrl + "journals/{id}/edit/", Handler: lamu.NewDynamicView("finance_accounts.JournalUpdateView")}},
 			{Key: "finance_accounts.JournalDeleteRoute", Value: lamu.Route{Path: AppUrl + "journals/{id}/delete/", Handler: lamu.NewDynamicView("finance_accounts.JournalDeleteView")}},
+			{Key: "finance_accounts.AccountingPreferencesRoute", Value: lamu.Route{Path: AppUrl + "preferences/", Handler: lamu.NewDynamicView("finance_accounts.AccountingPreferencesView")}},
 		},
 	}
 }

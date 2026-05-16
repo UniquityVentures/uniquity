@@ -5,7 +5,10 @@ go 1.26.1
 require (
 	github.com/UniquityVentures/lamu v0.4.7
 	github.com/UniquityVentures/lamu/plugins/p_users v0.4.7
+	github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_accounts v0.0.0
+	github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_creditnotes v0.0.0
 	github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_customer v0.0.0
+	github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_fiscal_year v0.0.0
 	github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_products v0.0.0
 	github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_taxes v0.0.0
 	gorm.io/gorm v1.31.1
@@ -70,7 +73,13 @@ require (
 	maragu.dev/gomponents v1.3.0 // indirect
 )
 
+replace github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_accounts => ../p_uniquity_finance_accounts
+
+replace github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_creditnotes => ../p_uniquity_finance_creditnotes
+
 replace github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_customer => ../p_uniquity_finance_customer
+
+replace github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_fiscal_year => ../p_uniquity_finance_fiscal_year
 
 replace github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_products => ../p_uniquity_finance_products
 

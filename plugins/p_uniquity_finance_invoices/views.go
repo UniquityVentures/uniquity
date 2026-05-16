@@ -30,42 +30,178 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 	return lamu.PluginFeatures[*views.View]{
 		Entries: []registry.Pair[string, *views.View]{
 			{
-				Key: "finance_invoices.InvoiceListView",
-				Value: lamu.GetPageView("finance_invoices.InvoiceTable").
+				Key: "finance_invoices.DraftInvoiceListView",
+				Value: lamu.GetPageView("finance_invoices.DraftInvoiceTable").
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 					WithLayer("finance_invoices.superuser", SuperuserOnlyLayer{}).
-					WithLayer("finance_invoices.invoice_list", views.LayerList[Invoice]{
-						Key: getters.Static("invoices"),
-						QueryPatchers: views.QueryPatchers[Invoice]{
-							{Key: "finance_invoices.preload_customer", Value: views.QueryPatcherPreload[Invoice]{Fields: []string{"Customer", "PaymentTerm", "Taxes"}}},
+					WithLayer("finance_invoices.draft_invoice_list", views.LayerList[DraftInvoice]{
+						Key: getters.Static("draft_invoices"),
+						QueryPatchers: views.QueryPatchers[DraftInvoice]{
+							registry.Pair[string, views.QueryPatcher[DraftInvoice]]{Key: "finance_invoices.list_fiscal_year_environment", Value: draftListFiscalYearEnvironment{}},
+							registry.Pair[string, views.QueryPatcher[DraftInvoice]]{Key: "finance_invoices.list_datetime_range", Value: draftListDatetimeRange{}},
+							registry.Pair[string, views.QueryPatcher[DraftInvoice]]{Key: "finance_invoices.list_exclude_posted", Value: draftListExcludePosted{}},
+							registry.Pair[string, views.QueryPatcher[DraftInvoice]]{Key: "finance_invoices.preload_draft_list", Value: views.QueryPatcherPreload[DraftInvoice]{Fields: []string{"Customer", "PaymentTerm", "Taxes"}}},
 						},
 					}),
 			},
 			{
-				Key: "finance_invoices.InvoiceDetailView",
-				Value: lamu.GetPageView("finance_invoices.InvoiceDetail").
+				Key: "finance_invoices.DraftInvoiceDetailView",
+				Value: lamu.GetPageView("finance_invoices.DraftInvoiceDetail").
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 					WithLayer("finance_invoices.superuser", SuperuserOnlyLayer{}).
-					WithLayer("finance_invoices.invoice_detail", views.LayerDetail[Invoice]{
-						Key:          getters.Static("invoice"),
+					WithLayer("finance_invoices.draft_invoice_detail", views.LayerDetail[DraftInvoice]{
+						Key:          getters.Static("draft_invoice"),
 						PathParamKey: getters.Static("id"),
-						QueryPatchers: views.QueryPatchers[Invoice]{
-							{Key: "finance_invoices.preload_customer", Value: views.QueryPatcherPreload[Invoice]{Fields: []string{"Customer", "PaymentTerm", "Taxes", "Lines", "Lines.Product"}}},
+						QueryPatchers: views.QueryPatchers[DraftInvoice]{
+							registry.Pair[string, views.QueryPatcher[DraftInvoice]]{Key: "finance_invoices.preload_draft_detail", Value: views.QueryPatcherPreload[DraftInvoice]{Fields: []string{"Customer", "PaymentTerm", "Taxes", "Lines", "Lines.Product"}}},
 						},
 					}),
 			},
 			{
-				Key: "finance_invoices.InvoiceCreateView",
-				Value: lamu.GetPageView("finance_invoices.InvoiceCreateForm").
+				Key: "finance_invoices.DraftInvoiceCreateView",
+				Value: lamu.GetPageView("finance_invoices.DraftInvoiceCreateForm").
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 					WithLayer("finance_invoices.superuser", SuperuserOnlyLayer{}).
-					WithLayer("finance_invoices.invoice_create", views.LayerCreate[Invoice]{
+					WithLayer("finance_invoices.draft_invoice_create", views.LayerCreate[DraftInvoice]{
 						SuccessURL: lamu.RoutePath("finance_invoices.DefaultRoute", nil),
 						FormPatchers: views.FormPatchers{
-							{Key: "finance_invoices.invoice_create_lines", Value: invoiceCreateLinesPatcher{}},
+							registry.Pair[string, views.FormPatcher]{Key: "finance_invoices.draft_invoice_create_lines", Value: invoiceCreateLinesPatcher{}},
 						},
 					}),
 			},
+			{
+				Key: "finance_invoices.DraftInvoiceUpdateView",
+				Value: lamu.GetPageView("finance_invoices.DraftInvoiceUpdateForm").
+					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
+					WithLayer("finance_invoices.superuser", SuperuserOnlyLayer{}).
+					WithLayer("finance_invoices.draft_invoice_detail", views.LayerDetail[DraftInvoice]{
+						Key:          getters.Static("draft_invoice"),
+						PathParamKey: getters.Static("id"),
+						QueryPatchers: views.QueryPatchers[DraftInvoice]{
+							registry.Pair[string, views.QueryPatcher[DraftInvoice]]{Key: "finance_invoices.preload_draft_detail", Value: views.QueryPatcherPreload[DraftInvoice]{Fields: []string{"Customer", "PaymentTerm", "Taxes", "Lines", "Lines.Product"}}},
+						},
+					}).
+					WithLayer("finance_invoices.draft_invoice_update", views.LayerUpdate[DraftInvoice]{
+						Key: getters.Static("draft_invoice"),
+						SuccessURL: lamu.RoutePath("finance_invoices.DraftInvoiceDetailRoute", map[string]getters.Getter[any]{
+							"id": getters.Any(getters.Key[uint]("draft_invoice.ID")),
+						}),
+						FormPatchers: views.FormPatchers{
+							registry.Pair[string, views.FormPatcher]{Key: "finance_invoices.draft_invoice_update_lines", Value: invoiceCreateLinesPatcher{}},
+						},
+					}),
+			},
+			{
+				Key: "finance_invoices.DraftInvoiceDeleteView",
+				Value: lamu.GetPageView("finance_invoices.DraftInvoiceDeleteForm").
+					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
+					WithLayer("finance_invoices.superuser", SuperuserOnlyLayer{}).
+					WithLayer("finance_invoices.draft_invoice_detail", views.LayerDetail[DraftInvoice]{
+						Key:          getters.Static("draft_invoice"),
+						PathParamKey: getters.Static("id"),
+					}).
+					WithLayer("finance_invoices.draft_invoice_delete", views.LayerDelete[DraftInvoice]{
+						Key:        getters.Static("draft_invoice"),
+						SuccessURL: lamu.RoutePath("finance_invoices.DefaultRoute", nil),
+					}),
+			},
+			{
+				Key: "finance_invoices.DraftInvoicePostView",
+				Value: lamu.GetPageView("finance_invoices.DraftInvoicePostForm").
+					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
+					WithLayer("finance_invoices.superuser", SuperuserOnlyLayer{}).
+					WithLayer("finance_invoices.draft_invoice_detail", views.LayerDetail[DraftInvoice]{
+						Key:          getters.Static("draft_invoice"),
+						PathParamKey: getters.Static("id"),
+						QueryPatchers: views.QueryPatchers[DraftInvoice]{
+							registry.Pair[string, views.QueryPatcher[DraftInvoice]]{Key: "finance_invoices.preload_draft_detail", Value: views.QueryPatcherPreload[DraftInvoice]{Fields: []string{"Lines"}}},
+						},
+					}).
+					WithLayer("finance_invoices.draft_invoice_post", layerPostDraftInvoice{}),
+			},
+
+			{
+				Key: "finance_invoices.PostedInvoiceListView",
+				Value: lamu.GetPageView("finance_invoices.PostedInvoiceTable").
+					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
+					WithLayer("finance_invoices.superuser", SuperuserOnlyLayer{}).
+					WithLayer("finance_invoices.posted_invoice_list", views.LayerList[PostedInvoice]{
+						Key: getters.Static("posted_invoices"),
+						QueryPatchers: views.QueryPatchers[PostedInvoice]{
+							registry.Pair[string, views.QueryPatcher[PostedInvoice]]{Key: "finance_invoices.posted_list_fy", Value: postedListFiscalYearEnvironment{}},
+							registry.Pair[string, views.QueryPatcher[PostedInvoice]]{Key: "finance_invoices.posted_list_dt", Value: postedListDatetimeRange{}},
+							registry.Pair[string, views.QueryPatcher[PostedInvoice]]{Key: "finance_invoices.posted_list_exclude_cancelled", Value: postedListExcludeCancelled{}},
+							registry.Pair[string, views.QueryPatcher[PostedInvoice]]{Key: "finance_invoices.preload_posted_list", Value: views.QueryPatcherPreload[PostedInvoice]{Fields: []string{"Customer"}}},
+						},
+					}),
+			},
+			{
+				Key: "finance_invoices.PostedInvoiceDetailView",
+				Value: lamu.GetPageView("finance_invoices.PostedInvoiceDetail").
+					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
+					WithLayer("finance_invoices.superuser", SuperuserOnlyLayer{}).
+					WithLayer("finance_invoices.posted_invoice_detail", views.LayerDetail[PostedInvoice]{
+						Key:          getters.Static("posted_invoice"),
+						PathParamKey: getters.Static("id"),
+						QueryPatchers: views.QueryPatchers[PostedInvoice]{
+							registry.Pair[string, views.QueryPatcher[PostedInvoice]]{Key: "finance_invoices.preload_posted_detail", Value: views.QueryPatcherPreload[PostedInvoice]{Fields: []string{"Customer", "PaymentTerm", "Taxes", "Lines", "Lines.Product", "JournalEntry"}}},
+						},
+					}),
+			},
+			{
+				Key: "finance_invoices.PostedInvoiceCancelView",
+				Value: lamu.GetPageView("finance_invoices.PostedInvoiceCancelForm").
+					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
+					WithLayer("finance_invoices.superuser", SuperuserOnlyLayer{}).
+					WithLayer("finance_invoices.posted_invoice_detail", views.LayerDetail[PostedInvoice]{
+						Key:          getters.Static("posted_invoice"),
+						PathParamKey: getters.Static("id"),
+					}).
+					WithLayer("finance_invoices.posted_invoice_cancel", layerCancelPostedInvoice{}),
+			},
+
+			{
+				Key: "finance_invoices.CancelledInvoiceListView",
+				Value: lamu.GetPageView("finance_invoices.CancelledInvoiceTable").
+					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
+					WithLayer("finance_invoices.superuser", SuperuserOnlyLayer{}).
+					WithLayer("finance_invoices.cancelled_invoice_list", views.LayerList[CancelledInvoice]{
+						Key: getters.Static("cancelled_invoices"),
+						QueryPatchers: views.QueryPatchers[CancelledInvoice]{
+							registry.Pair[string, views.QueryPatcher[CancelledInvoice]]{Key: "finance_invoices.cancelled_list_fy", Value: cancelledListFiscalYearEnvironment{}},
+							registry.Pair[string, views.QueryPatcher[CancelledInvoice]]{Key: "finance_invoices.cancelled_list_dt", Value: cancelledListDatetimeRange{}},
+							registry.Pair[string, views.QueryPatcher[CancelledInvoice]]{Key: "finance_invoices.preload_cancelled_list", Value: views.QueryPatcherPreload[CancelledInvoice]{Fields: []string{"Customer"}}},
+						},
+					}),
+			},
+			{
+				Key: "finance_invoices.CancelledInvoiceDetailView",
+				Value: lamu.GetPageView("finance_invoices.CancelledInvoiceDetail").
+					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
+					WithLayer("finance_invoices.superuser", SuperuserOnlyLayer{}).
+					WithLayer("finance_invoices.cancelled_invoice_detail", views.LayerDetail[CancelledInvoice]{
+						Key:          getters.Static("cancelled_invoice"),
+						PathParamKey: getters.Static("id"),
+						QueryPatchers: views.QueryPatchers[CancelledInvoice]{
+							registry.Pair[string, views.QueryPatcher[CancelledInvoice]]{Key: "finance_invoices.preload_cancelled_detail", Value: views.QueryPatcherPreload[CancelledInvoice]{Fields: []string{"Customer", "Lines", "Lines.Product"}}},
+						},
+					}),
+			},
+			{
+				Key: "finance_invoices.CancelledInvoiceNewDraftView",
+				Value: lamu.GetPageView("finance_invoices.CancelledInvoiceNewDraftForm").
+					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
+					WithLayer("finance_invoices.superuser", SuperuserOnlyLayer{}).
+					WithLayer("finance_invoices.cancelled_invoice_detail", views.LayerDetail[CancelledInvoice]{
+						Key:          getters.Static("cancelled_invoice"),
+						PathParamKey: getters.Static("id"),
+						QueryPatchers: views.QueryPatchers[CancelledInvoice]{
+							registry.Pair[string, views.QueryPatcher[CancelledInvoice]]{Key: "finance_invoices.preload_cancelled_newdraft", Value: views.QueryPatcherPreload[CancelledInvoice]{Fields: []string{"Lines", "Lines.Taxes", "Taxes"}}},
+						},
+					}).
+					WithLayer("finance_invoices.cancelled_new_draft", layerNewDraftFromCancelled{}),
+			},
+
 			{
 				Key: "finance_invoices.PaymentTermListView",
 				Value: lamu.GetPageView("finance_invoices.PaymentTermTable").
@@ -85,7 +221,7 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 							"id": getters.Any(getters.Key[uint]("$id")),
 						}),
 						FormPatchers: views.FormPatchers{
-							{Key: "finance_invoices.payment_term_create_backing", Value: paymentTermCreateFormPatcher{}},
+							registry.Pair[string, views.FormPatcher]{Key: "finance_invoices.payment_term_create_backing", Value: paymentTermCreateFormPatcher{}},
 						},
 					}),
 			},

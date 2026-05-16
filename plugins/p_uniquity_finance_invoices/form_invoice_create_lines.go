@@ -12,7 +12,7 @@ import (
 	finance_products "github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_products"
 )
 
-// invoiceCreateLinesPatcher validates [InvoiceLinesJSON] and sets [Invoice.PendingLines] for [Invoice.AfterCreate].
+// invoiceCreateLinesPatcher validates [InvoiceLinesJSON] and sets [DraftInvoice.PendingLines] for [DraftInvoice.AfterCreate].
 type invoiceCreateLinesPatcher struct{}
 
 func (invoiceCreateLinesPatcher) Patch(_ views.View, r *http.Request, formData map[string]any, formErrors map[string]error) (map[string]any, map[string]error) {
@@ -24,7 +24,7 @@ func (invoiceCreateLinesPatcher) Patch(_ views.View, r *http.Request, formData m
 		formErrors["InvoiceLinesJSON"] = fmt.Errorf("add at least one invoice line")
 		return formData, formErrors
 	}
-	var rows []InvoiceLinePending
+	var rows []DraftLinePending
 	if err := json.Unmarshal([]byte(raw), &rows); err != nil {
 		formErrors["InvoiceLinesJSON"] = fmt.Errorf("invalid lines data: %w", err)
 		return formData, formErrors
@@ -61,6 +61,18 @@ func (invoiceCreateLinesPatcher) Patch(_ views.View, r *http.Request, formData m
 		if qty.R == nil || qty.R.Sign() <= 0 {
 			formErrors["InvoiceLinesJSON"] = fmt.Errorf("line %d: quantity must be positive", idx+1)
 			return formData, formErrors
+		}
+		if strings.TrimSpace(row.Rate) != "" {
+			var rate fields.DecimalSix
+			if err := rate.UnmarshalText([]byte(strings.TrimSpace(row.Rate))); err != nil {
+				formErrors["InvoiceLinesJSON"] = fmt.Errorf("line %d: invalid rate: %w", idx+1, err)
+				return formData, formErrors
+			}
+			rate = rate.NormalizeDecimals()
+			if rate.R != nil && rate.R.Sign() < 0 {
+				formErrors["InvoiceLinesJSON"] = fmt.Errorf("line %d: rate must be non-negative", idx+1)
+				return formData, formErrors
+			}
 		}
 	}
 	formData["PendingLines"] = rows

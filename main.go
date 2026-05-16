@@ -14,7 +14,9 @@ import (
 	"github.com/UniquityVentures/lamu/plugins/p_users"
 	"github.com/UniquityVentures/uniquity/plugins/p_uniquity_employees"
 	"github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_accounts"
+	"github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_creditnotes"
 	"github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_customer"
+	"github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_fiscal_year"
 	"github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_invoices"
 	"github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_products"
 	"github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_taxes"
@@ -29,6 +31,8 @@ func main() {
 		p_uniquity_employees.GetPlugin(),
 		p_uniquity_finance_accounts.GetPlugin(),
 		p_uniquity_finance_customer.GetPlugin(),
+		p_uniquity_finance_creditnotes.GetPlugin(),
+		p_uniquity_finance_fiscal_year.GetPlugin(),
 		p_uniquity_finance_taxes.GetPlugin(),
 		p_uniquity_finance_products.GetPlugin(),
 		p_uniquity_finance_invoices.GetPlugin(),

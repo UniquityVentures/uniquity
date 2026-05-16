@@ -12,10 +12,10 @@ github.com/BurntSushi/toml v1.6.0 h1:dRaEfpa2VI55EwlIW72hMRHdWouJeRF7TPYhI+AUQjk
 github.com/BurntSushi/toml v1.6.0/go.mod h1:ukJfTF/6rtPPRCnwkur4qwRxa8vTRFBF0uk2lLoLwho=
 github.com/MakeNowJust/heredoc v1.0.0 h1:cXCdzVdstXyiTqTvfqk9SDHpKNjxuom+DOlyEeQ4pzQ=
 github.com/MakeNowJust/heredoc v1.0.0/go.mod h1:mG5amYoWBHf8vpLOuehzbGGw0EHxpZZ6lCpQ4fNJ8LE=
-github.com/UniquityVentures/lamu v0.4.7 h1:Xaf3nesuUwHVviJqsD1ogr83qu7f/0eSdGDSH9EZprY=
-github.com/UniquityVentures/lamu v0.4.7/go.mod h1:3/1olJuBIGRCMESBnm/M0bpXf+zLmHtOFGqpw2SO5vo=
-github.com/UniquityVentures/lamu/plugins/p_users v0.4.7 h1:rhc/sMgLHZAsl1QcZGvfzwk/Jueom+iVEgDGhNhGoKA=
-github.com/UniquityVentures/lamu/plugins/p_users v0.4.7/go.mod h1:2pOA4YVWZimOsZa7785r+F1ZpY/mPqce0n5pnNekxL0=
+github.com/UniquityVentures/lamu v0.4.8 h1:tthLwB1GO8Zs2Gub+ztRJ4C6xa2F/7lTJCyZ0Ub0w8Y=
+github.com/UniquityVentures/lamu v0.4.8/go.mod h1:3/1olJuBIGRCMESBnm/M0bpXf+zLmHtOFGqpw2SO5vo=
+github.com/UniquityVentures/lamu/plugins/p_users v0.4.8 h1:FPv29Pry/oefuBEvJwP/K8UPAqahhX0ToIUc0f1CHxY=
+github.com/UniquityVentures/lamu/plugins/p_users v0.4.8/go.mod h1:elv3gP88h87kAGUa3X3aM/X6HzIRE8rlSMbkL0oyh0E=
 github.com/atotto/clipboard v0.1.4 h1:EH0zSVneZPSuFR11BlR9YppQTVDbh5+16AmcJi4g1z4=
 github.com/atotto/clipboard v0.1.4/go.mod h1:ZY9tmq7sm5xIbd9bOK4onWV4S6X0u6GY7Vn0Yu86PYI=
 github.com/aymanbagabas/go-udiff v0.4.1 h1:OEIrQ8maEeDBXQDoGCbbTTXYJMYRCRO1fnodZ12Gv5o=

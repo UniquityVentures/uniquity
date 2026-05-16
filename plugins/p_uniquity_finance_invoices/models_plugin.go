@@ -11,8 +11,12 @@ func pluginModels() lamu.PluginFeatures[any] {
 			{Key: "p_uniquity_finance_invoices.PaymentTermDueDate", Value: PaymentTermDueDate{}},
 			{Key: "p_uniquity_finance_invoices.PaymentTermRelative", Value: PaymentTermRelative{}},
 			{Key: "p_uniquity_finance_invoices.PaymentTerm", Value: PaymentTerm{}},
-			{Key: "p_uniquity_finance_invoices.Invoice", Value: Invoice{}},
-			{Key: "p_uniquity_finance_invoices.InvoiceLine", Value: InvoiceLine{}},
+			{Key: "p_uniquity_finance_invoices.DraftInvoice", Value: DraftInvoice{}},
+			{Key: "p_uniquity_finance_invoices.DraftInvoiceLine", Value: DraftInvoiceLine{}},
+			{Key: "p_uniquity_finance_invoices.PostedInvoice", Value: PostedInvoice{}},
+			{Key: "p_uniquity_finance_invoices.PostedInvoiceLine", Value: PostedInvoiceLine{}},
+			{Key: "p_uniquity_finance_invoices.CancelledInvoice", Value: CancelledInvoice{}},
+			{Key: "p_uniquity_finance_invoices.CancelledInvoiceLine", Value: CancelledInvoiceLine{}},
 		},
 	}
 }

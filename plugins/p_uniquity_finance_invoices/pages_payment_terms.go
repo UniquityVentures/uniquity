@@ -200,7 +200,7 @@ func pageEntriesPaymentTermPages() []registry.Pair[string, components.PageInterf
 
 	return []registry.Pair[string, components.PageInterface]{
 		{Key: "finance_invoices.PaymentTermTable", Value: &components.ShellScaffold{
-			Sidebar: []components.PageInterface{lamu.DynamicPage{Name: "finance_invoices.MainMenu"}},
+			Sidebar: []components.PageInterface{lamu.DynamicPage{Name: "finance_accounts.MainMenu"}},
 			Children: []components.PageInterface{
 				&components.DataTable[PaymentTerm]{
 					UID:     "finance-payment-term-table",
@@ -241,7 +241,7 @@ func pageEntriesPaymentTermPages() []registry.Pair[string, components.PageInterf
 		}},
 		{Key: "finance_invoices.PaymentTermCreateForm", Value: &components.ShellScaffold{
 			Page:    components.Page{Roles: []string{"superuser"}},
-			Sidebar: []components.PageInterface{lamu.DynamicPage{Name: "finance_invoices.MainMenu"}},
+			Sidebar: []components.PageInterface{lamu.DynamicPage{Name: "finance_accounts.MainMenu"}},
 			Children: []components.PageInterface{
 				&components.FormListenBoostedPost{
 					Name:      ptCreateName,

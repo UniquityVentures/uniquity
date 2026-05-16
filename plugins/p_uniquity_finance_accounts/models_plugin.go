@@ -14,6 +14,7 @@ func pluginModels() lamu.PluginFeatures[any] {
 			{Key: "p_uniquity_finance_accounts.SourceDoc", Value: SourceDoc{}},
 			{Key: "p_uniquity_finance_accounts.JournalEntry", Value: JournalEntry{}},
 			{Key: "p_uniquity_finance_accounts.JournalEntryItem", Value: JournalEntryItem{}},
+			{Key: "p_uniquity_finance_accounts.AccountingPreferences", Value: AccountingPreferences{}},
 		},
 	}
 }

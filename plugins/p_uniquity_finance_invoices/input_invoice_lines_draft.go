@@ -50,7 +50,7 @@ func (e InputInvoiceLinesDraft) Build(ctx context.Context) Node {
 	if err != nil {
 		productsJSON = []byte("[]")
 	}
-	defaults := `[{"product_id":0,"quantity":"1"}]`
+	defaults := `[{"product_id":0,"quantity":"1","rate":""}]`
 	if e.Defaults != nil {
 		if s, err := e.Defaults(ctx); err == nil && strings.TrimSpace(s) != "" {
 			defaults = strings.TrimSpace(s)
@@ -74,44 +74,64 @@ $el.closest('form').addEventListener('submit', (ev) => {
 				Class("w-full"),
 				Attr("x-data", alpineData),
 				Attr("x-init", initJS),
-				Template(
-					Attr("x-for", "(line, i) in lines"),
-					Attr(":key", "i"),
-					Div(
-						Class("flex w-full flex-nowrap gap-2 items-end my-2 p-2 border border-base-300 rounded"),
-						Div(Class("flex-1 min-w-0"),
-							Select(
-								Class("select select-bordered w-full"),
-								Attr("x-model.number", "line.product_id"),
-								Option(Value("0"), Text("—")),
-								Template(
-									Attr("x-for", "p in products"),
-									Attr(":key", "p.id"),
-									Option(Attr(":value", "p.id"), Attr("x-text", "p.name")),
+				Div(Class("overflow-x-auto rounded-box border border-base-300 bg-base-100"),
+					Table(Class("table table-sm w-full"),
+						THead(Tr(
+							Th(Class("whitespace-nowrap min-w-[12rem]"), Text("Product")),
+							Th(Class("whitespace-nowrap w-32"), Text("Quantity")),
+							Th(Class("whitespace-nowrap w-32"), Text("Rate")),
+							Th(Class("whitespace-nowrap w-24"), Text("Actions")),
+						)),
+						TBody(
+							Template(
+								Attr("x-for", "(line, i) in lines"),
+								Attr(":key", "i"),
+								Tr(
+									Td(Class("align-middle"),
+										Select(
+											Class("select select-bordered w-full max-w-md"),
+											Attr("x-model.number", "line.product_id"),
+											Option(Value("0"), Text("—")),
+											Template(
+												Attr("x-for", "p in products"),
+												Attr(":key", "p.id"),
+												Option(Attr(":value", "p.id"), Attr("x-text", "p.name")),
+											),
+										),
+									),
+									Td(Class("align-middle"),
+										Input(
+											Type("text"),
+											Class("input input-bordered w-full"),
+											Attr("x-model", "line.quantity"),
+											Attr("inputmode", "decimal"),
+										),
+									),
+									Td(Class("align-middle"),
+										Input(
+											Type("text"),
+											Class("input input-bordered w-full"),
+											Attr("x-model", "line.rate"),
+											Attr("inputmode", "decimal"),
+										),
+									),
+									Td(Class("align-middle w-24"),
+										Button(
+											Type("button"),
+											Class("btn btn-ghost btn-sm"),
+											Attr("@click", "lines.splice(i, 1); if (lines.length === 0) lines.push({ product_id: 0, quantity: '1', rate: '' })"),
+											Text("Remove"),
+										),
+									),
 								),
 							),
-						),
-						Div(Class("w-28 shrink-0"),
-							Label(Class("text-xs opacity-70"), Text("Qty")),
-							Input(
-								Type("text"),
-								Class("input input-bordered w-full"),
-								Attr("x-model", "line.quantity"),
-								Attr("inputmode", "decimal"),
-							),
-						),
-						Button(
-							Type("button"),
-							Class("btn btn-ghost btn-sm shrink-0"),
-							Attr("@click", "lines.splice(i, 1); if (lines.length === 0) lines.push({ product_id: 0, quantity: '1' })"),
-							Text("Remove"),
 						),
 					),
 				),
 				Button(
 					Type("button"),
-					Class("btn btn-outline btn-sm mt-1 w-full sm:w-auto"),
-					Attr("@click", "lines.push({ product_id: 0, quantity: '1' })"),
+					Class("btn btn-outline btn-sm mt-2 w-full sm:w-auto"),
+					Attr("@click", "lines.push({ product_id: 0, quantity: '1', rate: '' })"),
 					Text("Add line"),
 				),
 				Input(Type("hidden"), Name(e.Name)),

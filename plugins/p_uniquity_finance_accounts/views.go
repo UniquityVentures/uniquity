@@ -503,6 +503,15 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 					}).
 					WithLayer("finance_accounts.journal_entry_items", journalEntryDetailItemsLayer{}),
 			},
+			{
+				Key: "finance_accounts.AccountingPreferencesView",
+				Value: lamu.GetPageView("finance_accounts.AccountingPreferencesForm").
+					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
+					WithLayer("finance_accounts.superuser", SuperuserOnlyLayer{}).
+					WithLayer("finance_accounts.accounting_preferences", views.LayerSingleton[AccountingPreferences]{
+						SuccessURL: lamu.RoutePath("finance_accounts.AccountingPreferencesRoute", nil),
+					}),
+			},
 		},
 	}
 }

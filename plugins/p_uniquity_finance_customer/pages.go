@@ -7,30 +7,44 @@ import (
 	"github.com/UniquityVentures/lamu/registry"
 )
 
+const financeAccountsMainMenuCustomersLinkKey = "finance_customers.FinanceAccountsMainMenuLink"
+
+func patchFinanceAccountsMainMenuForCustomers(page components.PageInterface) components.PageInterface {
+	menu, ok := page.(*components.SidebarMenu)
+	if !ok {
+		panic("p_uniquity_finance_customer: finance_accounts.MainMenu must be *components.SidebarMenu")
+	}
+	for _, ch := range menu.Children {
+		if item, ok := ch.(*components.SidebarMenuItem); ok && item.GetKey() == financeAccountsMainMenuCustomersLinkKey {
+			return menu
+		}
+	}
+	newChildren := append([]components.PageInterface{}, menu.Children...)
+	newChildren = append(newChildren, &components.SidebarMenuItem{
+		Page:  components.Page{Key: financeAccountsMainMenuCustomersLinkKey, Roles: []string{"superuser"}},
+		Title: getters.Static("Customers"),
+		Url:   lamu.RoutePath("finance_customers.DefaultRoute", nil),
+		Icon:  "building-storefront",
+	})
+	cloned := *menu
+	cloned.Children = newChildren
+	return &cloned
+}
+
 func pluginPages() lamu.PluginFeatures[components.PageInterface] {
 	e := pageEntriesCustomerMenus()
 	e = append(e, pageEntriesCustomerPages()...)
 	e = append(e, pageEntriesCustomerFkSelectPages()...)
-	return lamu.PluginFeatures[components.PageInterface]{Entries: e}
+	return lamu.PluginFeatures[components.PageInterface]{
+		Entries: e,
+		Patches: []registry.Pair[string, func(components.PageInterface) components.PageInterface]{
+			{Key: "finance_accounts.MainMenu", Value: patchFinanceAccountsMainMenuForCustomers},
+		},
+	}
 }
 
 func pageEntriesCustomerMenus() []registry.Pair[string, components.PageInterface] {
 	return []registry.Pair[string, components.PageInterface]{
-		{Key: "finance_customers.MainMenu", Value: &components.SidebarMenu{
-			Title: getters.Static("Finance customers"),
-			Back: &components.SidebarMenuItem{
-				Title: getters.Static("Back to Home"),
-				Url:   lamu.RoutePath("dashboard.AppsPage", nil),
-			},
-			Children: []components.PageInterface{
-				&components.SidebarMenuItem{
-					Page:  components.Page{Roles: []string{"superuser"}},
-					Title: getters.Static("Customers"),
-					Url:   lamu.RoutePath("finance_customers.DefaultRoute", nil),
-					Icon:  "building-storefront",
-				},
-			},
-		}},
 		{Key: "finance_customers.CustomerDetailMenu", Value: &components.SidebarMenu{
 			Title: getters.Format("%s", getters.Any(getters.Key[string]("customer.Name"))),
 			Back: &components.SidebarMenuItem{
@@ -157,7 +171,7 @@ func pageEntriesCustomerPages() []registry.Pair[string, components.PageInterface
 
 	return []registry.Pair[string, components.PageInterface]{
 		{Key: "finance_customers.CustomerTable", Value: &components.ShellScaffold{
-			Sidebar: []components.PageInterface{lamu.DynamicPage{Name: "finance_customers.MainMenu"}},
+			Sidebar: []components.PageInterface{lamu.DynamicPage{Name: "finance_accounts.MainMenu"}},
 			Children: []components.PageInterface{
 				&components.DataTable[Customer]{
 					UID:     "finance-customer-table",
@@ -191,7 +205,7 @@ func pageEntriesCustomerPages() []registry.Pair[string, components.PageInterface
 		}},
 		{Key: "finance_customers.CustomerCreateForm", Value: &components.ShellScaffold{
 			Page:    components.Page{Roles: []string{"superuser"}},
-			Sidebar: []components.PageInterface{lamu.DynamicPage{Name: "finance_customers.MainMenu"}},
+			Sidebar: []components.PageInterface{lamu.DynamicPage{Name: "finance_accounts.MainMenu"}},
 			Children: []components.PageInterface{
 				&components.FormListenBoostedPost{
 					Name:      createName,
