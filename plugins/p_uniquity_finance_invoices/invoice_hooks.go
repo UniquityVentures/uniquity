@@ -122,6 +122,20 @@ func buildDraftLineFromPending(tx *gorm.DB, draftID uint, row DraftLinePending, 
 		}
 	}
 	merged := mergeTaxesUnique(append([]finance_taxes.Tax{}, headerTaxes...), prod.Taxes)
+	if len(row.TaxIDs) > 0 {
+		var extra []finance_taxes.Tax
+		if err := tx.Where("id IN ?", row.TaxIDs).Find(&extra).Error; err != nil {
+			return nil, fmt.Errorf("load line taxes: %w", err)
+		}
+		seen := map[uint]struct{}{}
+		for _, id := range row.TaxIDs {
+			seen[id] = struct{}{}
+		}
+		if len(extra) != len(seen) {
+			return nil, fmt.Errorf("one or more line tax ids are invalid")
+		}
+		merged = mergeTaxesUnique(merged, extra)
+	}
 	line := &DraftInvoiceLine{
 		DraftInvoiceID: draftID,
 		ProductID:      row.ProductID,

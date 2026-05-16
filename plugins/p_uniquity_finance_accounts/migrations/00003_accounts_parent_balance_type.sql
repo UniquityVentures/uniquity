@@ -34,7 +34,7 @@ DROP TRIGGER IF EXISTS accounts_enforce_parent_balance_type_biud ON accounts;
 
 CREATE TRIGGER accounts_enforce_parent_balance_type_biud
   BEFORE INSERT OR UPDATE ON accounts
-  FOR EACH ROW EXECUTE FUNCTION accounts_enforce_parent_balance_type();
+  FOR EACH ROW EXECUTE PROCEDURE accounts_enforce_parent_balance_type();
 -- +goose StatementEnd
 
 -- +goose Down

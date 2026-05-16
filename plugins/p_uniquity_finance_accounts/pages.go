@@ -114,6 +114,7 @@ func pluginPages() lamu.PluginFeatures[components.PageInterface] {
 	entries = append(entries, pageAccountCRUD()...)
 	entries = append(entries, pageCurrencyCRUD()...)
 	entries = append(entries, pageJournalCRUD()...)
+	entries = append(entries, pageJournalFKSelectPages()...)
 	entries = append(entries, pageJournalEntryCreatePages()...)
 	entries = append(entries, pageJournalEntryDetailPages()...)
 	entries = append(entries, pageAccountingPreferencesPages()...)
@@ -475,15 +476,20 @@ func pageAccountCRUD() []registry.Pair[string, components.PageInterface] {
 			Children: []components.PageInterface{
 				&components.DataTable[Account]{
 					UID:   "finance-account-selection-table",
-					Title: "Select parent account",
+					Title: "Select account",
 					Data:  getters.Key[components.ObjectList[Account]]("accounts"),
 					Actions: []components.PageInterface{
 						&components.TableButtonFilter{Child: lamu.DynamicPage{Name: "finance_accounts.AccountSelectionFilter"}},
 					},
-					RowAttr: getters.RowAttrSelect("ParentID", getters.Key[uint]("$row.ID"), getters.Format("%d — %s",
-						getters.Any(getters.Key[int]("$row.Code")),
-						getters.Any(getters.Key[string]("$row.Name")),
-					)),
+					RowAttr: accountSelectionTableRowAttr(
+						getters.IfOrElse(getters.Key[string]("$get.target_input"), getters.Static("ParentID")),
+						getters.Key[uint]("$row.ID"),
+						getters.Format("%s (#%d)",
+							getters.Any(getters.Key[string]("$row.Name")),
+							getters.Any(getters.Key[uint]("$row.ID")),
+						),
+						getters.Key[bool]("$row.IsGroup"),
+					),
 					Columns: []components.TableColumn{
 						{Label: "Code", Name: "Code", Children: []components.PageInterface{
 							&components.FieldText{Getter: getters.Format("%d", getters.Any(getters.Key[int]("$row.Code")))},

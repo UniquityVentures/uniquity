@@ -10,6 +10,7 @@ import (
 	"github.com/UniquityVentures/lamu/getters"
 	"github.com/UniquityVentures/lamu/views"
 	finance_products "github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_products"
+	finance_taxes "github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_taxes"
 )
 
 // invoiceCreateLinesPatcher validates [InvoiceLinesJSON] and sets [DraftInvoice.PendingLines] for [DraftInvoice.AfterCreate].
@@ -38,7 +39,8 @@ func (invoiceCreateLinesPatcher) Patch(_ views.View, r *http.Request, formData m
 		formErrors["_form"] = err
 		return formData, formErrors
 	}
-	for idx, row := range rows {
+	for idx := range rows {
+		row := &rows[idx]
 		if row.ProductID == 0 {
 			formErrors["InvoiceLinesJSON"] = fmt.Errorf("line %d: choose a product", idx+1)
 			return formData, formErrors
@@ -72,6 +74,32 @@ func (invoiceCreateLinesPatcher) Patch(_ views.View, r *http.Request, formData m
 			if rate.R != nil && rate.R.Sign() < 0 {
 				formErrors["InvoiceLinesJSON"] = fmt.Errorf("line %d: rate must be non-negative", idx+1)
 				return formData, formErrors
+			}
+		}
+		if len(row.TaxIDs) > 0 {
+			uniq := make([]uint, 0, len(row.TaxIDs))
+			seen := map[uint]struct{}{}
+			for _, id := range row.TaxIDs {
+				if id == 0 {
+					continue
+				}
+				if _, ok := seen[id]; ok {
+					continue
+				}
+				seen[id] = struct{}{}
+				uniq = append(uniq, id)
+			}
+			row.TaxIDs = uniq
+			if len(row.TaxIDs) > 0 {
+				var taxCnt int64
+				if err := db.WithContext(r.Context()).Model(&finance_taxes.Tax{}).Where("id IN ?", row.TaxIDs).Count(&taxCnt).Error; err != nil {
+					formErrors["_form"] = err
+					return formData, formErrors
+				}
+				if taxCnt != int64(len(row.TaxIDs)) {
+					formErrors["InvoiceLinesJSON"] = fmt.Errorf("line %d: one or more tax selections are invalid", idx+1)
+					return formData, formErrors
+				}
 			}
 		}
 	}

@@ -40,6 +40,7 @@ func patchFinanceAccountsMainMenuForProducts(page components.PageInterface) comp
 func pluginPages() lamu.PluginFeatures[components.PageInterface] {
 	e := pageEntriesProductMenus()
 	e = append(e, pageEntriesProductPages()...)
+	e = append(e, pageEntriesProductFkSelectPages()...)
 	return lamu.PluginFeatures[components.PageInterface]{
 		Entries: e,
 		Patches: []registry.Pair[string, func(components.PageInterface) components.PageInterface]{

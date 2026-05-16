@@ -62,6 +62,7 @@ func pageFilterPages() []registry.Pair[string, components.PageInterface] {
 		{Key: "finance_accounts.AccountSelectionFilter", Value: &components.FormComponent[Account]{
 			Attr: getters.FormBoostedGet(lamu.RoutePath("finance_accounts.AccountSelectRoute", nil)),
 			ChildrenInput: []components.PageInterface{
+				&components.InputText{Hidden: true, Name: "target_input", Getter: getters.Key[string]("$get.target_input")},
 				&components.InputText{Name: "Name", Label: "Name", Getter: getters.Key[string]("$get.Name")},
 				&components.InputText{Name: "Code", Label: "Code", Getter: filterGETString("Code")},
 				&components.InputSelect[BalanceType]{

@@ -117,6 +117,20 @@ func (d *DraftInvoice) NewPosted(tx *gorm.DB, postedAt time.Time) (*PostedInvoic
 	if err != nil {
 		return nil, err
 	}
+	var dupPosted int64
+	if err := tx.Model(&PostedInvoice{}).Where("number = ? AND deleted_at IS NULL", number).Count(&dupPosted).Error; err != nil {
+		return nil, err
+	}
+	if dupPosted > 0 {
+		return nil, fmt.Errorf("invoice number %q is already used by another posted invoice", number)
+	}
+	var dupCancelled int64
+	if err := tx.Model(&CancelledInvoice{}).Where("number = ? AND deleted_at IS NULL", number).Count(&dupCancelled).Error; err != nil {
+		return nil, err
+	}
+	if dupCancelled > 0 {
+		return nil, fmt.Errorf("invoice number %q is already used by a cancelled invoice", number)
+	}
 	if postedAt.IsZero() {
 		postedAt = time.Now()
 	}

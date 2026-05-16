@@ -171,7 +171,10 @@ type CancelledInvoiceLine struct {
 
 // DraftLinePending is submitted JSON for new draft lines before persistence.
 type DraftLinePending struct {
-	ProductID uint   `json:"product_id"`
-	Rate      string `json:"rate"`
-	Quantity  string `json:"quantity"`
+	ProductID    uint   `json:"product_id"`
+	Rate         string `json:"rate"`
+	Quantity     string `json:"quantity"`
+	ProductLabel string `json:"product_label,omitempty"`
+	FkSlot       string `json:"fk_slot,omitempty"`
+	TaxIDs       []uint `json:"tax_ids,omitempty"`
 }

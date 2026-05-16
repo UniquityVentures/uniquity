@@ -388,9 +388,21 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 			{
 				Key: "finance_accounts.JournalListView",
 				Value: lamu.GetPageView("finance_accounts.JournalTable").
-					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
+				 WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 					WithLayer("finance_accounts.superuser", SuperuserOnlyLayer{}).
 					WithLayer("finance_accounts.journal_list", views.LayerList[Journal]{
+						Key: getters.Static("journals"),
+						QueryPatchers: views.QueryPatchers[Journal]{
+							{Key: "finance_accounts.journal_preload_currency", Value: journalListPreload{}},
+						},
+					}),
+			},
+			{
+				Key: "finance_accounts.JournalSelectView",
+				Value: lamu.GetPageView("finance_accounts.JournalFkSelectionTable").
+					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
+					WithLayer("finance_accounts.superuser", SuperuserOnlyLayer{}).
+					WithLayer("finance_accounts.journal_fk_list", views.LayerList[Journal]{
 						Key: getters.Static("journals"),
 						QueryPatchers: views.QueryPatchers[Journal]{
 							{Key: "finance_accounts.journal_preload_currency", Value: journalListPreload{}},

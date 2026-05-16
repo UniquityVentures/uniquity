@@ -14,6 +14,7 @@ func pluginRoutes() lamu.PluginFeatures[lamu.Route] {
 			{Key: "finance_products.ProductDetailRoute", Value: lamu.Route{Path: p + "{id}/", Handler: lamu.NewDynamicView("finance_products.ProductDetailView")}},
 			{Key: "finance_products.ProductUpdateRoute", Value: lamu.Route{Path: p + "{id}/edit/", Handler: lamu.NewDynamicView("finance_products.ProductUpdateView")}},
 			{Key: "finance_products.ProductDeleteRoute", Value: lamu.Route{Path: p + "{id}/delete/", Handler: lamu.NewDynamicView("finance_products.ProductDeleteView")}},
+			{Key: "finance_products.ProductFkSelectRoute", Value: lamu.Route{Path: AppUrl + "pick-product/", Handler: lamu.NewDynamicView("finance_products.ProductFkSelectView")}},
 		},
 	}
 }

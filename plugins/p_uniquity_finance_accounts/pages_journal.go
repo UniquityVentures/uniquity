@@ -494,3 +494,65 @@ func pageJournalEntryDetailPages() []registry.Pair[string, components.PageInterf
 		}},
 	}
 }
+
+func pageJournalFKSelectPages() []registry.Pair[string, components.PageInterface] {
+	return []registry.Pair[string, components.PageInterface]{
+		{Key: "finance_accounts.JournalFkSelectionFilter", Value: &components.FormComponent[Journal]{
+			Attr: getters.FormBoostedGet(lamu.RoutePath("finance_accounts.JournalSelectRoute", nil)),
+			ChildrenInput: []components.PageInterface{
+				&components.InputText{Hidden: true, Name: "target_input", Getter: getters.Key[string]("$get.target_input")},
+				&components.InputText{Name: "Name", Label: "Name", Getter: getters.Key[string]("$get.Name")},
+				&components.InputCheckbox{Name: "IsActive", Label: "Active", Getter: getters.Key[bool]("$get.IsActive")},
+				&components.InputText{Name: "CurrencyID", Label: "Currency ID", Getter: filterGETString("CurrencyID")},
+				&components.InputSelect[JournalType]{
+					Name:     "Type",
+					Label:    "Type",
+					Required: false,
+					Choices:  journalTypeChoices,
+					Getter:   journalTypeSelectGetter("$get.Type"),
+				},
+			},
+			ChildrenAction: []components.PageInterface{
+				&components.ContainerRow{Classes: "flex gap-2", Children: []components.PageInterface{
+					&components.ButtonSubmit{Label: "Apply Filters"},
+					&components.ButtonClear{Label: "Clear"},
+				}},
+			},
+		}},
+		{Key: "finance_accounts.JournalFkSelectionTable", Value: &components.Modal{
+			UID: "finance-journal-fk-select-modal",
+			Children: []components.PageInterface{
+				&components.DataTable[Journal]{
+					UID:   "finance-journal-fk-select-table",
+					Title: "Select journal",
+					Data:  getters.Key[components.ObjectList[Journal]]("journals"),
+					RowAttr: getters.RowAttrSelectNamed(
+						getters.IfOrElse(getters.Key[string]("$get.target_input"), getters.Static("JournalID")),
+						getters.Key[uint]("$row.ID"),
+						getters.Format("%s (#%d)",
+							getters.Any(getters.Key[string]("$row.Name")),
+							getters.Any(getters.Key[uint]("$row.ID")),
+						),
+					),
+					Actions: []components.PageInterface{
+						&components.TableButtonFilter{Child: lamu.DynamicPage{Name: "finance_accounts.JournalFkSelectionFilter"}},
+					},
+					Columns: []components.TableColumn{
+						{Label: "Name", Name: "Name", Children: []components.PageInterface{
+							&components.FieldText{Getter: getters.Key[string]("$row.Name")},
+						}},
+						{Label: "Active", Name: "IsActive", Children: []components.PageInterface{
+							&components.FieldCheckbox{Getter: getters.Key[bool]("$row.IsActive")},
+						}},
+						{Label: "Currency", Name: "Currency", Children: []components.PageInterface{
+							&components.FieldText{Getter: journalCurrencySummary("$row")},
+						}},
+						{Label: "Type", Name: "Type", Children: []components.PageInterface{
+							&components.FieldText{Getter: getters.Format("%s", getters.Any(getters.Key[JournalType]("$row.Type")))},
+						}},
+					},
+				},
+			},
+		}},
+	}
+}

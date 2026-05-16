@@ -94,6 +94,15 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 						SuccessURL: lamu.RoutePath("finance_products.DefaultRoute", nil),
 					}),
 			},
+			{
+				Key: "finance_products.ProductFkSelectView",
+				Value: lamu.GetPageView("finance_products.ProductFkSelectionTable").
+					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
+					WithLayer("finance_products.superuser", SuperuserOnlyLayer{}).
+					WithLayer("finance_products.product_fk_list", views.LayerList[Product]{
+						Key: getters.Static("products"),
+					}),
+			},
 		},
 	}
 }

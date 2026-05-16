@@ -24,6 +24,7 @@ func pluginRoutes() lamu.PluginFeatures[lamu.Route] {
 			{Key: "finance_accounts.CurrencyDeleteRoute", Value: lamu.Route{Path: AppUrl + "currencies/{id}/delete/", Handler: lamu.NewDynamicView("finance_accounts.CurrencyDeleteView")}},
 
 			{Key: "finance_accounts.JournalListRoute", Value: lamu.Route{Path: AppUrl + "journals/", Handler: lamu.NewDynamicView("finance_accounts.JournalListView")}},
+			{Key: "finance_accounts.JournalSelectRoute", Value: lamu.Route{Path: AppUrl + "journals/select/", Handler: lamu.NewDynamicView("finance_accounts.JournalSelectView")}},
 			{Key: "finance_accounts.JournalCreateRoute", Value: lamu.Route{Path: AppUrl + "journals/create/", Handler: lamu.NewDynamicView("finance_accounts.JournalCreateView")}},
 			{Key: "finance_accounts.JournalEntryCreateRoute", Value: lamu.Route{Path: AppUrl + "journals/{journal_id}/entries/create/", Handler: lamu.NewDynamicView("finance_accounts.JournalEntryCreateView")}},
 			{Key: "finance_accounts.SourceDocSelectRoute", Value: lamu.Route{Path: AppUrl + "source-docs/select/", Handler: lamu.NewDynamicView("finance_accounts.SourceDocSelectView")}},

@@ -13,6 +13,10 @@ type AccountingPreferences struct {
 
 	// InvoiceNumberFormat is a template for suggested/autofilled invoice numbers (interpretation is up to callers).
 	InvoiceNumberFormat string `gorm:"column:invoice_number_format"`
+
+	// DefaultJournalID optionally prefills the journal on new draft invoices (see finance invoices create form).
+	DefaultJournalID *uint    `gorm:"column:default_journal_id"`
+	DefaultJournal   *Journal `gorm:"foreignKey:DefaultJournalID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`
 }
 
 // LoadAccountingPreferences returns the singleton preferences row, creating id 1 if missing (same idea as p_otp OTPPreferences).

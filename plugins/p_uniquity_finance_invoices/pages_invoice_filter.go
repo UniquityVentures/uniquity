@@ -2,6 +2,8 @@ package p_uniquity_finance_invoices
 
 import (
 	"context"
+	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -10,6 +12,29 @@ import (
 	"github.com/UniquityVentures/lamu/lamu"
 	"github.com/UniquityVentures/lamu/registry"
 )
+
+// invoiceListFilterFormTargetGetter preserves ?tab= when applying filters on the invoice hub.
+func invoiceListFilterFormTargetGetter() getters.Getter[string] {
+	return func(ctx context.Context) (string, error) {
+		base, err := lamu.RoutePath("finance_invoices.DefaultRoute", nil)(ctx)
+		if err != nil {
+			return "", err
+		}
+		r, _ := ctx.Value("$request").(*http.Request)
+		if r == nil {
+			return base, nil
+		}
+		tab := strings.TrimSpace(r.URL.Query().Get("tab"))
+		if tab == "" {
+			return base, nil
+		}
+		sep := "?"
+		if strings.Contains(base, "?") {
+			sep = "&"
+		}
+		return base + sep + "tab=" + url.QueryEscape(tab), nil
+	}
+}
 
 // InvoiceDateFilter holds list filter GET params (not persisted).
 type InvoiceDateFilter struct {
@@ -45,7 +70,7 @@ func invoiceFilterGETTime(field string) getters.Getter[time.Time] {
 func pageEntriesInvoiceFilterPage() []registry.Pair[string, components.PageInterface] {
 	return []registry.Pair[string, components.PageInterface]{
 		{Key: "finance_invoices.InvoiceFilter", Value: &components.FormComponent[InvoiceDateFilter]{
-			Attr: getters.FormBoostedGet(lamu.RoutePath("finance_invoices.DefaultRoute", nil)),
+			Attr: getters.FormBoostedGet(invoiceListFilterFormTargetGetter()),
 			ChildrenInput: []components.PageInterface{
 				&components.InputDatetime{
 					Name:   "DatetimeFrom",
