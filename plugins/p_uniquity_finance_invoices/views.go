@@ -154,7 +154,7 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 						Key:          getters.Static("posted_invoice"),
 						PathParamKey: getters.Static("id"),
 						QueryPatchers: views.QueryPatchers[PostedInvoice]{
-							registry.Pair[string, views.QueryPatcher[PostedInvoice]]{Key: "finance_invoices.preload_posted_detail", Value: views.QueryPatcherPreload[PostedInvoice]{Fields: []string{"Customer", "PaymentTerm", "Taxes", "Lines", "Lines.Product", "JournalEntry"}}},
+							registry.Pair[string, views.QueryPatcher[PostedInvoice]]{Key: "finance_invoices.preload_posted_detail", Value: views.QueryPatcherPreload[PostedInvoice]{Fields: []string{"Customer", "PaymentTerm", "Taxes", "Lines", "Lines.Product", "Lines.Taxes", "JournalEntry"}}},
 						},
 					}),
 			},
@@ -179,7 +179,7 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 						Key:          getters.Static("cancelled_invoice"),
 						PathParamKey: getters.Static("id"),
 						QueryPatchers: views.QueryPatchers[CancelledInvoice]{
-							registry.Pair[string, views.QueryPatcher[CancelledInvoice]]{Key: "finance_invoices.preload_cancelled_detail", Value: views.QueryPatcherPreload[CancelledInvoice]{Fields: []string{"Customer", "Lines", "Lines.Product"}}},
+							registry.Pair[string, views.QueryPatcher[CancelledInvoice]]{Key: "finance_invoices.preload_cancelled_detail", Value: views.QueryPatcherPreload[CancelledInvoice]{Fields: []string{"Customer", "CreditNote", "Taxes", "Lines", "Lines.Product", "Lines.Taxes"}}},
 						},
 					}),
 			},

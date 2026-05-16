@@ -6,10 +6,12 @@ import (
 )
 
 func pluginRoutes() lamu.PluginFeatures[lamu.Route] {
+	cn := AppUrl + "cn/"
 	return lamu.PluginFeatures[lamu.Route]{
 		Entries: []registry.Pair[string, lamu.Route]{
 			{Key: "finance_credit_notes.DefaultRoute", Value: lamu.Route{Path: AppUrl, Handler: lamu.NewDynamicView("finance_credit_notes.CreditNoteListView")}},
 			{Key: "finance_credit_notes.CreditNoteCreateRoute", Value: lamu.Route{Path: AppUrl + "create/", Handler: lamu.NewDynamicView("finance_credit_notes.CreditNoteCreateView")}},
+			{Key: "finance_credit_notes.CreditNoteDetailRoute", Value: lamu.Route{Path: cn + "{id}/", Handler: lamu.NewDynamicView("finance_credit_notes.CreditNoteDetailView")}},
 			{Key: "finance_credit_notes.JournalEntryFkSelectRoute", Value: lamu.Route{Path: AppUrl + "pick-journal-entry/", Handler: lamu.NewDynamicView("finance_credit_notes.JournalEntryFkSelectView")}},
 		},
 	}

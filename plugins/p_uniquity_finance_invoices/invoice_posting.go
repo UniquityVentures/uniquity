@@ -59,6 +59,15 @@ func taxAmountOnBase(base, pctSum fields.DecimalSix) fields.DecimalSix {
 	return decMul(base, fields.DecimalSix{R: r})
 }
 
+// invoiceLineAmountBreakdown returns untaxed (qty×rate), tax on that base, and line total.
+// It matches the draft line editor and [taxAmountOnBase]/[sumTaxPercents] used when posting.
+func invoiceLineAmountBreakdown(qty, rate fields.DecimalSix, taxes []finance_taxes.Tax) (untaxed, taxAmt, lineTotal fields.DecimalSix) {
+	untaxed = decMul(qty, rate)
+	taxAmt = taxAmountOnBase(untaxed, sumTaxPercents(taxes))
+	lineTotal = decSum(untaxed, taxAmt)
+	return
+}
+
 func ratSumBalance(items []finance_accounts.JournalEntryItem) *big.Rat {
 	s := big.NewRat(0, 1)
 	for _, it := range items {

@@ -59,7 +59,7 @@ func (layerPostDraftInvoice) Next(_ views.View, next http.Handler) http.Handler 
 			http.Error(w, "Server error", http.StatusInternalServerError)
 			return
 		}
-		http.Redirect(w, r, dest, http.StatusSeeOther)
+		views.HtmxRedirect(w, r, dest, http.StatusSeeOther)
 	})
 }
 
@@ -110,7 +110,7 @@ func (layerCancelPostedInvoice) Next(_ views.View, next http.Handler) http.Handl
 			http.Error(w, "Server error", http.StatusInternalServerError)
 			return
 		}
-		http.Redirect(w, r, dest, http.StatusSeeOther)
+		views.HtmxRedirect(w, r, dest, http.StatusSeeOther)
 	})
 }
 
@@ -158,6 +158,6 @@ func (layerNewDraftFromCancelled) Next(_ views.View, next http.Handler) http.Han
 			http.Error(w, "Server error", http.StatusInternalServerError)
 			return
 		}
-		http.Redirect(w, r, dest, http.StatusSeeOther)
+		views.HtmxRedirect(w, r, dest, http.StatusSeeOther)
 	})
 }

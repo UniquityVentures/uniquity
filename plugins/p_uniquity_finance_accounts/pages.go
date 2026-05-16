@@ -431,6 +431,12 @@ func pageAccountCRUD() []registry.Pair[string, components.PageInterface] {
 									},
 								},
 								&components.LabelInline{
+									Title: "Total balance",
+									Children: []components.PageInterface{
+										&components.FieldText{Getter: getters.Key[string](accountBalanceTotalContextKey)},
+									},
+								},
+								&components.LabelInline{
 									Title: "Parent",
 									Children: []components.PageInterface{
 										&components.FieldLink{

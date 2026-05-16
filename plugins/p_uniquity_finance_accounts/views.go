@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/UniquityVentures/lamu/components"
+	"github.com/UniquityVentures/lamu/fields"
 	"github.com/UniquityVentures/lamu/getters"
 	"github.com/UniquityVentures/lamu/lamu"
 	"github.com/UniquityVentures/lamu/plugins/p_users"
@@ -32,6 +33,10 @@ func (SuperuserOnlyLayer) Next(_ views.View, next http.Handler) http.Handler {
 
 // accountChildrenContextKey holds [components.ObjectList[Account]] for direct children on the detail page.
 const accountChildrenContextKey = "accountChildren"
+
+// accountBalanceTotalContextKey holds a formatted sum of [JournalEntryItem] amounts for this account
+// and all descendant accounts (subtree), for the account detail page.
+const accountBalanceTotalContextKey = "accountBalanceTotal"
 
 type accountListPreload struct{}
 
@@ -81,6 +86,70 @@ func (accountDetailChildrenLayer) Next(_ views.View, next http.Handler) http.Han
 			Total:    n,
 		}
 		ctx = context.WithValue(ctx, accountChildrenContextKey, ol)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
+// accountDescendantIDs returns rootID and every descendant account id (BFS), unique.
+func accountDescendantIDs(db *gorm.DB, rootID uint) ([]uint, error) {
+	var out []uint
+	queue := []uint{rootID}
+	seen := map[uint]struct{}{rootID: {}}
+	for len(queue) > 0 {
+		cur := queue[0]
+		queue = queue[1:]
+		out = append(out, cur)
+		var kids []uint
+		if err := db.Model(&Account{}).Where("parent_id = ?", cur).Pluck("id", &kids).Error; err != nil {
+			return nil, err
+		}
+		for _, k := range kids {
+			if _, ok := seen[k]; ok {
+				continue
+			}
+			seen[k] = struct{}{}
+			queue = append(queue, k)
+		}
+	}
+	return out, nil
+}
+
+// accountDetailBalanceLayer sums journal line amounts for the account subtree into [accountBalanceTotalContextKey].
+type accountDetailBalanceLayer struct{}
+
+func (accountDetailBalanceLayer) Next(_ views.View, next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		acc, ok := ctx.Value("account").(Account)
+		if !ok {
+			next.ServeHTTP(w, r)
+			return
+		}
+		db, err := getters.DBFromContext(ctx)
+		if err != nil {
+			slog.Error("finance_accounts.account_detail_balance: db", "error", err)
+			ctx = context.WithValue(ctx, accountBalanceTotalContextKey, "—")
+			next.ServeHTTP(w, r.WithContext(ctx))
+			return
+		}
+		ids, err := accountDescendantIDs(db, acc.ID)
+		if err != nil {
+			slog.Error("finance_accounts.account_detail_balance: descendants", "error", err, "account_id", acc.ID)
+			ctx = context.WithValue(ctx, accountBalanceTotalContextKey, "—")
+			next.ServeHTTP(w, r.WithContext(ctx))
+			return
+		}
+		var row struct {
+			Total fields.DecimalSix `gorm:"column:total"`
+		}
+		q := db.Model(&JournalEntryItem{}).Where("account_id IN ?", ids)
+		if err := q.Select("COALESCE(SUM(amount), 0) AS total").Scan(&row).Error; err != nil {
+			slog.Error("finance_accounts.account_detail_balance: sum", "error", err, "account_id", acc.ID)
+			ctx = context.WithValue(ctx, accountBalanceTotalContextKey, "—")
+			next.ServeHTTP(w, r.WithContext(ctx))
+			return
+		}
+		ctx = context.WithValue(ctx, accountBalanceTotalContextKey, row.Total.String())
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
@@ -253,7 +322,8 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 							{Key: "finance_accounts.preload_parent", Value: accountDetailPreload{}},
 						},
 					}).
-					WithLayer("finance_accounts.account_detail_children", accountDetailChildrenLayer{}),
+					WithLayer("finance_accounts.account_detail_children", accountDetailChildrenLayer{}).
+					WithLayer("finance_accounts.account_detail_balance", accountDetailBalanceLayer{}),
 			},
 			{
 				Key: "finance_accounts.AccountCreateView",

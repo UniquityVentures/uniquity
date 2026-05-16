@@ -130,6 +130,9 @@ func pageEntriesCreditNotePages() []registry.Pair[string, components.PageInterfa
 					UID:     "finance-credit-notes-table",
 					Classes: "w-full",
 					Data:    getters.Key[components.ObjectList[CreditNote]]("credit_notes"),
+					RowAttr: getters.RowAttrNavigate(lamu.RoutePath("finance_credit_notes.CreditNoteDetailRoute", map[string]getters.Getter[any]{
+						"id": getters.Any(getters.Key[uint]("$row.ID")),
+					})),
 					Actions: []components.PageInterface{
 						&components.TableButtonCreate{
 							Link: lamu.RoutePath("finance_credit_notes.CreditNoteCreateRoute", nil),
@@ -150,6 +153,65 @@ func pageEntriesCreditNotePages() []registry.Pair[string, components.PageInterfa
 							&components.FieldText{Getter: creditNoteListReversedEntrySummary("$row")},
 						}},
 					},
+				},
+			},
+		}},
+		{Key: "finance_credit_notes.CreditNoteDetail", Value: &components.ShellScaffold{
+			Sidebar: []components.PageInterface{lamu.DynamicPage{Name: "finance_credit_notes.CreditNoteDetailMenu"}},
+			Children: []components.PageInterface{
+				&components.ContainerError{
+					Error: getters.Key[error]("$error._global"),
+					Children: []components.PageInterface{
+						&components.Detail[CreditNote]{
+							Getter: getters.Key[CreditNote]("credit_note"),
+							Children: []components.PageInterface{
+								&components.ContainerColumn{
+									Classes: "p-4",
+									Children: []components.PageInterface{
+										&components.LabelInline{Title: "Date", Children: []components.PageInterface{
+											&components.FieldText{Getter: getters.Format("%s", getters.Any(getters.Key[time.Time]("$in.Datetime")))},
+										}},
+										&components.LabelInline{Title: "Reason", Children: []components.PageInterface{
+											&components.FieldText{Getter: getters.Key[string]("$in.Reason")},
+										}},
+										&components.LabelInline{Title: "Original journal entry", Children: []components.PageInterface{
+											&components.FieldLink{
+												Href: lamu.RoutePath("finance_accounts.JournalEntryDetailRoute", map[string]getters.Getter[any]{
+													"id": getters.Any(getters.Key[uint]("$in.JournalEntryID")),
+												}),
+												Label:   getters.Format("Entry #%d", getters.Any(getters.Key[uint]("$in.JournalEntryID"))),
+												Classes: "link link-hover",
+											},
+										}},
+										&components.LabelInline{Title: "Reversal journal entry", Children: []components.PageInterface{
+											&components.FieldLink{
+												Href: lamu.RoutePath("finance_accounts.JournalEntryDetailRoute", map[string]getters.Getter[any]{
+													"id": getters.Any(getters.Key[uint]("$in.ReversedJournalEntryID")),
+												}),
+												Label:   getters.Format("Entry #%d", getters.Any(getters.Key[uint]("$in.ReversedJournalEntryID"))),
+												Classes: "link link-hover",
+											},
+										}},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		}},
+		{Key: "finance_credit_notes.CreditNoteDetailMenu", Value: &components.SidebarMenu{
+			Title: getters.Format("Credit note #%d", getters.Any(getters.Key[uint]("credit_note.ID"))),
+			Back: &components.SidebarMenuItem{
+				Title: getters.Static("Credit notes"),
+				Url:   lamu.RoutePath("finance_credit_notes.DefaultRoute", nil),
+			},
+			Children: []components.PageInterface{
+				&components.SidebarMenuItem{
+					Title: getters.Static("Detail"),
+					Url: lamu.RoutePath("finance_credit_notes.CreditNoteDetailRoute", map[string]getters.Getter[any]{
+						"id": getters.Any(getters.Key[uint]("credit_note.ID")),
+					}),
 				},
 			},
 		}},

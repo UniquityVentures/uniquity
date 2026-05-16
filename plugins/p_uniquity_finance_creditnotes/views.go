@@ -72,6 +72,19 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 					}),
 			},
 			{
+				Key: "finance_credit_notes.CreditNoteDetailView",
+				Value: lamu.GetPageView("finance_credit_notes.CreditNoteDetail").
+					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
+					WithLayer("finance_credit_notes.superuser", SuperuserOnlyLayer{}).
+					WithLayer("finance_credit_notes.credit_note_detail", views.LayerDetail[CreditNote]{
+						Key:          getters.Static("credit_note"),
+						PathParamKey: getters.Static("id"),
+						QueryPatchers: views.QueryPatchers[CreditNote]{
+							{Key: "finance_credit_notes.preload_credit_note_detail", Value: views.QueryPatcherPreload[CreditNote]{Fields: []string{"JournalEntry", "JournalEntry.Journal", "ReversedJournalEntry", "ReversedJournalEntry.Journal"}}},
+						},
+					}),
+			},
+			{
 				Key: "finance_credit_notes.JournalEntryFkSelectView",
 				Value: lamu.GetPageView("finance_credit_notes.JournalEntryFkSelectionTable").
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).

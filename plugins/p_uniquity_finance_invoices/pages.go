@@ -233,28 +233,6 @@ func invoiceDetailPaymentTermSummaryGetter() getters.Getter[string] {
 	}
 }
 
-func invoiceDetailTaxesNamesGetter() getters.Getter[string] {
-	return func(ctx context.Context) (string, error) {
-		m, ok := ctx.Value("$in").(map[string]any)
-		if !ok || m == nil {
-			return "—", nil
-		}
-		raw, ok := m["Taxes"]
-		if !ok || raw == nil {
-			return "—", nil
-		}
-		taxes, ok := raw.([]finance_taxes.Tax)
-		if !ok || len(taxes) == 0 {
-			return "—", nil
-		}
-		names := make([]string, 0, len(taxes))
-		for _, t := range taxes {
-			names = append(names, t.Name)
-		}
-		return strings.Join(names, ", "), nil
-	}
-}
-
 func invoiceLineEditorPreviewGetter() getters.Getter[string] {
 	return func(ctx context.Context) (string, error) {
 		db, err := getters.DBFromContext(ctx)
@@ -402,10 +380,15 @@ func draftInvoiceLinesDisplayGetter() getters.Getter[[]InvoiceLineDisplay] {
 			if name == "" {
 				name = fmt.Sprintf("#%d", ln.ProductID)
 			}
+			u, tax, tot := invoiceLineAmountBreakdown(ln.Quantity, ln.Rate, ln.Taxes)
 			out = append(out, InvoiceLineDisplay{
-				Product:  name,
-				Quantity: ln.Quantity.String(),
-				Rate:     ln.Rate.String(),
+				Product:       name,
+				Quantity:      ln.Quantity.String(),
+				Rate:          ln.Rate.String(),
+				LineTaxes:     invoiceLineTaxesLabel(ln.Taxes),
+				UntaxedAmount: decimalSixDisplay(u),
+				TaxedAmount:   decimalSixDisplay(tax),
+				LineTotal:     decimalSixDisplay(tot),
 			})
 		}
 		return out, nil
@@ -432,10 +415,15 @@ func postedInvoiceLinesDisplayGetter() getters.Getter[[]InvoiceLineDisplay] {
 			if name == "" {
 				name = fmt.Sprintf("#%d", ln.ProductID)
 			}
+			u, tax, tot := invoiceLineAmountBreakdown(ln.Quantity, ln.Rate, ln.Taxes)
 			out = append(out, InvoiceLineDisplay{
-				Product:  name,
-				Quantity: ln.Quantity.String(),
-				Rate:     ln.Rate.String(),
+				Product:       name,
+				Quantity:      ln.Quantity.String(),
+				Rate:          ln.Rate.String(),
+				LineTaxes:     invoiceLineTaxesLabel(ln.Taxes),
+				UntaxedAmount: decimalSixDisplay(u),
+				TaxedAmount:   decimalSixDisplay(tax),
+				LineTotal:     decimalSixDisplay(tot),
 			})
 		}
 		return out, nil
@@ -462,13 +450,84 @@ func cancelledInvoiceLinesDisplayGetter() getters.Getter[[]InvoiceLineDisplay] {
 			if name == "" {
 				name = fmt.Sprintf("#%d", ln.ProductID)
 			}
+			u, tax, tot := invoiceLineAmountBreakdown(ln.Quantity, ln.Rate, ln.Taxes)
 			out = append(out, InvoiceLineDisplay{
-				Product:  name,
-				Quantity: ln.Quantity.String(),
-				Rate:     ln.Rate.String(),
+				Product:       name,
+				Quantity:      ln.Quantity.String(),
+				Rate:          ln.Rate.String(),
+				LineTaxes:     invoiceLineTaxesLabel(ln.Taxes),
+				UntaxedAmount: decimalSixDisplay(u),
+				TaxedAmount:   decimalSixDisplay(tax),
+				LineTotal:     decimalSixDisplay(tot),
 			})
 		}
 		return out, nil
+	}
+}
+
+func draftInvoiceLinesSummaryGetter() getters.Getter[InvoiceLinesSummary] {
+	return func(ctx context.Context) (InvoiceLinesSummary, error) {
+		m, ok := ctx.Value("$in").(map[string]any)
+		if !ok || m == nil {
+			return InvoiceLinesSummary{}, nil
+		}
+		var lines []DraftInvoiceLine
+		if raw, ok := m["Lines"]; ok && raw != nil {
+			if l, ok2 := raw.([]DraftInvoiceLine); ok2 {
+				lines = l
+			}
+		}
+		var taxes []finance_taxes.Tax
+		if raw, ok := m["Taxes"]; ok && raw != nil {
+			if t, ok2 := raw.([]finance_taxes.Tax); ok2 {
+				taxes = t
+			}
+		}
+		return invoiceLinesSummaryFromDraftLines(lines, taxes), nil
+	}
+}
+
+func postedInvoiceLinesSummaryGetter() getters.Getter[InvoiceLinesSummary] {
+	return func(ctx context.Context) (InvoiceLinesSummary, error) {
+		m, ok := ctx.Value("$in").(map[string]any)
+		if !ok || m == nil {
+			return InvoiceLinesSummary{}, nil
+		}
+		var lines []PostedInvoiceLine
+		if raw, ok := m["Lines"]; ok && raw != nil {
+			if l, ok2 := raw.([]PostedInvoiceLine); ok2 {
+				lines = l
+			}
+		}
+		var taxes []finance_taxes.Tax
+		if raw, ok := m["Taxes"]; ok && raw != nil {
+			if t, ok2 := raw.([]finance_taxes.Tax); ok2 {
+				taxes = t
+			}
+		}
+		return invoiceLinesSummaryFromPostedLines(lines, taxes), nil
+	}
+}
+
+func cancelledInvoiceLinesSummaryGetter() getters.Getter[InvoiceLinesSummary] {
+	return func(ctx context.Context) (InvoiceLinesSummary, error) {
+		m, ok := ctx.Value("$in").(map[string]any)
+		if !ok || m == nil {
+			return InvoiceLinesSummary{}, nil
+		}
+		var lines []CancelledInvoiceLine
+		if raw, ok := m["Lines"]; ok && raw != nil {
+			if l, ok2 := raw.([]CancelledInvoiceLine); ok2 {
+				lines = l
+			}
+		}
+		var taxes []finance_taxes.Tax
+		if raw, ok := m["Taxes"]; ok && raw != nil {
+			if t, ok2 := raw.([]finance_taxes.Tax); ok2 {
+				taxes = t
+			}
+		}
+		return invoiceLinesSummaryFromCancelledLines(lines, taxes), nil
 	}
 }
 
@@ -783,6 +842,20 @@ func pageEntriesDraftInvoicePages() []registry.Pair[string, components.PageInter
 								&components.ContainerColumn{
 									Classes: "p-4",
 									Children: []components.PageInterface{
+										&components.ContainerRow{
+											Classes: "mb-4",
+											Children: []components.PageInterface{
+												&components.ButtonModalForm{
+													Page:        components.Page{Roles: []string{"superuser"}},
+													Label:       "Post invoice",
+													Url:         lamu.RoutePath("finance_invoices.DraftInvoicePostRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("draft_invoice.ID"))}),
+													Name:        getters.Static("finance_invoices.DraftInvoicePostModalInner"),
+													FormPostURL: lamu.RoutePath("finance_invoices.DraftInvoicePostRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("draft_invoice.ID"))}),
+													ModalUID:    "finance-draft-invoice-post-modal",
+													Classes:     "btn btn-primary",
+												},
+											},
+										},
 										&components.LabelInline{Title: "Number", Children: []components.PageInterface{
 											&components.FieldText{Getter: draftNumberOrPlaceholderDetail("$in.Number")},
 										}},
@@ -790,16 +863,27 @@ func pageEntriesDraftInvoicePages() []registry.Pair[string, components.PageInter
 											&components.FieldText{Getter: invoiceDatetimeStringGetter("$in.Datetime")},
 										}},
 										&components.LabelInline{Title: "Customer", Children: []components.PageInterface{
-											&components.FieldText{Getter: getters.Key[string]("$in.Customer.Name")},
+											&components.FieldLink{
+												Href:  invoiceCustomerDetailLinkHrefGetter(),
+												Label: getters.Key[string]("$in.Customer.Name"),
+												Classes: "link link-hover",
+											},
 										}},
 										&components.LabelInline{Title: "Payment term", Children: []components.PageInterface{
 											&components.FieldText{Getter: invoiceDetailPaymentTermSummaryGetter()},
 										}},
 										&components.LabelInline{Title: "Taxes", Children: []components.PageInterface{
-											&components.FieldText{Getter: invoiceDetailTaxesNamesGetter()},
+											&components.FieldManyToMany[finance_taxes.Tax]{
+												Getter:    getters.Key[[]finance_taxes.Tax]("$in.Taxes"),
+												Display:   getters.Key[string]("$in.Name"),
+												Link:      invoiceTaxDetailLinkHrefGetter(),
+												Classes:   "w-full max-w-xl",
+												EmptyText: "—",
+											},
 										}},
-										&components.LabelInline{Title: "Lines", Children: []components.PageInterface{
+										&components.LabelNewline{Title: "Lines", Children: []components.PageInterface{
 											&FieldInvoiceLines{Getter: draftInvoiceLinesDisplayGetter()},
+											&FieldInvoiceLinesSummary{Getter: draftInvoiceLinesSummaryGetter()},
 										}},
 									},
 								},
@@ -829,34 +913,16 @@ func pageEntriesDraftInvoicePages() []registry.Pair[string, components.PageInter
 						"id": getters.Any(getters.Key[uint]("draft_invoice.ID")),
 					}),
 				},
-				&components.SidebarMenuItem{
-					Page:  components.Page{Roles: []string{"superuser"}},
-					Title: getters.Static("Post invoice"),
-					Url: lamu.RoutePath("finance_invoices.DraftInvoicePostRoute", map[string]getters.Getter[any]{
-						"id": getters.Any(getters.Key[uint]("draft_invoice.ID")),
-					}),
-				},
 			},
 		}},
-		{Key: "finance_invoices.DraftInvoicePostForm", Value: &components.ShellScaffold{
+		{Key: "finance_invoices.DraftInvoicePostForm", Value: &components.Modal{
 			Page:    components.Page{Roles: []string{"superuser"}},
-			Sidebar: []components.PageInterface{lamu.DynamicPage{Name: "finance_invoices.DraftInvoiceDetailMenu"}},
+			UID:     "finance-draft-invoice-post-modal",
+			Classes: "max-w-lg",
 			Children: []components.PageInterface{
-				&components.FormListenBoostedPost{
-					Name: getters.Static("finance_invoices.DraftInvoicePostFormInner"),
-					ActionURL: lamu.RoutePath("finance_invoices.DraftInvoicePostRoute", map[string]getters.Getter[any]{
-						"id": getters.Any(getters.Key[uint]("draft_invoice.ID")),
-					}),
-					Children: []components.PageInterface{
-						&components.FormComponent[struct{}]{
-							Title:         "Post invoice",
-							Subtitle:      "Creates the journal entry and posted invoice. This cannot be undone except by cancellation.",
-							ChildrenInput: []components.PageInterface{},
-							ChildrenAction: []components.PageInterface{
-								&components.ButtonSubmit{Label: "Post"},
-							},
-						},
-					},
+				&PostInvoiceConfirmation{
+					Page: components.Page{Key: "finance_invoices.PostInvoiceConfirmation"},
+					Attr: getters.FormBubbling(getters.Static("finance_invoices.DraftInvoicePostModalInner")),
 				},
 			},
 		}},
@@ -976,6 +1042,46 @@ func journalEntryLinkGetter(jeIDKey string) getters.Getter[string] {
 	})
 }
 
+func invoiceCustomerDetailLinkHrefGetter() getters.Getter[string] {
+	return lamu.RoutePath("finance_customers.CustomerDetailRoute", map[string]getters.Getter[any]{
+		"id": getters.Any(getters.Key[uint]("$in.CustomerID")),
+	})
+}
+
+func invoiceTaxDetailLinkHrefGetter() getters.Getter[string] {
+	return lamu.RoutePath("finance_taxes.TaxDetailRoute", map[string]getters.Getter[any]{
+		"id": getters.Any(getters.Key[uint]("$in.ID")),
+	})
+}
+
+func cancelledInvoiceCreditNoteDetailLinkHrefGetter() getters.Getter[string] {
+	return lamu.RoutePath("finance_credit_notes.CreditNoteDetailRoute", map[string]getters.Getter[any]{
+		"id": getters.Any(getters.Key[uint]("$in.CreditNoteID")),
+	})
+}
+
+func cancelledInvoiceCreditNoteLinkLabelGetter() getters.Getter[string] {
+	return func(ctx context.Context) (string, error) {
+		id, err := getters.Key[uint]("$in.CreditNoteID")(ctx)
+		if err != nil {
+			return "", err
+		}
+		dt, dErr := getters.Key[time.Time]("$in.CreditNote.Datetime")(ctx)
+		if dErr == nil && !dt.IsZero() {
+			reason, rErr := getters.Key[string]("$in.CreditNote.Reason")(ctx)
+			if rErr == nil && strings.TrimSpace(reason) != "" {
+				r := strings.TrimSpace(reason)
+				if len(r) > 48 {
+					r = r[:45] + "…"
+				}
+				return fmt.Sprintf("#%d · %s · %s", id, dt.Format(time.DateOnly), r), nil
+			}
+			return fmt.Sprintf("#%d · %s", id, dt.Format(time.DateOnly)), nil
+		}
+		return fmt.Sprintf("Credit note #%d", id), nil
+	}
+}
+
 func optionalTimePointerGetter(ctxKey string) getters.Getter[string] {
 	return func(ctx context.Context) (string, error) {
 		t, err := getters.Key[*time.Time](ctxKey)(ctx)
@@ -1000,6 +1106,24 @@ func pageEntriesPostedInvoicePages() []registry.Pair[string, components.PageInte
 								&components.ContainerColumn{
 									Classes: "p-4",
 									Children: []components.PageInterface{
+										&components.ContainerRow{
+											Classes: "mb-4",
+											Children: []components.PageInterface{
+												&components.ButtonModalForm{
+													Page:        components.Page{Roles: []string{"superuser"}},
+													Label:       "Cancel invoice",
+													Url: lamu.RoutePath("finance_invoices.PostedInvoiceCancelRoute", map[string]getters.Getter[any]{
+														"id": getters.Any(getters.Key[uint]("posted_invoice.ID")),
+													}),
+													Name: getters.Static("finance_invoices.PostedInvoiceCancelModalInner"),
+													FormPostURL: lamu.RoutePath("finance_invoices.PostedInvoiceCancelRoute", map[string]getters.Getter[any]{
+														"id": getters.Any(getters.Key[uint]("posted_invoice.ID")),
+													}),
+													ModalUID: "finance-posted-invoice-cancel-modal",
+													Classes:  "btn btn-error",
+												},
+											},
+										},
 										&components.LabelInline{Title: "Number", Children: []components.PageInterface{
 											&components.FieldText{Getter: getters.Key[string]("$in.Number")},
 										}},
@@ -1010,7 +1134,11 @@ func pageEntriesPostedInvoicePages() []registry.Pair[string, components.PageInte
 											&components.FieldText{Getter: invoiceDatetimeStringGetter("$in.Datetime")},
 										}},
 										&components.LabelInline{Title: "Customer", Children: []components.PageInterface{
-											&components.FieldText{Getter: getters.Key[string]("$in.Customer.Name")},
+											&components.FieldLink{
+												Href:  invoiceCustomerDetailLinkHrefGetter(),
+												Label: getters.Key[string]("$in.Customer.Name"),
+												Classes: "link link-hover",
+											},
 										}},
 										&components.LabelInline{Title: "Payment term", Children: []components.PageInterface{
 											&components.FieldText{Getter: invoiceDetailPaymentTermSummaryGetterPosted()},
@@ -1022,10 +1150,17 @@ func pageEntriesPostedInvoicePages() []registry.Pair[string, components.PageInte
 											},
 										}},
 										&components.LabelInline{Title: "Taxes", Children: []components.PageInterface{
-											&components.FieldText{Getter: invoiceDetailTaxesNamesGetterPosted()},
+											&components.FieldManyToMany[finance_taxes.Tax]{
+												Getter:    getters.Key[[]finance_taxes.Tax]("$in.Taxes"),
+												Display:   getters.Key[string]("$in.Name"),
+												Link:      invoiceTaxDetailLinkHrefGetter(),
+												Classes:   "w-full max-w-xl",
+												EmptyText: "—",
+											},
 										}},
-										&components.LabelInline{Title: "Lines", Children: []components.PageInterface{
+										&components.LabelNewline{Title: "Lines", Children: []components.PageInterface{
 											&FieldInvoiceLines{Getter: postedInvoiceLinesDisplayGetter()},
+											&FieldInvoiceLinesSummary{Getter: postedInvoiceLinesSummaryGetter()},
 										}},
 									},
 								},
@@ -1048,36 +1183,16 @@ func pageEntriesPostedInvoicePages() []registry.Pair[string, components.PageInte
 						"id": getters.Any(getters.Key[uint]("posted_invoice.ID")),
 					}),
 				},
-				&components.SidebarMenuItem{
-					Page:  components.Page{Roles: []string{"superuser"}},
-					Title: getters.Static("Cancel invoice"),
-					Url: lamu.RoutePath("finance_invoices.PostedInvoiceCancelRoute", map[string]getters.Getter[any]{
-						"id": getters.Any(getters.Key[uint]("posted_invoice.ID")),
-					}),
-				},
 			},
 		}},
-		{Key: "finance_invoices.PostedInvoiceCancelForm", Value: &components.ShellScaffold{
+		{Key: "finance_invoices.PostedInvoiceCancelForm", Value: &components.Modal{
 			Page:    components.Page{Roles: []string{"superuser"}},
-			Sidebar: []components.PageInterface{lamu.DynamicPage{Name: "finance_invoices.PostedInvoiceDetailMenu"}},
+			UID:     "finance-posted-invoice-cancel-modal",
+			Classes: "max-w-lg",
 			Children: []components.PageInterface{
-				&components.FormListenBoostedPost{
-					Name: getters.Static("finance_invoices.PostedInvoiceCancelInner"),
-					ActionURL: lamu.RoutePath("finance_invoices.PostedInvoiceCancelRoute", map[string]getters.Getter[any]{
-						"id": getters.Any(getters.Key[uint]("posted_invoice.ID")),
-					}),
-					Children: []components.PageInterface{
-						&components.FormComponent[struct{}]{
-							Title:    "Cancel invoice",
-							Subtitle: "Creates a credit note reversing the journal entry.",
-							ChildrenInput: []components.PageInterface{
-								&components.InputText{Name: "Reason", Label: "Reason"},
-							},
-							ChildrenAction: []components.PageInterface{
-								&components.ButtonSubmit{Label: "Cancel invoice"},
-							},
-						},
-					},
+				&CancelInvoiceConfirmation{
+					Page: components.Page{Key: "finance_invoices.CancelInvoiceConfirmation"},
+					Attr: getters.FormBubbling(getters.Static("finance_invoices.PostedInvoiceCancelModalInner")),
 				},
 			},
 		}},
@@ -1106,28 +1221,6 @@ func invoiceDetailPaymentTermSummaryGetterPosted() getters.Getter[string] {
 	}
 }
 
-func invoiceDetailTaxesNamesGetterPosted() getters.Getter[string] {
-	return func(ctx context.Context) (string, error) {
-		m, ok := ctx.Value("$in").(map[string]any)
-		if !ok || m == nil {
-			return "—", nil
-		}
-		raw, ok := m["Taxes"]
-		if !ok || raw == nil {
-			return "—", nil
-		}
-		taxes, ok := raw.([]finance_taxes.Tax)
-		if !ok || len(taxes) == 0 {
-			return "—", nil
-		}
-		names := make([]string, 0, len(taxes))
-		for _, t := range taxes {
-			names = append(names, t.Name)
-		}
-		return strings.Join(names, ", "), nil
-	}
-}
-
 func pageEntriesCancelledInvoicePages() []registry.Pair[string, components.PageInterface] {
 	return []registry.Pair[string, components.PageInterface]{
 		{Key: "finance_invoices.CancelledInvoiceDetail", Value: &components.ShellScaffold{
@@ -1142,6 +1235,24 @@ func pageEntriesCancelledInvoicePages() []registry.Pair[string, components.PageI
 								&components.ContainerColumn{
 									Classes: "p-4",
 									Children: []components.PageInterface{
+										&components.ContainerRow{
+											Classes: "mb-4",
+											Children: []components.PageInterface{
+												&components.ButtonModalForm{
+													Page:        components.Page{Roles: []string{"superuser"}},
+													Label:       "New draft from this",
+													Url: lamu.RoutePath("finance_invoices.CancelledInvoiceNewDraftRoute", map[string]getters.Getter[any]{
+														"id": getters.Any(getters.Key[uint]("cancelled_invoice.ID")),
+													}),
+													Name:        getters.Static("finance_invoices.CancelledInvoiceNewDraftModalInner"),
+													FormPostURL: lamu.RoutePath("finance_invoices.CancelledInvoiceNewDraftRoute", map[string]getters.Getter[any]{
+														"id": getters.Any(getters.Key[uint]("cancelled_invoice.ID")),
+													}),
+													ModalUID: "finance-cancelled-invoice-new-draft-modal",
+													Classes:  "btn btn-primary",
+												},
+											},
+										},
 										&components.LabelInline{Title: "Number", Children: []components.PageInterface{
 											&components.FieldText{Getter: getters.Key[string]("$in.Number")},
 										}},
@@ -1152,13 +1263,31 @@ func pageEntriesCancelledInvoicePages() []registry.Pair[string, components.PageI
 											&components.FieldText{Getter: invoiceDatetimeStringGetter("$in.Datetime")},
 										}},
 										&components.LabelInline{Title: "Customer", Children: []components.PageInterface{
-											&components.FieldText{Getter: getters.Key[string]("$in.Customer.Name")},
+											&components.FieldLink{
+												Href:  invoiceCustomerDetailLinkHrefGetter(),
+												Label: getters.Key[string]("$in.Customer.Name"),
+												Classes: "link link-hover",
+											},
 										}},
 										&components.LabelInline{Title: "Credit note", Children: []components.PageInterface{
-											&components.FieldText{Getter: getters.Format("#%d", getters.Any(getters.Key[uint]("$in.CreditNoteID")))},
+											&components.FieldLink{
+												Href:    cancelledInvoiceCreditNoteDetailLinkHrefGetter(),
+												Label:   cancelledInvoiceCreditNoteLinkLabelGetter(),
+												Classes: "link link-hover",
+											},
 										}},
-										&components.LabelInline{Title: "Lines", Children: []components.PageInterface{
+										&components.LabelInline{Title: "Taxes", Children: []components.PageInterface{
+											&components.FieldManyToMany[finance_taxes.Tax]{
+												Getter:    getters.Key[[]finance_taxes.Tax]("$in.Taxes"),
+												Display:   getters.Key[string]("$in.Name"),
+												Link:      invoiceTaxDetailLinkHrefGetter(),
+												Classes:   "w-full max-w-xl",
+												EmptyText: "—",
+											},
+										}},
+										&components.LabelNewline{Title: "Lines", Children: []components.PageInterface{
 											&FieldInvoiceLines{Getter: cancelledInvoiceLinesDisplayGetter()},
+											&FieldInvoiceLinesSummary{Getter: cancelledInvoiceLinesSummaryGetter()},
 										}},
 									},
 								},
@@ -1181,34 +1310,16 @@ func pageEntriesCancelledInvoicePages() []registry.Pair[string, components.PageI
 						"id": getters.Any(getters.Key[uint]("cancelled_invoice.ID")),
 					}),
 				},
-				&components.SidebarMenuItem{
-					Page:  components.Page{Roles: []string{"superuser"}},
-					Title: getters.Static("New draft from this"),
-					Url: lamu.RoutePath("finance_invoices.CancelledInvoiceNewDraftRoute", map[string]getters.Getter[any]{
-						"id": getters.Any(getters.Key[uint]("cancelled_invoice.ID")),
-					}),
-				},
 			},
 		}},
-		{Key: "finance_invoices.CancelledInvoiceNewDraftForm", Value: &components.ShellScaffold{
+		{Key: "finance_invoices.CancelledInvoiceNewDraftForm", Value: &components.Modal{
 			Page:    components.Page{Roles: []string{"superuser"}},
-			Sidebar: []components.PageInterface{lamu.DynamicPage{Name: "finance_invoices.CancelledInvoiceDetailMenu"}},
+			UID:     "finance-cancelled-invoice-new-draft-modal",
+			Classes: "max-w-lg",
 			Children: []components.PageInterface{
-				&components.FormListenBoostedPost{
-					Name: getters.Static("finance_invoices.CancelledNewDraftInner"),
-					ActionURL: lamu.RoutePath("finance_invoices.CancelledInvoiceNewDraftRoute", map[string]getters.Getter[any]{
-						"id": getters.Any(getters.Key[uint]("cancelled_invoice.ID")),
-					}),
-					Children: []components.PageInterface{
-						&components.FormComponent[struct{}]{
-							Title:         "New draft",
-							Subtitle:      "Creates a new editable draft copied from this cancellation.",
-							ChildrenInput: []components.PageInterface{},
-							ChildrenAction: []components.PageInterface{
-								&components.ButtonSubmit{Label: "Create draft"},
-							},
-						},
-					},
+				&NewDraftFromCancelledConfirmation{
+					Page: components.Page{Key: "finance_invoices.NewDraftFromCancelledConfirmation"},
+					Attr: getters.FormBubbling(getters.Static("finance_invoices.CancelledInvoiceNewDraftModalInner")),
 				},
 			},
 		}},
