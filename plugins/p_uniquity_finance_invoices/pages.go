@@ -694,102 +694,125 @@ func invoiceListPaymentTermSummaryGetter() getters.Getter[string] {
 }
 
 func invoiceListHubShell() components.PageInterface {
-	draftPanel := &components.ContainerColumn{
-		Page:    components.Page{Key: "finance_invoices.InvoiceListHub.drafts"},
-		Classes: "w-full",
-		Children: []components.PageInterface{
-			&components.DataTable[DraftInvoice]{
-				UID:     "finance-draft-invoice-table",
-				Classes: "w-full",
-				Data:    getters.Key[components.ObjectList[DraftInvoice]]("draft_invoices"),
-				Actions: []components.PageInterface{
-					&components.TableButtonFilter{Child: lamu.DynamicPage{Name: "finance_invoices.InvoiceFilter"}},
-					&components.TableButtonCreate{
-						Link: lamu.RoutePath("finance_invoices.DraftInvoiceCreateRoute", nil),
-						Page: components.Page{Roles: []string{"superuser"}},
-					},
+	var draftTable *components.DataTable[DraftInvoice]
+	draftTable = &components.DataTable[DraftInvoice]{
+		UID:            "finance-draft-invoice-table",
+		Classes:        "w-full",
+		Data:           getters.Key[components.ObjectList[DraftInvoice]]("draft_invoices"),
+		EnabledColumns: components.GetterEnabledColumnsFromContext(invoiceDraftColsCtxKey),
+		Actions: []components.PageInterface{
+			&components.TableButtonFilter{Child: lamu.DynamicPage{Name: "finance_invoices.InvoiceFilter"}},
+			&components.ButtonToggleColumns{
+				Table: func(ctx context.Context) (components.TableWithColumns, error) {
+					return draftTable, nil
 				},
-				RowAttr: getters.RowAttrNavigate(lamu.RoutePath("finance_invoices.DraftInvoiceDetailRoute", map[string]getters.Getter[any]{
-					"id": getters.Any(getters.Key[uint]("$row.ID")),
-				})),
-				Columns: []components.TableColumn{
-					{Label: "Number", Name: "Number", Children: []components.PageInterface{
-						&components.FieldText{Getter: draftNumberOrPlaceholderRow("$row.Number")},
-					}},
-					{Label: "Datetime", Name: "Datetime", Children: []components.PageInterface{
-						&components.FieldText{Getter: invoiceDatetimeStringGetter("$row.Datetime")},
-					}},
-					{Label: "Customer", Name: "Customer", Children: []components.PageInterface{
-						&components.FieldText{Getter: getters.Key[string]("$row.Customer.Name")},
-					}},
-					{Label: "Payment term", Name: "PaymentTerm", Children: []components.PageInterface{
-						&components.FieldText{Getter: getters.Format("#%d — %s",
-							getters.Any(getters.Key[uint]("$row.PaymentTermID")),
-							getters.Any(invoiceListPaymentTermSummaryGetter()),
-						)},
-					}},
-				},
+				QueryKey: invoiceDraftColsParam,
 			},
+			&components.TableButtonCreate{
+				Link: lamu.RoutePath("finance_invoices.DraftInvoiceCreateRoute", nil),
+				Page: components.Page{Roles: []string{"superuser"}},
+			},
+		},
+		RowAttr: getters.RowAttrNavigate(lamu.RoutePath("finance_invoices.DraftInvoiceDetailRoute", map[string]getters.Getter[any]{
+			"id": getters.Any(getters.Key[uint]("$row.ID")),
+		})),
+		Columns: []components.TableColumn{
+			{Label: "Number", Name: "Number", Children: []components.PageInterface{
+				&components.FieldText{Getter: draftNumberOrPlaceholderRow("$row.Number")},
+			}},
+			{Label: "Datetime", Name: "Datetime", Children: []components.PageInterface{
+				&components.FieldText{Getter: invoiceDatetimeStringGetter("$row.Datetime")},
+			}},
+			{Label: "Customer", Name: "Customer", Children: []components.PageInterface{
+				&components.FieldText{Getter: getters.Key[string]("$row.Customer.Name")},
+			}},
+			{Label: "Payment term", Name: "PaymentTerm", Children: []components.PageInterface{
+				&components.FieldText{Getter: getters.Format("#%d — %s",
+					getters.Any(getters.Key[uint]("$row.PaymentTermID")),
+					getters.Any(invoiceListPaymentTermSummaryGetter()),
+				)},
+			}},
+		},
+	}
+	draftPanel := &components.ContainerColumn{
+		Page:     components.Page{Key: "finance_invoices.InvoiceListHub.drafts"},
+		Classes:  "w-full",
+		Children: []components.PageInterface{draftTable},
+	}
+
+	var postedTable *components.DataTable[PostedInvoice]
+	postedTable = &components.DataTable[PostedInvoice]{
+		UID:            "finance-posted-invoice-table",
+		Classes:        "w-full",
+		Data:           getters.Key[components.ObjectList[PostedInvoice]]("posted_invoices"),
+		EnabledColumns: components.GetterEnabledColumnsFromContext(invoicePostedColsCtxKey),
+		Actions: []components.PageInterface{
+			&components.TableButtonFilter{Child: lamu.DynamicPage{Name: "finance_invoices.InvoiceFilter"}},
+			&components.ButtonToggleColumns{
+				Table: func(ctx context.Context) (components.TableWithColumns, error) {
+					return postedTable, nil
+				},
+				QueryKey: invoicePostedColsParam,
+			},
+		},
+		RowAttr: getters.RowAttrNavigate(lamu.RoutePath("finance_invoices.PostedInvoiceDetailRoute", map[string]getters.Getter[any]{
+			"id": getters.Any(getters.Key[uint]("$row.ID")),
+		})),
+		Columns: []components.TableColumn{
+			{Label: "Number", Name: "Number", Children: []components.PageInterface{
+				&components.FieldText{Getter: getters.Key[string]("$row.Number")},
+			}},
+			{Label: "Posted at", Name: "PostedAt", Children: []components.PageInterface{
+				&components.FieldText{Getter: optionalTimePointerGetter("$row.PostedAt")},
+			}},
+			{Label: "Datetime", Name: "Datetime", Children: []components.PageInterface{
+				&components.FieldText{Getter: invoiceDatetimeStringGetter("$row.Datetime")},
+			}},
+			{Label: "Customer", Name: "Customer", Children: []components.PageInterface{
+				&components.FieldText{Getter: getters.Key[string]("$row.Customer.Name")},
+			}},
 		},
 	}
 	postedPanel := &components.ContainerColumn{
-		Page:    components.Page{Key: "finance_invoices.InvoiceListHub.posted"},
-		Classes: "w-full",
-		Children: []components.PageInterface{
-			&components.DataTable[PostedInvoice]{
-				UID:     "finance-posted-invoice-table",
-				Classes: "w-full",
-				Data:    getters.Key[components.ObjectList[PostedInvoice]]("posted_invoices"),
-				Actions: []components.PageInterface{
-					&components.TableButtonFilter{Child: lamu.DynamicPage{Name: "finance_invoices.InvoiceFilter"}},
+		Page:     components.Page{Key: "finance_invoices.InvoiceListHub.posted"},
+		Classes:  "w-full",
+		Children: []components.PageInterface{postedTable},
+	}
+
+	var cancelledTable *components.DataTable[CancelledInvoice]
+	cancelledTable = &components.DataTable[CancelledInvoice]{
+		UID:            "finance-cancelled-invoice-table",
+		Classes:        "w-full",
+		Data:           getters.Key[components.ObjectList[CancelledInvoice]]("cancelled_invoices"),
+		EnabledColumns: components.GetterEnabledColumnsFromContext(invoiceCancelledColsCtxKey),
+		Actions: []components.PageInterface{
+			&components.TableButtonFilter{Child: lamu.DynamicPage{Name: "finance_invoices.InvoiceFilter"}},
+			&components.ButtonToggleColumns{
+				Table: func(ctx context.Context) (components.TableWithColumns, error) {
+					return cancelledTable, nil
 				},
-				RowAttr: getters.RowAttrNavigate(lamu.RoutePath("finance_invoices.PostedInvoiceDetailRoute", map[string]getters.Getter[any]{
-					"id": getters.Any(getters.Key[uint]("$row.ID")),
-				})),
-				Columns: []components.TableColumn{
-					{Label: "Number", Name: "Number", Children: []components.PageInterface{
-						&components.FieldText{Getter: getters.Key[string]("$row.Number")},
-					}},
-					{Label: "Posted at", Name: "PostedAt", Children: []components.PageInterface{
-						&components.FieldText{Getter: optionalTimePointerGetter("$row.PostedAt")},
-					}},
-					{Label: "Datetime", Name: "Datetime", Children: []components.PageInterface{
-						&components.FieldText{Getter: invoiceDatetimeStringGetter("$row.Datetime")},
-					}},
-					{Label: "Customer", Name: "Customer", Children: []components.PageInterface{
-						&components.FieldText{Getter: getters.Key[string]("$row.Customer.Name")},
-					}},
-				},
+				QueryKey: invoiceCancelledColsParam,
 			},
+		},
+		RowAttr: getters.RowAttrNavigate(lamu.RoutePath("finance_invoices.CancelledInvoiceDetailRoute", map[string]getters.Getter[any]{
+			"id": getters.Any(getters.Key[uint]("$row.ID")),
+		})),
+		Columns: []components.TableColumn{
+			{Label: "Number", Name: "Number", Children: []components.PageInterface{
+				&components.FieldText{Getter: getters.Key[string]("$row.Number")},
+			}},
+			{Label: "Cancelled at", Name: "CancelledAt", Children: []components.PageInterface{
+				&components.FieldText{Getter: optionalTimePointerGetter("$row.CancelledAt")},
+			}},
+			{Label: "Customer", Name: "Customer", Children: []components.PageInterface{
+				&components.FieldText{Getter: getters.Key[string]("$row.Customer.Name")},
+			}},
 		},
 	}
 	cancelledPanel := &components.ContainerColumn{
-		Page:    components.Page{Key: "finance_invoices.InvoiceListHub.cancelled"},
-		Classes: "w-full",
-		Children: []components.PageInterface{
-			&components.DataTable[CancelledInvoice]{
-				UID:     "finance-cancelled-invoice-table",
-				Classes: "w-full",
-				Data:    getters.Key[components.ObjectList[CancelledInvoice]]("cancelled_invoices"),
-				Actions: []components.PageInterface{
-					&components.TableButtonFilter{Child: lamu.DynamicPage{Name: "finance_invoices.InvoiceFilter"}},
-				},
-				RowAttr: getters.RowAttrNavigate(lamu.RoutePath("finance_invoices.CancelledInvoiceDetailRoute", map[string]getters.Getter[any]{
-					"id": getters.Any(getters.Key[uint]("$row.ID")),
-				})),
-				Columns: []components.TableColumn{
-					{Label: "Number", Name: "Number", Children: []components.PageInterface{
-						&components.FieldText{Getter: getters.Key[string]("$row.Number")},
-					}},
-					{Label: "Cancelled at", Name: "CancelledAt", Children: []components.PageInterface{
-						&components.FieldText{Getter: optionalTimePointerGetter("$row.CancelledAt")},
-					}},
-					{Label: "Customer", Name: "Customer", Children: []components.PageInterface{
-						&components.FieldText{Getter: getters.Key[string]("$row.Customer.Name")},
-					}},
-				},
-			},
-		},
+		Page:     components.Page{Key: "finance_invoices.InvoiceListHub.cancelled"},
+		Classes:  "w-full",
+		Children: []components.PageInterface{cancelledTable},
 	}
 	return &components.ShellScaffold{
 		Page:    components.Page{Key: "finance_invoices.InvoiceListHub.shell"},
@@ -809,10 +832,10 @@ func invoiceListHubShell() components.PageInterface {
 			},
 			&components.ClientTabs{
 				Page: components.Page{Key: "finance_invoices.InvoiceListHub.tabs"},
-				Tabs: map[string]getters.Getter[components.PageInterface]{
-					"Drafts":    getters.Static[components.PageInterface](draftPanel),
-					"Posted":    getters.Static[components.PageInterface](postedPanel),
-					"Cancelled": getters.Static[components.PageInterface](cancelledPanel),
+				Tabs: []registry.Pair[string, getters.Getter[components.PageInterface]]{
+					{Key: "Drafts", Value: getters.Static[components.PageInterface](draftPanel)},
+					{Key: "Posted", Value: getters.Static[components.PageInterface](postedPanel)},
+					{Key: "Cancelled", Value: getters.Static[components.PageInterface](cancelledPanel)},
 				},
 				Default:           invoiceHubDefaultTabGetter(),
 				StateKey:          "invoiceTab",
@@ -843,7 +866,7 @@ func pageEntriesDraftInvoicePages() []registry.Pair[string, components.PageInter
 									Classes: "p-4",
 									Children: []components.PageInterface{
 										&components.ContainerRow{
-											Classes: "mb-4",
+											Classes: "mb-4 flex flex-wrap gap-2 items-center",
 											Children: []components.PageInterface{
 												&components.ButtonModalForm{
 													Page:        components.Page{Roles: []string{"superuser"}},
@@ -853,6 +876,15 @@ func pageEntriesDraftInvoicePages() []registry.Pair[string, components.PageInter
 													FormPostURL: lamu.RoutePath("finance_invoices.DraftInvoicePostRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("draft_invoice.ID"))}),
 													ModalUID:    "finance-draft-invoice-post-modal",
 													Classes:     "btn btn-primary",
+												},
+												&components.ButtonDownload{
+													Page:    components.Page{Roles: []string{"superuser"}},
+													Label:   "Download PDF",
+													Icon:    "arrow-down-tray",
+													Classes: "btn-outline btn-secondary",
+													Link: lamu.RoutePath("finance_invoices.DraftInvoicePdfRoute", map[string]getters.Getter[any]{
+														"id": getters.Any(getters.Key[uint]("draft_invoice.ID")),
+													}),
 												},
 											},
 										},
@@ -864,8 +896,8 @@ func pageEntriesDraftInvoicePages() []registry.Pair[string, components.PageInter
 										}},
 										&components.LabelInline{Title: "Customer", Children: []components.PageInterface{
 											&components.FieldLink{
-												Href:  invoiceCustomerDetailLinkHrefGetter(),
-												Label: getters.Key[string]("$in.Customer.Name"),
+												Href:    invoiceCustomerDetailLinkHrefGetter(),
+												Label:   getters.Key[string]("$in.Customer.Name"),
 												Classes: "link link-hover",
 											},
 										}},
@@ -1110,8 +1142,8 @@ func pageEntriesPostedInvoicePages() []registry.Pair[string, components.PageInte
 											Classes: "mb-4",
 											Children: []components.PageInterface{
 												&components.ButtonModalForm{
-													Page:        components.Page{Roles: []string{"superuser"}},
-													Label:       "Cancel invoice",
+													Page:  components.Page{Roles: []string{"superuser"}},
+													Label: "Cancel invoice",
 													Url: lamu.RoutePath("finance_invoices.PostedInvoiceCancelRoute", map[string]getters.Getter[any]{
 														"id": getters.Any(getters.Key[uint]("posted_invoice.ID")),
 													}),
@@ -1135,8 +1167,8 @@ func pageEntriesPostedInvoicePages() []registry.Pair[string, components.PageInte
 										}},
 										&components.LabelInline{Title: "Customer", Children: []components.PageInterface{
 											&components.FieldLink{
-												Href:  invoiceCustomerDetailLinkHrefGetter(),
-												Label: getters.Key[string]("$in.Customer.Name"),
+												Href:    invoiceCustomerDetailLinkHrefGetter(),
+												Label:   getters.Key[string]("$in.Customer.Name"),
 												Classes: "link link-hover",
 											},
 										}},
@@ -1236,20 +1268,29 @@ func pageEntriesCancelledInvoicePages() []registry.Pair[string, components.PageI
 									Classes: "p-4",
 									Children: []components.PageInterface{
 										&components.ContainerRow{
-											Classes: "mb-4",
+											Classes: "mb-4 flex flex-wrap gap-2 items-center",
 											Children: []components.PageInterface{
 												&components.ButtonModalForm{
-													Page:        components.Page{Roles: []string{"superuser"}},
-													Label:       "New draft from this",
+													Page:  components.Page{Roles: []string{"superuser"}},
+													Label: "New draft from this",
 													Url: lamu.RoutePath("finance_invoices.CancelledInvoiceNewDraftRoute", map[string]getters.Getter[any]{
 														"id": getters.Any(getters.Key[uint]("cancelled_invoice.ID")),
 													}),
-													Name:        getters.Static("finance_invoices.CancelledInvoiceNewDraftModalInner"),
+													Name: getters.Static("finance_invoices.CancelledInvoiceNewDraftModalInner"),
 													FormPostURL: lamu.RoutePath("finance_invoices.CancelledInvoiceNewDraftRoute", map[string]getters.Getter[any]{
 														"id": getters.Any(getters.Key[uint]("cancelled_invoice.ID")),
 													}),
 													ModalUID: "finance-cancelled-invoice-new-draft-modal",
 													Classes:  "btn btn-primary",
+												},
+												&components.ButtonDownload{
+													Page:    components.Page{Roles: []string{"superuser"}},
+													Label:   "Download PDF",
+													Icon:    "arrow-down-tray",
+													Classes: "btn-outline btn-secondary",
+													Link: lamu.RoutePath("finance_invoices.CancelledInvoicePdfRoute", map[string]getters.Getter[any]{
+														"id": getters.Any(getters.Key[uint]("cancelled_invoice.ID")),
+													}),
 												},
 											},
 										},
@@ -1264,8 +1305,8 @@ func pageEntriesCancelledInvoicePages() []registry.Pair[string, components.PageI
 										}},
 										&components.LabelInline{Title: "Customer", Children: []components.PageInterface{
 											&components.FieldLink{
-												Href:  invoiceCustomerDetailLinkHrefGetter(),
-												Label: getters.Key[string]("$in.Customer.Name"),
+												Href:    invoiceCustomerDetailLinkHrefGetter(),
+												Label:   getters.Key[string]("$in.Customer.Name"),
 												Classes: "link link-hover",
 											},
 										}},

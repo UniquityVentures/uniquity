@@ -3,13 +3,13 @@ module github.com/UniquityVentures/uniquity
 go 1.26.1
 
 require (
-	github.com/UniquityVentures/lamu v0.4.8
-	github.com/UniquityVentures/lamu/plugins/p_dashboard v0.4.7
-	github.com/UniquityVentures/lamu/plugins/p_filesystem v0.4.7
-	github.com/UniquityVentures/lamu/plugins/p_livereloading v0.4.7
-	github.com/UniquityVentures/lamu/plugins/p_otp v0.4.7
-	github.com/UniquityVentures/lamu/plugins/p_pwa v0.4.7
-	github.com/UniquityVentures/lamu/plugins/p_users v0.4.8
+	github.com/UniquityVentures/lamu v0.4.10
+	github.com/UniquityVentures/lamu/plugins/p_dashboard v0.4.10
+	github.com/UniquityVentures/lamu/plugins/p_filesystem v0.4.10
+	github.com/UniquityVentures/lamu/plugins/p_livereloading v0.4.10
+	github.com/UniquityVentures/lamu/plugins/p_otp v0.4.10
+	github.com/UniquityVentures/lamu/plugins/p_pwa v0.4.10
+	github.com/UniquityVentures/lamu/plugins/p_users v0.4.10
 	github.com/UniquityVentures/uniquity/plugins/p_uniquity_employees v0.0.0-20260509035636-50c64227b4a6
 	github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_accounts v0.0.0
 	github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_creditnotes v0.0.0
@@ -128,41 +128,3 @@ require (
 	gorm.io/gorm v1.31.1 // indirect
 	maragu.dev/gomponents v1.3.0 // indirect
 )
-
-replace github.com/UniquityVentures/lamu => ../../lamu
-
-replace github.com/UniquityVentures/lamu/plugins/p_dashboard => ../../lamu/plugins/p_dashboard
-
-replace github.com/UniquityVentures/lamu/plugins/p_filesystem => ../../lamu/plugins/p_filesystem
-
-replace github.com/UniquityVentures/lamu/plugins/p_livereloading => ../../lamu/plugins/p_livereloading
-
-replace github.com/UniquityVentures/lamu/plugins/p_otp => ../../lamu/plugins/p_otp
-
-replace github.com/UniquityVentures/lamu/plugins/p_pwa => ../../lamu/plugins/p_pwa
-
-replace github.com/UniquityVentures/lamu/plugins/p_users => ../../lamu/plugins/p_users
-
-replace github.com/UniquityVentures/uniquity/plugins/p_uniquity_entities => ./plugins/p_uniquity_entities
-
-replace github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_accounts => ./plugins/p_uniquity_finance_accounts
-
-replace github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_creditnotes => ./plugins/p_uniquity_finance_creditnotes
-
-replace github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_customer => ./plugins/p_uniquity_finance_customer
-
-replace github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_fiscal_year => ./plugins/p_uniquity_finance_fiscal_year
-
-replace github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_taxes => ./plugins/p_uniquity_finance_taxes
-
-replace github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_products => ./plugins/p_uniquity_finance_products
-
-replace github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_invoices => ./plugins/p_uniquity_finance_invoices
-
-replace github.com/UniquityVentures/uniquity/plugins/p_uniquity_currencies => ./plugins/p_uniquity_currencies
-
-replace github.com/UniquityVentures/uniquity/plugins/p_uniquity_invoices => ./plugins/p_uniquity_invoices
-
-replace github.com/UniquityVentures/uniquity/plugins/p_uniquity_products => ./plugins/p_uniquity_products
-
-replace github.com/UniquityVentures/uniquity/plugins/p_uniquity_tax_rates => ./plugins/p_uniquity_tax_rates

@@ -59,6 +59,18 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 							registry.Pair[string, views.QueryPatcher[CancelledInvoice]]{Key: "finance_invoices.cancelled_list_dt", Value: cancelledListDatetimeRange{}},
 							registry.Pair[string, views.QueryPatcher[CancelledInvoice]]{Key: "finance_invoices.preload_cancelled_list", Value: views.QueryPatcherPreload[CancelledInvoice]{Fields: []string{"Customer"}}},
 						},
+					}).
+					WithLayer("finance_invoices.toggle_draft_invoice_cols", views.LayerTableToggleColumns{
+						QueryParam: getters.Static(invoiceDraftColsParam),
+						ContextKey: getters.Static(invoiceDraftColsCtxKey),
+					}).
+					WithLayer("finance_invoices.toggle_posted_invoice_cols", views.LayerTableToggleColumns{
+						QueryParam: getters.Static(invoicePostedColsParam),
+						ContextKey: getters.Static(invoicePostedColsCtxKey),
+					}).
+					WithLayer("finance_invoices.toggle_cancelled_invoice_cols", views.LayerTableToggleColumns{
+						QueryParam: getters.Static(invoiceCancelledColsParam),
+						ContextKey: getters.Static(invoiceCancelledColsCtxKey),
 					}),
 			},
 			{
@@ -72,6 +84,23 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 						QueryPatchers: views.QueryPatchers[DraftInvoice]{
 							registry.Pair[string, views.QueryPatcher[DraftInvoice]]{Key: "finance_invoices.preload_draft_detail", Value: views.QueryPatcherPreload[DraftInvoice]{Fields: []string{"Customer", "PaymentTerm", "Taxes", "Lines", "Lines.Product", "Lines.Taxes"}}},
 						},
+					}),
+			},
+			{
+				Key: "finance_invoices.DraftInvoicePdfView",
+				Value: lamu.GetPageView("finance_invoices.DraftInvoiceDetail").
+					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
+					WithLayer("finance_invoices.superuser", SuperuserOnlyLayer{}).
+					WithLayer("finance_invoices.draft_invoice_pdf_detail", views.LayerDetail[DraftInvoice]{
+						Key:          getters.Static("draft_invoice"),
+						PathParamKey: getters.Static("id"),
+						QueryPatchers: views.QueryPatchers[DraftInvoice]{
+							registry.Pair[string, views.QueryPatcher[DraftInvoice]]{Key: "finance_invoices.preload_draft_detail", Value: views.QueryPatcherPreload[DraftInvoice]{Fields: []string{"Customer", "PaymentTerm", "Taxes", "Lines", "Lines.Product", "Lines.Taxes"}}},
+						},
+					}).
+					WithLayer("finance_invoices.draft_invoice_pdf", views.MethodLayer{
+						Method:  http.MethodGet,
+						Handler: draftInvoicePdfHandler,
 					}),
 			},
 			{
@@ -181,6 +210,23 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 						QueryPatchers: views.QueryPatchers[CancelledInvoice]{
 							registry.Pair[string, views.QueryPatcher[CancelledInvoice]]{Key: "finance_invoices.preload_cancelled_detail", Value: views.QueryPatcherPreload[CancelledInvoice]{Fields: []string{"Customer", "CreditNote", "Taxes", "Lines", "Lines.Product", "Lines.Taxes"}}},
 						},
+					}),
+			},
+			{
+				Key: "finance_invoices.CancelledInvoicePdfView",
+				Value: lamu.GetPageView("finance_invoices.CancelledInvoiceDetail").
+					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
+					WithLayer("finance_invoices.superuser", SuperuserOnlyLayer{}).
+					WithLayer("finance_invoices.cancelled_invoice_pdf_detail", views.LayerDetail[CancelledInvoice]{
+						Key:          getters.Static("cancelled_invoice"),
+						PathParamKey: getters.Static("id"),
+						QueryPatchers: views.QueryPatchers[CancelledInvoice]{
+							registry.Pair[string, views.QueryPatcher[CancelledInvoice]]{Key: "finance_invoices.preload_cancelled_detail", Value: views.QueryPatcherPreload[CancelledInvoice]{Fields: []string{"Customer", "CreditNote", "Taxes", "Lines", "Lines.Product", "Lines.Taxes"}}},
+						},
+					}).
+					WithLayer("finance_invoices.cancelled_invoice_pdf", views.MethodLayer{
+						Method:  http.MethodGet,
+						Handler: cancelledInvoicePdfHandler,
 					}),
 			},
 			{

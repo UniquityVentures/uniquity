@@ -23,7 +23,7 @@ func pageAccountingPreferencesPages() []registry.Pair[string, components.PageInt
 						&components.FormComponent[AccountingPreferences]{
 							Attr:          getters.FormBubbling(formName),
 							Title:         "Accounting preferences",
-							Subtitle:      "Go text/template for posted invoice numbers when a draft has no number. Variables: FISCAL_CODE, YY, YYYY, POSTED_SEQ (next posted row id). Example: INV-{{.YYYY}}-{{.POSTED_SEQ}}. Default journal prefills new draft invoices.",
+							Subtitle:      "Go text/template for posted invoice numbers when a draft has no number. Variables: FISCAL_CODE, YY, YYYY, POSTED_SEQ (next posted row id). Example: INV-{{.YYYY}}-{{.POSTED_SEQ}}. Default journal prefills new draft invoices. Draft and cancelled invoice PDFs share one Go text/template producing Typst (same root fields as each detail page’s $in); see Invoice PDF template.",
 							ChildrenInput: accountingPreferencesFormInputs(),
 							ChildrenAction: []components.PageInterface{
 								&components.ButtonSubmit{Label: "Save preferences"},
@@ -59,6 +59,18 @@ func accountingPreferencesFormInputs() []components.PageInterface {
 					Display:     getters.Key[string]("$in.Name"),
 					Placeholder: "None — user must choose each time",
 					Getter:      getters.Association[Journal, uint](accountingPrefsDefaultJournalIDUintGetter()),
+				},
+			},
+		},
+		&components.ContainerError{
+			Error: getters.Key[error]("$error.InvoicePDFTemplate"),
+			Children: []components.PageInterface{
+				&components.InputTextarea{
+					Name:    "InvoicePDFTemplate",
+					Label:   "Invoice PDF template (Typst)",
+					Getter:  getters.Key[string]("$in.InvoicePDFTemplate"),
+					Rows:    16,
+					Classes: "font-mono text-sm min-h-48",
 				},
 			},
 		},

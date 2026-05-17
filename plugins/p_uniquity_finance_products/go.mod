@@ -3,8 +3,8 @@ module github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_products
 go 1.26.1
 
 require (
-	github.com/UniquityVentures/lamu v0.4.7
-	github.com/UniquityVentures/lamu/plugins/p_users v0.4.7
+	github.com/UniquityVentures/lamu v0.4.10
+	github.com/UniquityVentures/lamu/plugins/p_users v0.4.10
 	github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_accounts v0.0.0
 	github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_taxes v0.0.0
 	gorm.io/gorm v1.31.1
@@ -69,6 +69,4 @@ require (
 	maragu.dev/gomponents v1.3.0 // indirect
 )
 
-replace github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_accounts => ../p_uniquity_finance_accounts
 
-replace github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_taxes => ../p_uniquity_finance_taxes

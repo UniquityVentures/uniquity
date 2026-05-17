@@ -14,6 +14,9 @@ type AccountingPreferences struct {
 	// InvoiceNumberFormat is a template for suggested/autofilled invoice numbers (interpretation is up to callers).
 	InvoiceNumberFormat string `gorm:"column:invoice_number_format"`
 
+	// InvoicePDFTemplate is Go text/template source whose output must be valid Typst markup; executed with getters.MapFromStruct on draft or cancelled invoice rows (same shape as each detail page’s $in). Compiled to PDF via Typst (gotypst).
+	InvoicePDFTemplate string `gorm:"column:invoice_pdf_template"`
+
 	// DefaultJournalID optionally prefills the journal on new draft invoices (see finance invoices create form).
 	DefaultJournalID *uint    `gorm:"column:default_journal_id"`
 	DefaultJournal   *Journal `gorm:"foreignKey:DefaultJournalID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`

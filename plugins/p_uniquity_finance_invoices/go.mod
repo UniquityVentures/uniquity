@@ -3,15 +3,17 @@ module github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_invoices
 go 1.26.1
 
 require (
-	github.com/UniquityVentures/lamu v0.4.7
-	github.com/UniquityVentures/lamu/plugins/p_users v0.4.7
+	github.com/UniquityVentures/lamu v0.4.10
+	github.com/UniquityVentures/lamu/plugins/p_users v0.4.10
 	github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_accounts v0.0.0
 	github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_creditnotes v0.0.0
 	github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_customer v0.0.0
 	github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_fiscal_year v0.0.0
 	github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_products v0.0.0
 	github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_taxes v0.0.0
+	github.com/francescoalemanno/gotypst v0.2.0
 	gorm.io/gorm v1.31.1
+	maragu.dev/gomponents v1.3.0
 )
 
 require (
@@ -57,7 +59,7 @@ require (
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/sethvargo/go-retry v0.3.0 // indirect
 	github.com/spf13/cobra v1.10.2 // indirect
-	github.com/spf13/pflag v1.0.9 // indirect
+	github.com/spf13/pflag v1.0.10 // indirect
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/crypto v0.51.0 // indirect
@@ -70,17 +72,12 @@ require (
 	gorm.io/driver/mysql v1.5.6 // indirect
 	gorm.io/driver/postgres v1.6.0 // indirect
 	gorm.io/driver/sqlite v1.6.0 // indirect
-	maragu.dev/gomponents v1.3.0 // indirect
 )
 
-replace github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_accounts => ../p_uniquity_finance_accounts
 
-replace github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_creditnotes => ../p_uniquity_finance_creditnotes
 
-replace github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_customer => ../p_uniquity_finance_customer
 
-replace github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_fiscal_year => ../p_uniquity_finance_fiscal_year
 
-replace github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_products => ../p_uniquity_finance_products
 
-replace github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_taxes => ../p_uniquity_finance_taxes
+
+
