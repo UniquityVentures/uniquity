@@ -37,35 +37,15 @@ func decNeg(a fields.DecimalSix) fields.DecimalSix {
 	return fields.DecimalSix{R: new(big.Rat).Neg(a.R)}.NormalizeDecimals()
 }
 
-func sumTaxPercents(taxes []finance_taxes.Tax) fields.DecimalSix {
-	acc := big.NewRat(0, 1)
-	for _, t := range taxes {
-		if t.Percentage.R != nil {
-			acc.Add(acc, t.Percentage.R)
-		}
-	}
-	return fields.DecimalSix{R: acc}.NormalizeDecimals()
+func decSub(a, b fields.DecimalSix) fields.DecimalSix {
+	return decSum(a, decNeg(b))
 }
 
-func taxAmountOnBase(base, pctSum fields.DecimalSix) fields.DecimalSix {
-	if base.R == nil || base.R.Sign() == 0 {
-		return fields.DecimalSix{R: big.NewRat(0, 1)}.NormalizeDecimals()
+func decAbs(a fields.DecimalSix) fields.DecimalSix {
+	if a.R == nil || a.R.Sign() >= 0 {
+		return a.NormalizeDecimals()
 	}
-	if pctSum.R == nil || pctSum.R.Sign() == 0 {
-		return fields.DecimalSix{R: big.NewRat(0, 1)}.NormalizeDecimals()
-	}
-	hundred := big.NewRat(100, 1)
-	r := new(big.Rat).Quo(pctSum.R, hundred)
-	return decMul(base, fields.DecimalSix{R: r})
-}
-
-// invoiceLineAmountBreakdown returns untaxed (qty×rate), tax on that base, and line total.
-// It matches the draft line editor and [taxAmountOnBase]/[sumTaxPercents] used when posting.
-func invoiceLineAmountBreakdown(qty, rate fields.DecimalSix, taxes []finance_taxes.Tax) (untaxed, taxAmt, lineTotal fields.DecimalSix) {
-	untaxed = decMul(qty, rate)
-	taxAmt = taxAmountOnBase(untaxed, sumTaxPercents(taxes))
-	lineTotal = decSum(untaxed, taxAmt)
-	return
+	return decNeg(a)
 }
 
 func ratSumBalance(items []finance_accounts.JournalEntryItem) *big.Rat {
@@ -81,14 +61,10 @@ func ratSumBalance(items []finance_accounts.JournalEntryItem) *big.Rat {
 // NewPosted creates a posted invoice, journal entry, and lines from a draft inside tx.
 //
 // Posting (single balanced journal entry; signed amounts must sum to zero):
-//   - Sales per line: line base = rate × quantity; sales tax = base × (sum of line tax percentages / 100),
-//     union of header and product taxes on the line via [mergeTaxesUnique] in draft line creation.
-//     For each line: Cr revenue (−base), Cr tax payable (−sales tax).
-//   - Cost per line: cost base = product.BaseCost × quantity; Dr COGS (+cost base), Cr inventory (−cost base).
-//     Requires product inventory and COGS accounts.
-//   - Cost tax per line: if product has input-tax account and line has taxes, tax on cost base with same
-//     percentages; Dr input tax (+), Cr inventory (−).
-//   - Closing: Dr accounts receivable (+) for total of all line bases and sales taxes.
+//   - Sales per line: Cr revenue (−base); levied taxes Cr tax payable (−); withholding Dr [Tax.AccountID] (+).
+//   - AR is the net of base + levied − withholding (line and document-level).
+//   - Cost per line: Dr COGS (+cost), Cr inventory (−); input tax uses levied percentages only on cost base.
+//   - Document-level header taxes not already on lines follow the same levied vs withholding rules.
 //   - [PostedInvoiceLine.JournalEntryItemID] points at the revenue credit line for that invoice line (first
 //     of the two sales items per line in entry build order).
 func (d *DraftInvoice) NewPosted(tx *gorm.DB, postedAt time.Time) (*PostedInvoice, error) {
@@ -114,6 +90,10 @@ func (d *DraftInvoice) NewPosted(tx *gorm.DB, postedAt time.Time) (*PostedInvoic
 	}
 	if len(lines) == 0 {
 		return nil, fmt.Errorf("draft has no lines")
+	}
+	allTaxes := append(collectTaxesFromLines(lines), full.Taxes...)
+	if err := validateWithholdingTaxAccounts(allTaxes); err != nil {
+		return nil, err
 	}
 	for i := range lines {
 		p := lines[i].Product
@@ -162,15 +142,27 @@ func (d *DraftInvoice) NewPosted(tx *gorm.DB, postedAt time.Time) (*PostedInvoic
 		amount    fields.DecimalSix
 	}
 	var specs []itemSpec
+	revItemSpecIndex := make([]int, len(lines))
 
-	for _, line := range lines {
+	for i, line := range lines {
 		lineBase := decMul(line.Rate, line.Quantity)
-		sp := sumTaxPercents(line.Taxes)
-		salesTax := taxAmountOnBase(lineBase, sp)
-		specs = append(specs,
-			itemSpec{accountID: full.AccountRevenueID, amount: decNeg(lineBase)},
-			itemSpec{accountID: full.AccountTaxPayableID, amount: decNeg(salesTax)},
-		)
+		leviedTax := taxAmountOnBase(lineBase, sumTaxPercents(taxesLevied(line.Taxes)))
+		revItemSpecIndex[i] = len(specs)
+		specs = append(specs, itemSpec{accountID: full.AccountRevenueID, amount: decNeg(lineBase)})
+		if leviedTax.R != nil && leviedTax.R.Sign() != 0 {
+			specs = append(specs, itemSpec{accountID: full.AccountTaxPayableID, amount: decNeg(leviedTax)})
+		}
+		for _, tax := range taxesWithholding(line.Taxes) {
+			whAmt := taxAmountForTax(lineBase, tax)
+			if whAmt.R == nil || whAmt.R.Sign() == 0 {
+				continue
+			}
+			acctID, err := withholdingTaxAccountID(tax)
+			if err != nil {
+				return nil, err
+			}
+			specs = append(specs, itemSpec{accountID: acctID, amount: whAmt})
+		}
 	}
 
 	for _, line := range lines {
@@ -181,8 +173,8 @@ func (d *DraftInvoice) NewPosted(tx *gorm.DB, postedAt time.Time) (*PostedInvoic
 			itemSpec{accountID: *p.CostOfSalesAcctID, amount: costBase},
 			itemSpec{accountID: *p.InventoryAccountID, amount: decNeg(costBase)},
 		)
-		if p.InputTaxAccountID != nil && *p.InputTaxAccountID != 0 && len(line.Taxes) > 0 {
-			ct := taxAmountOnBase(costBase, sumTaxPercents(line.Taxes))
+		if p.InputTaxAccountID != nil && *p.InputTaxAccountID != 0 && len(taxesLevied(line.Taxes)) > 0 {
+			ct := taxAmountOnBase(costBase, sumTaxPercents(taxesLevied(line.Taxes)))
 			if ct.R != nil && ct.R.Sign() != 0 {
 				specs = append(specs,
 					itemSpec{accountID: *p.InputTaxAccountID, amount: ct},
@@ -192,12 +184,31 @@ func (d *DraftInvoice) NewPosted(tx *gorm.DB, postedAt time.Time) (*PostedInvoic
 		}
 	}
 
-	var totalAR fields.DecimalSix
+	var lineTotals invoiceLinesTotals
+	lineTaxIDs := map[uint]struct{}{}
 	for _, line := range lines {
-		lineBase := decMul(line.Rate, line.Quantity)
-		st := taxAmountOnBase(lineBase, sumTaxPercents(line.Taxes))
-		totalAR = decSum(totalAR, decSum(lineBase, st))
+		u, lev, wh, _ := invoiceLineAmountBreakdown(line.Quantity, line.Rate, line.Taxes)
+		lineTotals.UntaxedSubtotal = decSum(lineTotals.UntaxedSubtotal, u)
+		lineTotals.LinesLevied = decSum(lineTotals.LinesLevied, lev)
+		lineTotals.LinesWithholding = decSum(lineTotals.LinesWithholding, wh)
+		mergeInvoiceLineTaxIDs(lineTaxIDs, line.Taxes)
 	}
+	for _, tax := range documentLevelHeaderTaxes(full.Taxes, lineTaxIDs) {
+		amt := taxAmountForTax(lineTotals.UntaxedSubtotal, tax)
+		if amt.R == nil || amt.R.Sign() == 0 {
+			continue
+		}
+		if effectiveTaxKind(tax) == finance_taxes.TaxKindWithholding {
+			acctID, err := withholdingTaxAccountID(tax)
+			if err != nil {
+				return nil, err
+			}
+			specs = append(specs, itemSpec{accountID: acctID, amount: amt})
+			continue
+		}
+		specs = append(specs, itemSpec{accountID: full.AccountTaxPayableID, amount: decNeg(amt)})
+	}
+	totalAR := invoiceReceivableGrandTotal(lineTotals, full.Taxes, lineTaxIDs)
 	specs = append(specs, itemSpec{accountID: full.AccountReceivableID, amount: totalAR})
 
 	for _, sp := range specs {
@@ -238,8 +249,8 @@ func (d *DraftInvoice) NewPosted(tx *gorm.DB, postedAt time.Time) (*PostedInvoic
 	}
 
 	for i, line := range lines {
-		revItemIdx := 2 * i
-		if revItemIdx >= len(journalItems) {
+		revIdx := revItemSpecIndex[i]
+		if revIdx >= len(journalItems) {
 			return nil, fmt.Errorf("internal error: revenue item index")
 		}
 		pLine := PostedInvoiceLine{
@@ -247,7 +258,7 @@ func (d *DraftInvoice) NewPosted(tx *gorm.DB, postedAt time.Time) (*PostedInvoic
 			ProductID:          line.ProductID,
 			Rate:               line.Rate,
 			Quantity:           line.Quantity,
-			JournalEntryItemID: journalItems[revItemIdx].ID,
+			JournalEntryItemID: journalItems[revIdx].ID,
 		}
 		if err := tx.Create(&pLine).Error; err != nil {
 			return nil, err

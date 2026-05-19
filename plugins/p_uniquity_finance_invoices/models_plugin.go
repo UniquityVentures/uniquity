@@ -17,6 +17,9 @@ func pluginModels() lamu.PluginFeatures[any] {
 			{Key: "p_uniquity_finance_invoices.PostedInvoiceLine", Value: PostedInvoiceLine{}},
 			{Key: "p_uniquity_finance_invoices.CancelledInvoice", Value: CancelledInvoice{}},
 			{Key: "p_uniquity_finance_invoices.CancelledInvoiceLine", Value: CancelledInvoiceLine{}},
+			{Key: "p_uniquity_finance_invoices.Payment", Value: Payment{}},
+			{Key: "p_uniquity_finance_invoices.PartiallyPaidInvoice", Value: PartiallyPaidInvoice{}},
+			{Key: "p_uniquity_finance_invoices.PaidInvoice", Value: PaidInvoice{}},
 		},
 	}
 }

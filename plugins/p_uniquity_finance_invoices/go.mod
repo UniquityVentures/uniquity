@@ -5,12 +5,6 @@ go 1.26.1
 require (
 	github.com/UniquityVentures/lamu v0.4.10
 	github.com/UniquityVentures/lamu/plugins/p_users v0.4.10
-	github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_accounts v0.0.0
-	github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_creditnotes v0.0.0
-	github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_customer v0.0.0
-	github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_fiscal_year v0.0.0
-	github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_products v0.0.0
-	github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_taxes v0.0.0
 	github.com/francescoalemanno/gotypst v0.2.0
 	gorm.io/gorm v1.31.1
 	maragu.dev/gomponents v1.3.0
@@ -73,11 +67,3 @@ require (
 	gorm.io/driver/postgres v1.6.0 // indirect
 	gorm.io/driver/sqlite v1.6.0 // indirect
 )
-
-
-
-
-
-
-
-

@@ -11,13 +11,6 @@ require (
 	github.com/UniquityVentures/lamu/plugins/p_pwa v0.4.10
 	github.com/UniquityVentures/lamu/plugins/p_users v0.4.10
 	github.com/UniquityVentures/uniquity/plugins/p_uniquity_employees v0.0.0-20260509035636-50c64227b4a6
-	github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_accounts v0.0.0
-	github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_creditnotes v0.0.0
-	github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_customer v0.0.0
-	github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_fiscal_year v0.0.0
-	github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_invoices v0.0.0
-	github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_products v0.0.0
-	github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_taxes v0.0.0
 	github.com/UniquityVentures/uniquity/plugins/p_uniquity_video v0.0.0-20260509035636-50c64227b4a6
 )
 

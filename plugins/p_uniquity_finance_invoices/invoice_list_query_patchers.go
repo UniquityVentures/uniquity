@@ -120,9 +120,34 @@ func (postedListFiscalYearEnvironment) Patch(_ views.View, r *http.Request, quer
 type postedListExcludeCancelled struct{}
 
 func (postedListExcludeCancelled) Patch(_ views.View, _ *http.Request, query gorm.ChainInterface[PostedInvoice]) gorm.ChainInterface[PostedInvoice] {
-	return query.Where(
-		"NOT EXISTS (SELECT 1 FROM cancelled_invoices c WHERE c.posted_invoice_id = posted_invoices.id AND c.deleted_at IS NULL)",
-	)
+	return query.Where(sqlPostedInvoiceNotCancelled)
+}
+
+// postedListExcludeFullyPaid hides posted rows settled via [PaidInvoice] (see Paid tab).
+type postedListExcludeFullyPaid struct{}
+
+func (postedListExcludeFullyPaid) Patch(_ views.View, _ *http.Request, query gorm.ChainInterface[PostedInvoice]) gorm.ChainInterface[PostedInvoice] {
+	return query.Where(sqlPostedInvoiceNotFullyPaid)
+}
+
+const sqlPostedInvoiceNotCancelled = `
+	NOT EXISTS (
+		SELECT 1 FROM cancelled_invoices c
+		WHERE c.posted_invoice_id = posted_invoices.id AND c.deleted_at IS NULL
+	)`
+
+const sqlPostedInvoiceNotFullyPaid = `
+	NOT EXISTS (
+		SELECT 1 FROM paid_invoices paid
+		WHERE paid.posted_invoice_id = posted_invoices.id AND paid.deleted_at IS NULL
+	)`
+
+// postedInvoicePickEligible restricts FK picker to posted invoices that can still receive payments.
+// Eligibility: not cancelled and not fully paid. Remaining balance is enforced in [Payment.BeforeCreate].
+type postedInvoicePickEligible struct{}
+
+func (postedInvoicePickEligible) Patch(_ views.View, _ *http.Request, query gorm.ChainInterface[PostedInvoice]) gorm.ChainInterface[PostedInvoice] {
+	return query.Where(sqlPostedInvoiceNotCancelled + " AND " + sqlPostedInvoiceNotFullyPaid)
 }
 
 // cancelledListDatetimeRange filters cancelled invoices by original Datetime.

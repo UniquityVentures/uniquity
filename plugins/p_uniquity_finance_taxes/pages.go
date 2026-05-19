@@ -2,12 +2,15 @@ package p_uniquity_finance_taxes
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
 	"github.com/UniquityVentures/lamu/components"
 	"github.com/UniquityVentures/lamu/fields"
 	"github.com/UniquityVentures/lamu/getters"
 	"github.com/UniquityVentures/lamu/lamu"
 	"github.com/UniquityVentures/lamu/registry"
+	finance_accounts "github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_accounts"
 )
 
 const financeAccountsMainMenuTaxesLinkKey = "finance_taxes.FinanceAccountsMainMenuLink"
@@ -62,6 +65,69 @@ func taxDecimalGetter(ctxKey string) getters.Getter[fields.DecimalSix] {
 	}
 }
 
+var taxKindChoices = getters.Static([]registry.Pair[TaxKind, string]{
+	{Key: TaxKindLevied, Value: "Levied"},
+	{Key: TaxKindWithholding, Value: "Withholding"},
+})
+
+func taxKindSelectGetter(ctxKey string) getters.Getter[registry.Pair[TaxKind, string]] {
+	return func(ctx context.Context) (registry.Pair[TaxKind, string], error) {
+		k, err := getters.Key[TaxKind](ctxKey)(ctx)
+		if err != nil {
+			return registry.Pair[TaxKind, string]{}, err
+		}
+		if k == "" {
+			return registry.Pair[TaxKind, string]{}, nil
+		}
+		label := string(k)
+		if k == TaxKindLevied {
+			label = "Levied"
+		}
+		if k == TaxKindWithholding {
+			label = "Withholding"
+		}
+		return registry.Pair[TaxKind, string]{Key: k, Value: label}, nil
+	}
+}
+
+func taxKindLabel(ctxKey string) getters.Getter[string] {
+	return func(ctx context.Context) (string, error) {
+		k, err := getters.Key[TaxKind](ctxKey)(ctx)
+		if err != nil {
+			return "", err
+		}
+		switch k {
+		case TaxKindLevied:
+			return "Levied", nil
+		case TaxKindWithholding:
+			return "Withholding", nil
+		default:
+			return string(k), nil
+		}
+	}
+}
+
+func taxAccountLabel(rowPrefix string) getters.Getter[string] {
+	return func(ctx context.Context) (string, error) {
+		aid, err := getters.Key[*uint](rowPrefix + ".AccountID")(ctx)
+		if err != nil {
+			return "", err
+		}
+		if aid == nil || *aid == 0 {
+			return "—", nil
+		}
+		name, err := getters.Key[string](rowPrefix + ".Account.Name")(ctx)
+		if err != nil || strings.TrimSpace(name) == "" {
+			return fmt.Sprintf("#%d", *aid), nil
+		}
+		code, err := getters.Key[int](rowPrefix + ".Account.Code")(ctx)
+		if err == nil && code != 0 {
+			return fmt.Sprintf("%d — %s", code, name), nil
+		}
+		return fmt.Sprintf("%s (#%d)", name, *aid), nil
+	}
+}
+
 func pageEntriesTaxMenus() []registry.Pair[string, components.PageInterface] {
 	return []registry.Pair[string, components.PageInterface]{
 		{Key: "finance_taxes.TaxDetailMenu", Value: &components.SidebarMenu{
@@ -98,12 +164,38 @@ func taxCreateFormInputs() []components.PageInterface {
 			},
 		},
 		&components.ContainerError{
+			Error: getters.Key[error]("$error.TaxType"),
+			Children: []components.PageInterface{
+				&components.InputSelect[TaxKind]{
+					Name:     "TaxType",
+					Label:    "Type",
+					Required: true,
+					Choices:  taxKindChoices,
+					Getter:   taxKindSelectGetter("$in.TaxType"),
+				},
+			},
+		},
+		&components.ContainerError{
 			Error: getters.Key[error]("$error.Percentage"),
 			Children: []components.PageInterface{
 				&components.InputPointsDecimal{
 					Label:    "Percentage",
 					Name:     "Percentage",
 					Required: true,
+				},
+			},
+		},
+		&components.ContainerError{
+			Error: getters.Key[error]("$error.AccountID"),
+			Children: []components.PageInterface{
+				&components.InputForeignKey[finance_accounts.Account]{
+					Label:       "Account",
+					Name:        "AccountID",
+					Url:         lamu.RoutePath("finance_accounts.AccountSelectRoute", nil),
+					Display:     getters.Format("%s (#%d)", getters.Any(getters.Key[string]("$in.Name")), getters.Any(getters.Key[uint]("$in.ID"))),
+					Placeholder: "Select…",
+					Required:    true,
+					Getter:      getters.Association[finance_accounts.Account, *uint](getters.Key[*uint]("$in.AccountID")),
 				},
 			},
 		},
@@ -119,6 +211,18 @@ func taxUpdateFormInputs() []components.PageInterface {
 			},
 		},
 		&components.ContainerError{
+			Error: getters.Key[error]("$error.TaxType"),
+			Children: []components.PageInterface{
+				&components.InputSelect[TaxKind]{
+					Name:     "TaxType",
+					Label:    "Type",
+					Required: true,
+					Choices:  taxKindChoices,
+					Getter:   taxKindSelectGetter("$in.TaxType"),
+				},
+			},
+		},
+		&components.ContainerError{
 			Error: getters.Key[error]("$error.Percentage"),
 			Children: []components.PageInterface{
 				&components.InputPointsDecimal{
@@ -126,6 +230,20 @@ func taxUpdateFormInputs() []components.PageInterface {
 					Name:     "Percentage",
 					Required: true,
 					Getter:   taxDecimalGetter("$in.Percentage"),
+				},
+			},
+		},
+		&components.ContainerError{
+			Error: getters.Key[error]("$error.AccountID"),
+			Children: []components.PageInterface{
+				&components.InputForeignKey[finance_accounts.Account]{
+					Label:       "Account",
+					Name:        "AccountID",
+					Url:         lamu.RoutePath("finance_accounts.AccountSelectRoute", nil),
+					Display:     getters.Format("%s (#%d)", getters.Any(getters.Key[string]("$in.Name")), getters.Any(getters.Key[uint]("$in.ID"))),
+					Placeholder: "Select…",
+					Required:    true,
+					Getter:      getters.Association[finance_accounts.Account, *uint](getters.Key[*uint]("$in.AccountID")),
 				},
 			},
 		},
@@ -158,8 +276,14 @@ func pageEntriesTaxPages() []registry.Pair[string, components.PageInterface] {
 						{Label: "Name", Name: "Name", Children: []components.PageInterface{
 							&components.FieldText{Getter: getters.Key[string]("$row.Name")},
 						}},
+						{Label: "Type", Name: "TaxType", Children: []components.PageInterface{
+							&components.FieldText{Getter: taxKindLabel("$row.TaxType")},
+						}},
 						{Label: "Percentage", Name: "Percentage", Children: []components.PageInterface{
 							&components.FieldText{Getter: taxDecimalStringGetter("$row.Percentage")},
+						}},
+						{Label: "Account", Name: "AccountID", Children: []components.PageInterface{
+							&components.FieldText{Getter: taxAccountLabel("$row")},
 						}},
 					},
 				},
@@ -176,7 +300,7 @@ func pageEntriesTaxPages() []registry.Pair[string, components.PageInterface] {
 						&components.FormComponent[Tax]{
 							Attr:          getters.FormBubbling(createName),
 							Title:         "Create tax",
-							Subtitle:      "Name and percentage rate",
+							Subtitle:      "Name, type, percentage, and GL account",
 							ChildrenInput: taxCreateFormInputs(),
 							ChildrenAction: []components.PageInterface{
 								&components.ButtonSubmit{Label: "Save"},
@@ -200,7 +324,7 @@ func pageEntriesTaxPages() []registry.Pair[string, components.PageInterface] {
 							Getter:        getters.Key[Tax]("tax"),
 							Attr:          getters.FormBubbling(updateName),
 							Title:         "Edit tax",
-							Subtitle:      "Update name and percentage",
+							Subtitle:      "Update name, type, percentage, and GL account",
 							ChildrenInput: taxUpdateFormInputs(),
 							ChildrenAction: []components.PageInterface{
 								&components.ContainerRow{
@@ -253,8 +377,14 @@ func pageEntriesTaxPages() []registry.Pair[string, components.PageInterface] {
 								&components.LabelInline{Title: "Name", Children: []components.PageInterface{
 									&components.FieldText{Getter: getters.Key[string]("$in.Name")},
 								}},
+								&components.LabelInline{Title: "Type", Children: []components.PageInterface{
+									&components.FieldText{Getter: taxKindLabel("$in.TaxType")},
+								}},
 								&components.LabelInline{Title: "Percentage", Children: []components.PageInterface{
 									&components.FieldText{Getter: taxDecimalStringGetter("$in.Percentage")},
+								}},
+								&components.LabelInline{Title: "Account", Children: []components.PageInterface{
+									&components.FieldText{Getter: taxAccountLabel("$in")},
 								}},
 							},
 						},

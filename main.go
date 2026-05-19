@@ -17,6 +17,7 @@ import (
 	"github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_creditnotes"
 	"github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_customer"
 	"github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_fiscal_year"
+	"github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_indian"
 	"github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_invoices"
 	"github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_products"
 	"github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_taxes"
@@ -34,6 +35,7 @@ func main() {
 		p_uniquity_finance_creditnotes.GetPlugin(),
 		p_uniquity_finance_fiscal_year.GetPlugin(),
 		p_uniquity_finance_taxes.GetPlugin(),
+		p_uniquity_finance_indian.GetPlugin(),
 		p_uniquity_finance_products.GetPlugin(),
 		p_uniquity_finance_invoices.GetPlugin(),
 		p_uniquity_video.GetPlugin(),

@@ -49,6 +49,7 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 							registry.Pair[string, views.QueryPatcher[PostedInvoice]]{Key: "finance_invoices.posted_list_fy", Value: postedListFiscalYearEnvironment{}},
 							registry.Pair[string, views.QueryPatcher[PostedInvoice]]{Key: "finance_invoices.posted_list_dt", Value: postedListDatetimeRange{}},
 							registry.Pair[string, views.QueryPatcher[PostedInvoice]]{Key: "finance_invoices.posted_list_exclude_cancelled", Value: postedListExcludeCancelled{}},
+							registry.Pair[string, views.QueryPatcher[PostedInvoice]]{Key: "finance_invoices.posted_list_exclude_paid", Value: postedListExcludeFullyPaid{}},
 							registry.Pair[string, views.QueryPatcher[PostedInvoice]]{Key: "finance_invoices.preload_posted_list", Value: views.QueryPatcherPreload[PostedInvoice]{Fields: []string{"Customer"}}},
 						},
 					}).
@@ -58,6 +59,18 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 							registry.Pair[string, views.QueryPatcher[CancelledInvoice]]{Key: "finance_invoices.cancelled_list_fy", Value: cancelledListFiscalYearEnvironment{}},
 							registry.Pair[string, views.QueryPatcher[CancelledInvoice]]{Key: "finance_invoices.cancelled_list_dt", Value: cancelledListDatetimeRange{}},
 							registry.Pair[string, views.QueryPatcher[CancelledInvoice]]{Key: "finance_invoices.preload_cancelled_list", Value: views.QueryPatcherPreload[CancelledInvoice]{Fields: []string{"Customer"}}},
+						},
+					}).
+					WithLayer("finance_invoices.paid_invoice_list", views.LayerList[PaidInvoice]{
+						Key: getters.Static("paid_invoices"),
+						QueryPatchers: views.QueryPatchers[PaidInvoice]{
+							registry.Pair[string, views.QueryPatcher[PaidInvoice]]{Key: "finance_invoices.preload_paid_invoice_list", Value: views.QueryPatcherPreload[PaidInvoice]{Fields: []string{"Payment", "PostedInvoice", "PostedInvoice.Customer"}}},
+						},
+					}).
+					WithLayer("finance_invoices.partially_paid_invoice_list", views.LayerList[PartiallyPaidInvoice]{
+						Key: getters.Static("partially_paid_invoices"),
+						QueryPatchers: views.QueryPatchers[PartiallyPaidInvoice]{
+							registry.Pair[string, views.QueryPatcher[PartiallyPaidInvoice]]{Key: "finance_invoices.preload_partially_paid_invoice_list", Value: views.QueryPatcherPreload[PartiallyPaidInvoice]{Fields: []string{"Payment", "PostedInvoice", "PostedInvoice.Customer"}}},
 						},
 					}).
 					WithLayer("finance_invoices.toggle_draft_invoice_cols", views.LayerTableToggleColumns{
@@ -298,6 +311,95 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 					WithLayer("finance_invoices.superuser", SuperuserOnlyLayer{}).
 					WithLayer("finance_invoices.payment_term_fk_list", views.LayerList[PaymentTerm]{
 						Key: getters.Static("payment_terms"),
+					}),
+			},
+
+			{
+				Key: "finance_invoices.PostedInvoiceFkSelectView",
+				Value: lamu.GetPageView("finance_invoices.PostedInvoiceFkSelectionTable").
+					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
+					WithLayer("finance_invoices.superuser", SuperuserOnlyLayer{}).
+					WithLayer("finance_invoices.posted_invoice_fk_list", views.LayerList[PostedInvoice]{
+						Key: getters.Static("posted_invoices"),
+						QueryPatchers: views.QueryPatchers[PostedInvoice]{
+							registry.Pair[string, views.QueryPatcher[PostedInvoice]]{Key: "finance_invoices.posted_invoice_pick_eligible", Value: postedInvoicePickEligible{}},
+							registry.Pair[string, views.QueryPatcher[PostedInvoice]]{Key: "finance_invoices.preload_posted_fk_pick", Value: views.QueryPatcherPreload[PostedInvoice]{Fields: []string{"Customer"}}},
+						},
+					}),
+			},
+			{
+				Key: "finance_invoices.PaymentListView",
+				Value: lamu.GetPageView("finance_invoices.PaymentTable").
+					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
+					WithLayer("finance_invoices.superuser", SuperuserOnlyLayer{}).
+					WithLayer("finance_invoices.payment_list", views.LayerList[Payment]{
+						Key: getters.Static("payments"),
+						QueryPatchers: views.QueryPatchers[Payment]{
+							registry.Pair[string, views.QueryPatcher[Payment]]{Key: "finance_invoices.preload_payment_list", Value: views.QueryPatcherPreload[Payment]{Fields: []string{"PostedInvoice", "Account", "Taxes"}}},
+						},
+					}),
+			},
+			{
+				Key: "finance_invoices.PaymentCreateView",
+				Value: lamu.GetPageView("finance_invoices.PaymentCreateForm").
+					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
+					WithLayer("finance_invoices.superuser", SuperuserOnlyLayer{}).
+					WithLayer("finance_invoices.payment_create_query_defaults", paymentCreateQueryDefaultsLayer{}).
+					WithLayer("finance_invoices.payment_create", views.LayerCreate[Payment]{
+						FormPatchers: views.FormPatchers{
+							registry.Pair[string, views.FormPatcher]{Key: "finance_invoices.payment_create_taxes", Value: paymentCreateFormPatcher{}},
+						},
+						SuccessURL: lamu.RoutePath("finance_invoices.PaymentDetailRoute", map[string]getters.Getter[any]{
+							"id": getters.Any(getters.Key[uint]("$id")),
+						}),
+					}),
+			},
+			{
+				Key: "finance_invoices.PaymentDetailView",
+				Value: lamu.GetPageView("finance_invoices.PaymentDetail").
+					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
+					WithLayer("finance_invoices.superuser", SuperuserOnlyLayer{}).
+					WithLayer("finance_invoices.payment_detail", views.LayerDetail[Payment]{
+						Key:          getters.Static("payment"),
+						PathParamKey: getters.Static("id"),
+						QueryPatchers: views.QueryPatchers[Payment]{
+							registry.Pair[string, views.QueryPatcher[Payment]]{Key: "finance_invoices.preload_payment_detail", Value: views.QueryPatcherPreload[Payment]{Fields: []string{"PostedInvoice", "PostedInvoice.Customer", "Account", "JournalEntry", "Taxes"}}},
+						},
+					}),
+			},
+
+			{
+				Key:   "finance_invoices.PaidInvoiceListView",
+				Value: invoiceHubRedirectView("paid"),
+			},
+			{
+				Key: "finance_invoices.PaidInvoiceDetailView",
+				Value: lamu.GetPageView("finance_invoices.PaidInvoiceDetail").
+					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
+					WithLayer("finance_invoices.superuser", SuperuserOnlyLayer{}).
+					WithLayer("finance_invoices.paid_invoice_detail", views.LayerDetail[PaidInvoice]{
+						Key:          getters.Static("paid_invoice"),
+						PathParamKey: getters.Static("id"),
+						QueryPatchers: views.QueryPatchers[PaidInvoice]{
+							registry.Pair[string, views.QueryPatcher[PaidInvoice]]{Key: "finance_invoices.preload_paid_invoice_detail", Value: views.QueryPatcherPreload[PaidInvoice]{Fields: []string{"Payment", "PostedInvoice", "PostedInvoice.Customer", "PriorPartial"}}},
+						},
+					}),
+			},
+			{
+				Key:   "finance_invoices.PartiallyPaidInvoiceListView",
+				Value: invoiceHubRedirectView("partial"),
+			},
+			{
+				Key: "finance_invoices.PartiallyPaidInvoiceDetailView",
+				Value: lamu.GetPageView("finance_invoices.PartiallyPaidInvoiceDetail").
+					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
+					WithLayer("finance_invoices.superuser", SuperuserOnlyLayer{}).
+					WithLayer("finance_invoices.partially_paid_invoice_detail", views.LayerDetail[PartiallyPaidInvoice]{
+						Key:          getters.Static("partially_paid_invoice"),
+						PathParamKey: getters.Static("id"),
+						QueryPatchers: views.QueryPatchers[PartiallyPaidInvoice]{
+							registry.Pair[string, views.QueryPatcher[PartiallyPaidInvoice]]{Key: "finance_invoices.preload_partially_paid_invoice_detail", Value: views.QueryPatcherPreload[PartiallyPaidInvoice]{Fields: []string{"Payment", "PostedInvoice", "PostedInvoice.Customer", "PriorPartial"}}},
+						},
 					}),
 			},
 		},

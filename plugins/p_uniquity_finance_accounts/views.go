@@ -379,6 +379,7 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 						Key: getters.Static("accounts"),
 						QueryPatchers: views.QueryPatchers[Account]{
 							{Key: "finance_accounts.preload_parent", Value: accountListPreload{}},
+							{Key: "finance_accounts.account_select_balance_type_scope", Value: accountSelectBalanceTypeScope{}},
 						},
 					}),
 			},

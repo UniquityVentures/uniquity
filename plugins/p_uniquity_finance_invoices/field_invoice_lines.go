@@ -16,40 +16,125 @@ import (
 
 // InvoiceHeaderTaxAmountRow is one document-level tax line in [FieldInvoiceLinesSummary].
 type InvoiceHeaderTaxAmountRow struct {
-	Label  string
-	Amount string
+	Label         string
+	Amount        string
+	IsWithholding bool
 }
 
 // InvoiceLinesSummary is the footer under the lines table (matches the draft line editor).
 type InvoiceLinesSummary struct {
-	LinesSubtotal string
-	TaxRows       []InvoiceHeaderTaxAmountRow
-	GrandTotal    string
+	LinesSubtotal   string
+	TaxRows         []InvoiceHeaderTaxAmountRow
+	WithholdingRows []InvoiceHeaderTaxAmountRow
+	GrandTotal      string
 }
 
-func finishInvoiceLinesSummary(untaxedSubtotal, linesGrossTotal fields.DecimalSix, headerTaxes []finance_taxes.Tax, lineCount int) InvoiceLinesSummary {
-	var rows []InvoiceHeaderTaxAmountRow
-	var headerSum fields.DecimalSix
-	for _, t := range headerTaxes {
-		amt := taxAmountOnBase(untaxedSubtotal, sumTaxPercents([]finance_taxes.Tax{t}))
+func mergeInvoiceLineTaxIDs(into map[uint]struct{}, taxes []finance_taxes.Tax) {
+	for _, t := range taxes {
+		if t.ID != 0 {
+			into[t.ID] = struct{}{}
+		}
+	}
+}
+
+// documentLevelHeaderTaxes returns invoice-level taxes that are not already applied on any line.
+func documentLevelHeaderTaxes(header []finance_taxes.Tax, lineTaxIDs map[uint]struct{}) []finance_taxes.Tax {
+	var out []finance_taxes.Tax
+	for _, t := range header {
+		if t.ID == 0 {
+			continue
+		}
+		if _, onLine := lineTaxIDs[t.ID]; onLine {
+			continue
+		}
+		out = append(out, t)
+	}
+	return out
+}
+
+func accumulateInvoiceLineTotals(lines []DraftInvoiceLine) (invoiceLinesTotals, map[uint]struct{}) {
+	var totals invoiceLinesTotals
+	lineTaxIDs := map[uint]struct{}{}
+	for _, ln := range lines {
+		u, lev, wh, _ := invoiceLineAmountBreakdown(ln.Quantity, ln.Rate, ln.Taxes)
+		totals.UntaxedSubtotal = decSum(totals.UntaxedSubtotal, u)
+		totals.LinesLevied = decSum(totals.LinesLevied, lev)
+		totals.LinesWithholding = decSum(totals.LinesWithholding, wh)
+		mergeInvoiceLineTaxIDs(lineTaxIDs, ln.Taxes)
+	}
+	return totals, lineTaxIDs
+}
+
+func accumulatePostedInvoiceLineTotals(lines []PostedInvoiceLine) (invoiceLinesTotals, map[uint]struct{}) {
+	var totals invoiceLinesTotals
+	lineTaxIDs := map[uint]struct{}{}
+	for _, ln := range lines {
+		u, lev, wh, _ := invoiceLineAmountBreakdown(ln.Quantity, ln.Rate, ln.Taxes)
+		totals.UntaxedSubtotal = decSum(totals.UntaxedSubtotal, u)
+		totals.LinesLevied = decSum(totals.LinesLevied, lev)
+		totals.LinesWithholding = decSum(totals.LinesWithholding, wh)
+		mergeInvoiceLineTaxIDs(lineTaxIDs, ln.Taxes)
+	}
+	return totals, lineTaxIDs
+}
+
+func accumulateCancelledInvoiceLineTotals(lines []CancelledInvoiceLine) (invoiceLinesTotals, map[uint]struct{}) {
+	var totals invoiceLinesTotals
+	lineTaxIDs := map[uint]struct{}{}
+	for _, ln := range lines {
+		u, lev, wh, _ := invoiceLineAmountBreakdown(ln.Quantity, ln.Rate, ln.Taxes)
+		totals.UntaxedSubtotal = decSum(totals.UntaxedSubtotal, u)
+		totals.LinesLevied = decSum(totals.LinesLevied, lev)
+		totals.LinesWithholding = decSum(totals.LinesWithholding, wh)
+		mergeInvoiceLineTaxIDs(lineTaxIDs, ln.Taxes)
+	}
+	return totals, lineTaxIDs
+}
+
+func headerTaxRows(untaxedSubtotal fields.DecimalSix, headerTaxes []finance_taxes.Tax, lineTaxIDs map[uint]struct{}) (levied, withholding []InvoiceHeaderTaxAmountRow) {
+	for _, t := range documentLevelHeaderTaxes(headerTaxes, lineTaxIDs) {
+		amt := taxAmountForTax(untaxedSubtotal, t)
 		label := t.Name
 		if strings.TrimSpace(label) == "" {
 			label = fmt.Sprintf("Tax #%d", t.ID)
 		}
-		rows = append(rows, InvoiceHeaderTaxAmountRow{Label: label, Amount: decimalSixDisplay(amt)})
-		headerSum = decSum(headerSum, amt)
+		row := InvoiceHeaderTaxAmountRow{Label: label}
+		if effectiveTaxKind(t) == finance_taxes.TaxKindWithholding {
+			row.Amount = decimalSixDisplayWithholding(amt)
+			row.IsWithholding = true
+			withholding = append(withholding, row)
+		} else {
+			row.Amount = decimalSixDisplay(amt)
+			levied = append(levied, row)
+		}
 	}
-	grand := decSum(linesGrossTotal, headerSum)
+	return levied, withholding
+}
+
+func finishInvoiceLinesSummary(totals invoiceLinesTotals, headerTaxes []finance_taxes.Tax, lineTaxIDs map[uint]struct{}, lineCount int) InvoiceLinesSummary {
+	taxRows, whHeaderRows := headerTaxRows(totals.UntaxedSubtotal, headerTaxes, lineTaxIDs)
+
+	var withholdingRows []InvoiceHeaderTaxAmountRow
+	if !decimalIsZero(totals.LinesWithholding) {
+		withholdingRows = append(withholdingRows, InvoiceHeaderTaxAmountRow{
+			Label:         "Withholding (lines)",
+			Amount:        decimalSixDisplayWithholding(totals.LinesWithholding),
+			IsWithholding: true,
+		})
+	}
+	withholdingRows = append(withholdingRows, whHeaderRows...)
+
+	grand := invoiceReceivableGrandTotal(totals, headerTaxes, lineTaxIDs)
 
 	linesSub := "—"
 	if lineCount > 0 {
-		linesSub = decimalSixDisplay(linesGrossTotal)
+		linesSub = decimalSixDisplay(totals.linesGrossBeforeWithholding())
 	}
 	grandStr := decimalSixDisplay(grand)
-	if lineCount == 0 && len(headerTaxes) == 0 && decimalIsZero(grand) {
+	if lineCount == 0 && len(taxRows) == 0 && len(withholdingRows) == 0 && decimalIsZero(grand) {
 		grandStr = "—"
 	}
-	return InvoiceLinesSummary{LinesSubtotal: linesSub, TaxRows: rows, GrandTotal: grandStr}
+	return InvoiceLinesSummary{LinesSubtotal: linesSub, TaxRows: taxRows, WithholdingRows: withholdingRows, GrandTotal: grandStr}
 }
 
 func decimalIsZero(d fields.DecimalSix) bool {
@@ -57,44 +142,30 @@ func decimalIsZero(d fields.DecimalSix) bool {
 }
 
 func invoiceLinesSummaryFromDraftLines(lines []DraftInvoiceLine, headerTaxes []finance_taxes.Tax) InvoiceLinesSummary {
-	var untaxedSubtotal, linesGrossTotal fields.DecimalSix
-	for _, ln := range lines {
-		u, _, tot := invoiceLineAmountBreakdown(ln.Quantity, ln.Rate, ln.Taxes)
-		untaxedSubtotal = decSum(untaxedSubtotal, u)
-		linesGrossTotal = decSum(linesGrossTotal, tot)
-	}
-	return finishInvoiceLinesSummary(untaxedSubtotal, linesGrossTotal, headerTaxes, len(lines))
+	totals, lineTaxIDs := accumulateInvoiceLineTotals(lines)
+	return finishInvoiceLinesSummary(totals, headerTaxes, lineTaxIDs, len(lines))
 }
 
 func invoiceLinesSummaryFromPostedLines(lines []PostedInvoiceLine, headerTaxes []finance_taxes.Tax) InvoiceLinesSummary {
-	var untaxedSubtotal, linesGrossTotal fields.DecimalSix
-	for _, ln := range lines {
-		u, _, tot := invoiceLineAmountBreakdown(ln.Quantity, ln.Rate, ln.Taxes)
-		untaxedSubtotal = decSum(untaxedSubtotal, u)
-		linesGrossTotal = decSum(linesGrossTotal, tot)
-	}
-	return finishInvoiceLinesSummary(untaxedSubtotal, linesGrossTotal, headerTaxes, len(lines))
+	totals, lineTaxIDs := accumulatePostedInvoiceLineTotals(lines)
+	return finishInvoiceLinesSummary(totals, headerTaxes, lineTaxIDs, len(lines))
 }
 
 func invoiceLinesSummaryFromCancelledLines(lines []CancelledInvoiceLine, headerTaxes []finance_taxes.Tax) InvoiceLinesSummary {
-	var untaxedSubtotal, linesGrossTotal fields.DecimalSix
-	for _, ln := range lines {
-		u, _, tot := invoiceLineAmountBreakdown(ln.Quantity, ln.Rate, ln.Taxes)
-		untaxedSubtotal = decSum(untaxedSubtotal, u)
-		linesGrossTotal = decSum(linesGrossTotal, tot)
-	}
-	return finishInvoiceLinesSummary(untaxedSubtotal, linesGrossTotal, headerTaxes, len(lines))
+	totals, lineTaxIDs := accumulateCancelledInvoiceLineTotals(lines)
+	return finishInvoiceLinesSummary(totals, headerTaxes, lineTaxIDs, len(lines))
 }
 
 // InvoiceLineDisplay is one read-only row for [FieldInvoiceLines].
 type InvoiceLineDisplay struct {
-	Product       string
-	Quantity      string
-	Rate          string
-	LineTaxes     string
-	UntaxedAmount string
-	TaxedAmount   string
-	LineTotal     string
+	Product            string
+	Quantity           string
+	Rate               string
+	LineTaxes          string
+	UntaxedAmount      string
+	LeviedTaxAmount    string
+	WithholdingAmount  string
+	LineTotal          string
 }
 
 func invoiceLineTaxesLabel(taxes []finance_taxes.Tax) string {
@@ -151,7 +222,7 @@ func (e FieldInvoiceLines) Build(ctx context.Context) Node {
 	var tbody []Node
 	if len(rows) == 0 {
 		tbody = append(tbody, Tr(
-			Td(ColSpan("7"), Class("text-center opacity-50 py-4"), Text("No lines")),
+			Td(ColSpan("8"), Class("text-center opacity-50 py-4"), Text("No lines")),
 		))
 	} else {
 		for _, r := range rows {
@@ -161,7 +232,8 @@ func (e FieldInvoiceLines) Build(ctx context.Context) Node {
 				Td(Class("whitespace-nowrap text-end tabular-nums"), Text(r.Rate)),
 				Td(Class("min-w-[10rem] max-w-md text-sm"), Text(r.LineTaxes)),
 				Td(Class("whitespace-nowrap text-end tabular-nums"), Text(r.UntaxedAmount)),
-				Td(Class("whitespace-nowrap text-end tabular-nums"), Text(r.TaxedAmount)),
+				Td(Class("whitespace-nowrap text-end tabular-nums"), Text(r.LeviedTaxAmount)),
+				Td(Class("whitespace-nowrap text-end tabular-nums"), Text(r.WithholdingAmount)),
 				Td(Class("whitespace-nowrap text-end tabular-nums font-medium"), Text(r.LineTotal)),
 			))
 		}
@@ -175,7 +247,8 @@ func (e FieldInvoiceLines) Build(ctx context.Context) Node {
 					Th(Class("whitespace-nowrap w-32 text-end"), Text("Rate")),
 					Th(Class("whitespace-nowrap min-w-[10rem]"), Text("Line taxes")),
 					Th(Class("whitespace-nowrap min-w-[7rem] text-end"), Text("Untaxed amount")),
-					Th(Class("whitespace-nowrap min-w-[7rem] text-end"), Text("Taxed amount")),
+					Th(Class("whitespace-nowrap min-w-[7rem] text-end"), Text("Levied tax")),
+					Th(Class("whitespace-nowrap min-w-[7rem] text-end"), Text("Withholding")),
 					Th(Class("whitespace-nowrap min-w-[7rem] text-end"), Text("Line total")),
 				)),
 				TBody(tbody...),
@@ -216,6 +289,12 @@ func (e FieldInvoiceLinesSummary) Build(ctx context.Context) Node {
 		),
 	}
 	for _, row := range s.TaxRows {
+		rowNodes = append(rowNodes, Div(Class("grid grid-cols-[1fr_auto] gap-x-4 items-center px-4 py-3"),
+			Div(Class("text-sm font-bold min-w-0 truncate"), Text(row.Label)),
+			Div(Class("text-sm tabular-nums text-end font-semibold shrink-0 min-w-[7rem]"), Text(row.Amount)),
+		))
+	}
+	for _, row := range s.WithholdingRows {
 		rowNodes = append(rowNodes, Div(Class("grid grid-cols-[1fr_auto] gap-x-4 items-center px-4 py-3"),
 			Div(Class("text-sm font-bold min-w-0 truncate"), Text(row.Label)),
 			Div(Class("text-sm tabular-nums text-end font-semibold shrink-0 min-w-[7rem]"), Text(row.Amount)),

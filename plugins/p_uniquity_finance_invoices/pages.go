@@ -18,6 +18,7 @@ import (
 	finance_customer "github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_customer"
 	finance_products "github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_products"
 	finance_taxes "github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_taxes"
+	"maragu.dev/gomponents"
 )
 
 const (
@@ -25,12 +26,16 @@ const (
 	financeAccountsMainMenuInvoicePaymentTermsLinkKey = "finance_invoices.FinanceAccountsMainMenuPaymentTermsLink"
 	financeAccountsMainMenuPostedInvoicesLinkKey      = "finance_invoices.FinanceAccountsMainMenuPostedLink"
 	financeAccountsMainMenuCancelledInvoicesLinkKey   = "finance_invoices.FinanceAccountsMainMenuCancelledLink"
+	financeAccountsMainMenuPaymentsLinkKey            = "finance_invoices.FinanceAccountsMainMenuPaymentsLink"
+	financeAccountsMainMenuPaidInvoicesLinkKey        = "finance_invoices.FinanceAccountsMainMenuPaidInvoicesLink"
+	financeAccountsMainMenuPartialPaymentsLinkKey     = "finance_invoices.FinanceAccountsMainMenuPartialPaymentsLink"
 )
 
 // invoiceLineTaxMeta is embedded in the invoice line editor preview JSON (id → name for chips).
 type invoiceLineTaxMeta struct {
-	ID   uint   `json:"id"`
-	Name string `json:"name"`
+	ID      uint   `json:"id"`
+	Name    string `json:"name"`
+	TaxKind string `json:"tax_kind"`
 }
 
 func invoiceHubURLWithTabGetter(tab string) getters.Getter[string] {
@@ -61,6 +66,10 @@ func invoiceHubDefaultTabGetter() getters.Getter[string] {
 			return "Posted", nil
 		case "cancelled":
 			return "Cancelled", nil
+		case "paid":
+			return "Paid", nil
+		case "partial":
+			return "Partially paid", nil
 		default:
 			return "Drafts", nil
 		}
@@ -87,7 +96,7 @@ func patchFinanceAccountsMainMenuForInvoices(page components.PageInterface) comp
 		financeAccountsMainMenuCancelledInvoicesLinkKey: {},
 	}
 
-	newChildren := make([]components.PageInterface, 0, len(menu.Children)+2)
+	newChildren := make([]components.PageInterface, 0, len(menu.Children)+8)
 	haveInvoices := false
 	for _, ch := range menu.Children {
 		item, ok := ch.(*components.SidebarMenuItem)
@@ -126,6 +135,30 @@ func patchFinanceAccountsMainMenuForInvoices(page components.PageInterface) comp
 			Icon:  "calendar-days",
 		})
 	}
+	if !sidebarMenuHasChildKeyFromList(newChildren, financeAccountsMainMenuPaymentsLinkKey) {
+		newChildren = append(newChildren, &components.SidebarMenuItem{
+			Page:  components.Page{Key: financeAccountsMainMenuPaymentsLinkKey, Roles: []string{"superuser"}},
+			Title: getters.Static("Payments"),
+			Url:   lamu.RoutePath("finance_invoices.PaymentListRoute", nil),
+			Icon:  "banknotes",
+		})
+	}
+	if !sidebarMenuHasChildKeyFromList(newChildren, financeAccountsMainMenuPaidInvoicesLinkKey) {
+		newChildren = append(newChildren, &components.SidebarMenuItem{
+			Page:  components.Page{Key: financeAccountsMainMenuPaidInvoicesLinkKey, Roles: []string{"superuser"}},
+			Title: getters.Static("Paid invoices"),
+			Url:   invoiceHubURLWithTabGetter("paid"),
+			Icon:  "check-circle",
+		})
+	}
+	if !sidebarMenuHasChildKeyFromList(newChildren, financeAccountsMainMenuPartialPaymentsLinkKey) {
+		newChildren = append(newChildren, &components.SidebarMenuItem{
+			Page:  components.Page{Key: financeAccountsMainMenuPartialPaymentsLinkKey, Roles: []string{"superuser"}},
+			Title: getters.Static("Partial payments"),
+			Url:   invoiceHubURLWithTabGetter("partial"),
+			Icon:  "adjustments-horizontal",
+		})
+	}
 
 	if len(newChildren) == len(menu.Children) {
 		same := true
@@ -151,6 +184,9 @@ func pluginPages() lamu.PluginFeatures[components.PageInterface] {
 	e = append(e, pageEntriesInvoiceFilterPage()...)
 	e = append(e, pageEntriesPaymentTermPages()...)
 	e = append(e, pageEntriesPaymentTermFkSelectPages()...)
+	e = append(e, pageEntriesPostedInvoiceFkSelectPages()...)
+	e = append(e, pageEntriesPaymentPages()...)
+	e = append(e, pageEntriesSettlementPages()...)
 	return lamu.PluginFeatures[components.PageInterface]{
 		Entries: e,
 		Patches: []registry.Pair[string, func(components.PageInterface) components.PageInterface]{
@@ -159,17 +195,31 @@ func pluginPages() lamu.PluginFeatures[components.PageInterface] {
 	}
 }
 
-func invoiceDatetimeStringGetter(ctxKey string) getters.Getter[string] {
-	return func(ctx context.Context) (string, error) {
-		t, err := getters.Key[time.Time](ctxKey)(ctx)
-		if err != nil {
-			return "", err
-		}
-		if t.IsZero() {
-			return "", nil
-		}
-		return t.Format(time.RFC3339), nil
+// optionalFieldDate renders [components.FieldDate] or "—" when the getter returns zero time.
+type optionalFieldDate struct {
+	components.Page
+	Getter getters.Getter[time.Time]
+}
+
+func (e optionalFieldDate) GetKey() string  { return e.Key }
+func (e optionalFieldDate) GetRoles() []string { return e.Roles }
+
+func (e optionalFieldDate) Build(ctx context.Context) gomponents.Node {
+	if e.Getter == nil {
+		return gomponents.Group{}
 	}
+	v, err := e.Getter(ctx)
+	if err != nil {
+		return components.ContainerError{Error: getters.Static(err)}.Build(ctx)
+	}
+	if v.IsZero() {
+		return (&components.FieldText{Getter: getters.Static("—")}).Build(ctx)
+	}
+	return (&components.FieldDate{Getter: e.Getter}).Build(ctx)
+}
+
+func invoiceOptionalDateGetter(ctxKey string) getters.Getter[time.Time] {
+	return getters.Deref(getters.Key[*time.Time](ctxKey))
 }
 
 func invoicePaymentTermFKDisplayGetter() getters.Getter[string] {
@@ -248,8 +298,11 @@ func invoiceLineEditorPreviewGetter() getters.Getter[string] {
 			return "", err
 		}
 		pctByID := make(map[string]string, len(taxes))
+		kindByID := make(map[string]string, len(taxes))
 		for _, t := range taxes {
-			pctByID[strconv.FormatUint(uint64(t.ID), 10)] = t.Percentage.String()
+			id := strconv.FormatUint(uint64(t.ID), 10)
+			pctByID[id] = t.Percentage.String()
+			kindByID[id] = string(effectiveTaxKind(t))
 		}
 		opts := make([]invoiceLineProductOpt, 0, len(products))
 		for _, p := range products {
@@ -266,13 +319,18 @@ func invoiceLineEditorPreviewGetter() getters.Getter[string] {
 		}
 		allTaxes := make([]invoiceLineTaxMeta, 0, len(taxes))
 		for _, t := range taxes {
-			allTaxes = append(allTaxes, invoiceLineTaxMeta{ID: t.ID, Name: t.Name})
+			allTaxes = append(allTaxes, invoiceLineTaxMeta{
+				ID:      t.ID,
+				Name:    t.Name,
+				TaxKind: string(effectiveTaxKind(t)),
+			})
 		}
 		payload := struct {
-			Products   []invoiceLineProductOpt `json:"products"`
-			TaxPctByID map[string]string       `json:"tax_pct_by_id"`
-			AllTaxes   []invoiceLineTaxMeta    `json:"all_taxes"`
-		}{Products: opts, TaxPctByID: pctByID, AllTaxes: allTaxes}
+			Products     []invoiceLineProductOpt `json:"products"`
+			TaxPctByID   map[string]string       `json:"tax_pct_by_id"`
+			TaxKindByID  map[string]string       `json:"tax_kind_by_id"`
+			AllTaxes     []invoiceLineTaxMeta    `json:"all_taxes"`
+		}{Products: opts, TaxPctByID: pctByID, TaxKindByID: kindByID, AllTaxes: allTaxes}
 		b, err := json.Marshal(payload)
 		if err != nil {
 			return "", err
@@ -380,15 +438,16 @@ func draftInvoiceLinesDisplayGetter() getters.Getter[[]InvoiceLineDisplay] {
 			if name == "" {
 				name = fmt.Sprintf("#%d", ln.ProductID)
 			}
-			u, tax, tot := invoiceLineAmountBreakdown(ln.Quantity, ln.Rate, ln.Taxes)
+			u, lev, wh, net := invoiceLineAmountBreakdown(ln.Quantity, ln.Rate, ln.Taxes)
 			out = append(out, InvoiceLineDisplay{
-				Product:       name,
-				Quantity:      ln.Quantity.String(),
-				Rate:          ln.Rate.String(),
-				LineTaxes:     invoiceLineTaxesLabel(ln.Taxes),
-				UntaxedAmount: decimalSixDisplay(u),
-				TaxedAmount:   decimalSixDisplay(tax),
-				LineTotal:     decimalSixDisplay(tot),
+				Product:           name,
+				Quantity:          ln.Quantity.String(),
+				Rate:              ln.Rate.String(),
+				LineTaxes:         invoiceLineTaxesLabel(ln.Taxes),
+				UntaxedAmount:     decimalSixDisplay(u),
+				LeviedTaxAmount:   decimalSixDisplay(lev),
+				WithholdingAmount: decimalSixDisplayWithholding(wh),
+				LineTotal:         decimalSixDisplay(net),
 			})
 		}
 		return out, nil
@@ -415,15 +474,16 @@ func postedInvoiceLinesDisplayGetter() getters.Getter[[]InvoiceLineDisplay] {
 			if name == "" {
 				name = fmt.Sprintf("#%d", ln.ProductID)
 			}
-			u, tax, tot := invoiceLineAmountBreakdown(ln.Quantity, ln.Rate, ln.Taxes)
+			u, lev, wh, net := invoiceLineAmountBreakdown(ln.Quantity, ln.Rate, ln.Taxes)
 			out = append(out, InvoiceLineDisplay{
-				Product:       name,
-				Quantity:      ln.Quantity.String(),
-				Rate:          ln.Rate.String(),
-				LineTaxes:     invoiceLineTaxesLabel(ln.Taxes),
-				UntaxedAmount: decimalSixDisplay(u),
-				TaxedAmount:   decimalSixDisplay(tax),
-				LineTotal:     decimalSixDisplay(tot),
+				Product:           name,
+				Quantity:          ln.Quantity.String(),
+				Rate:              ln.Rate.String(),
+				LineTaxes:         invoiceLineTaxesLabel(ln.Taxes),
+				UntaxedAmount:     decimalSixDisplay(u),
+				LeviedTaxAmount:   decimalSixDisplay(lev),
+				WithholdingAmount: decimalSixDisplayWithholding(wh),
+				LineTotal:         decimalSixDisplay(net),
 			})
 		}
 		return out, nil
@@ -450,15 +510,16 @@ func cancelledInvoiceLinesDisplayGetter() getters.Getter[[]InvoiceLineDisplay] {
 			if name == "" {
 				name = fmt.Sprintf("#%d", ln.ProductID)
 			}
-			u, tax, tot := invoiceLineAmountBreakdown(ln.Quantity, ln.Rate, ln.Taxes)
+			u, lev, wh, net := invoiceLineAmountBreakdown(ln.Quantity, ln.Rate, ln.Taxes)
 			out = append(out, InvoiceLineDisplay{
-				Product:       name,
-				Quantity:      ln.Quantity.String(),
-				Rate:          ln.Rate.String(),
-				LineTaxes:     invoiceLineTaxesLabel(ln.Taxes),
-				UntaxedAmount: decimalSixDisplay(u),
-				TaxedAmount:   decimalSixDisplay(tax),
-				LineTotal:     decimalSixDisplay(tot),
+				Product:           name,
+				Quantity:          ln.Quantity.String(),
+				Rate:              ln.Rate.String(),
+				LineTaxes:         invoiceLineTaxesLabel(ln.Taxes),
+				UntaxedAmount:     decimalSixDisplay(u),
+				LeviedTaxAmount:   decimalSixDisplay(lev),
+				WithholdingAmount: decimalSixDisplayWithholding(wh),
+				LineTotal:         decimalSixDisplay(net),
 			})
 		}
 		return out, nil
@@ -585,9 +646,9 @@ func draftInvoiceCreateEditInputs() []components.PageInterface {
 					Label:       "Accounts receivable",
 					Name:        "AccountReceivableID",
 					Required:    true,
-					Url:         lamu.RoutePath("finance_accounts.AccountSelectRoute", nil),
+					Url:         finance_accounts.AccountSelectRouteURL(finance_accounts.BalanceTypeDebit),
 					Display:     getters.Format("%s (#%d)", getters.Any(getters.Key[string]("$in.Name")), getters.Any(getters.Key[uint]("$in.ID"))),
-					Placeholder: "Select…",
+					Placeholder: "Select debit account…",
 					Getter:      getters.Association[finance_accounts.Account, uint](getters.Key[uint]("$in.AccountReceivableID")),
 				},
 			},
@@ -599,9 +660,9 @@ func draftInvoiceCreateEditInputs() []components.PageInterface {
 					Label:       "Revenue account",
 					Name:        "AccountRevenueID",
 					Required:    true,
-					Url:         lamu.RoutePath("finance_accounts.AccountSelectRoute", nil),
+					Url:         finance_accounts.AccountSelectRouteURL(finance_accounts.BalanceTypeCredit),
 					Display:     getters.Format("%s (#%d)", getters.Any(getters.Key[string]("$in.Name")), getters.Any(getters.Key[uint]("$in.ID"))),
-					Placeholder: "Select…",
+					Placeholder: "Select credit account…",
 					Getter:      getters.Association[finance_accounts.Account, uint](getters.Key[uint]("$in.AccountRevenueID")),
 				},
 			},
@@ -613,9 +674,9 @@ func draftInvoiceCreateEditInputs() []components.PageInterface {
 					Label:       "Tax payable",
 					Name:        "AccountTaxPayableID",
 					Required:    true,
-					Url:         lamu.RoutePath("finance_accounts.AccountSelectRoute", nil),
+					Url:         finance_accounts.AccountSelectRouteURL(finance_accounts.BalanceTypeCredit),
 					Display:     getters.Format("%s (#%d)", getters.Any(getters.Key[string]("$in.Name")), getters.Any(getters.Key[uint]("$in.ID"))),
-					Placeholder: "Select…",
+					Placeholder: "Select credit account…",
 					Getter:      getters.Association[finance_accounts.Account, uint](getters.Key[uint]("$in.AccountTaxPayableID")),
 				},
 			},
@@ -720,8 +781,8 @@ func invoiceListHubShell() components.PageInterface {
 			{Label: "Number", Name: "Number", Children: []components.PageInterface{
 				&components.FieldText{Getter: draftNumberOrPlaceholderRow("$row.Number")},
 			}},
-			{Label: "Datetime", Name: "Datetime", Children: []components.PageInterface{
-				&components.FieldText{Getter: invoiceDatetimeStringGetter("$row.Datetime")},
+			{Label: "Invoice date", Name: "Datetime", Children: []components.PageInterface{
+				&components.FieldDate{Getter: getters.Key[time.Time]("$row.Datetime")},
 			}},
 			{Label: "Customer", Name: "Customer", Children: []components.PageInterface{
 				&components.FieldText{Getter: getters.Key[string]("$row.Customer.Name")},
@@ -762,11 +823,11 @@ func invoiceListHubShell() components.PageInterface {
 			{Label: "Number", Name: "Number", Children: []components.PageInterface{
 				&components.FieldText{Getter: getters.Key[string]("$row.Number")},
 			}},
-			{Label: "Posted at", Name: "PostedAt", Children: []components.PageInterface{
-				&components.FieldText{Getter: optionalTimePointerGetter("$row.PostedAt")},
+			{Label: "Posted date", Name: "PostedAt", Children: []components.PageInterface{
+				&optionalFieldDate{Getter: invoiceOptionalDateGetter("$row.PostedAt")},
 			}},
-			{Label: "Datetime", Name: "Datetime", Children: []components.PageInterface{
-				&components.FieldText{Getter: invoiceDatetimeStringGetter("$row.Datetime")},
+			{Label: "Invoice date", Name: "Datetime", Children: []components.PageInterface{
+				&components.FieldDate{Getter: getters.Key[time.Time]("$row.Datetime")},
 			}},
 			{Label: "Customer", Name: "Customer", Children: []components.PageInterface{
 				&components.FieldText{Getter: getters.Key[string]("$row.Customer.Name")},
@@ -801,8 +862,8 @@ func invoiceListHubShell() components.PageInterface {
 			{Label: "Number", Name: "Number", Children: []components.PageInterface{
 				&components.FieldText{Getter: getters.Key[string]("$row.Number")},
 			}},
-			{Label: "Cancelled at", Name: "CancelledAt", Children: []components.PageInterface{
-				&components.FieldText{Getter: optionalTimePointerGetter("$row.CancelledAt")},
+			{Label: "Cancelled date", Name: "CancelledAt", Children: []components.PageInterface{
+				&optionalFieldDate{Getter: invoiceOptionalDateGetter("$row.CancelledAt")},
 			}},
 			{Label: "Customer", Name: "Customer", Children: []components.PageInterface{
 				&components.FieldText{Getter: getters.Key[string]("$row.Customer.Name")},
@@ -814,6 +875,18 @@ func invoiceListHubShell() components.PageInterface {
 		Classes:  "w-full",
 		Children: []components.PageInterface{cancelledTable},
 	}
+
+	paidPanel := &components.ContainerColumn{
+		Page:     components.Page{Key: "finance_invoices.InvoiceListHub.paid"},
+		Classes:  "w-full",
+		Children: []components.PageInterface{paidInvoiceHubTable()},
+	}
+	partialPanel := &components.ContainerColumn{
+		Page:     components.Page{Key: "finance_invoices.InvoiceListHub.partial"},
+		Classes:  "w-full",
+		Children: []components.PageInterface{partiallyPaidInvoiceHubTable()},
+	}
+
 	return &components.ShellScaffold{
 		Page:    components.Page{Key: "finance_invoices.InvoiceListHub.shell"},
 		Sidebar: []components.PageInterface{lamu.DynamicPage{Name: "finance_accounts.MainMenu"}},
@@ -836,11 +909,13 @@ func invoiceListHubShell() components.PageInterface {
 					{Key: "Drafts", Value: getters.Static[components.PageInterface](draftPanel)},
 					{Key: "Posted", Value: getters.Static[components.PageInterface](postedPanel)},
 					{Key: "Cancelled", Value: getters.Static[components.PageInterface](cancelledPanel)},
+					{Key: "Paid", Value: getters.Static[components.PageInterface](paidPanel)},
+					{Key: "Partially paid", Value: getters.Static[components.PageInterface](partialPanel)},
 				},
 				Default:           invoiceHubDefaultTabGetter(),
 				StateKey:          "invoiceTab",
 				Layout:            components.ClientTabsLayoutHorizontal,
-				DiscoveryChildren: []components.PageInterface{draftPanel, postedPanel, cancelledPanel},
+				DiscoveryChildren: []components.PageInterface{draftPanel, postedPanel, cancelledPanel, paidPanel, partialPanel},
 			},
 		},
 	}
@@ -892,7 +967,7 @@ func pageEntriesDraftInvoicePages() []registry.Pair[string, components.PageInter
 											&components.FieldText{Getter: draftNumberOrPlaceholderDetail("$in.Number")},
 										}},
 										&components.LabelInline{Title: "Invoice date", Children: []components.PageInterface{
-											&components.FieldText{Getter: invoiceDatetimeStringGetter("$in.Datetime")},
+											&components.FieldDate{Getter: getters.Key[time.Time]("$in.Datetime")},
 										}},
 										&components.LabelInline{Title: "Customer", Children: []components.PageInterface{
 											&components.FieldLink{
@@ -1114,16 +1189,6 @@ func cancelledInvoiceCreditNoteLinkLabelGetter() getters.Getter[string] {
 	}
 }
 
-func optionalTimePointerGetter(ctxKey string) getters.Getter[string] {
-	return func(ctx context.Context) (string, error) {
-		t, err := getters.Key[*time.Time](ctxKey)(ctx)
-		if err != nil || t == nil || t.IsZero() {
-			return "—", nil
-		}
-		return t.Format(time.RFC3339), nil
-	}
-}
-
 func pageEntriesPostedInvoicePages() []registry.Pair[string, components.PageInterface] {
 	return []registry.Pair[string, components.PageInterface]{
 		{Key: "finance_invoices.PostedInvoiceDetail", Value: &components.ShellScaffold{
@@ -1159,11 +1224,11 @@ func pageEntriesPostedInvoicePages() []registry.Pair[string, components.PageInte
 										&components.LabelInline{Title: "Number", Children: []components.PageInterface{
 											&components.FieldText{Getter: getters.Key[string]("$in.Number")},
 										}},
-										&components.LabelInline{Title: "Posted at", Children: []components.PageInterface{
-											&components.FieldText{Getter: optionalTimePointerGetter("$in.PostedAt")},
+										&components.LabelInline{Title: "Posted date", Children: []components.PageInterface{
+											&optionalFieldDate{Getter: invoiceOptionalDateGetter("$in.PostedAt")},
 										}},
 										&components.LabelInline{Title: "Invoice date", Children: []components.PageInterface{
-											&components.FieldText{Getter: invoiceDatetimeStringGetter("$in.Datetime")},
+											&components.FieldDate{Getter: getters.Key[time.Time]("$in.Datetime")},
 										}},
 										&components.LabelInline{Title: "Customer", Children: []components.PageInterface{
 											&components.FieldLink{
@@ -1297,11 +1362,11 @@ func pageEntriesCancelledInvoicePages() []registry.Pair[string, components.PageI
 										&components.LabelInline{Title: "Number", Children: []components.PageInterface{
 											&components.FieldText{Getter: getters.Key[string]("$in.Number")},
 										}},
-										&components.LabelInline{Title: "Cancelled at", Children: []components.PageInterface{
-											&components.FieldText{Getter: optionalTimePointerGetter("$in.CancelledAt")},
+										&components.LabelInline{Title: "Cancelled date", Children: []components.PageInterface{
+											&optionalFieldDate{Getter: invoiceOptionalDateGetter("$in.CancelledAt")},
 										}},
 										&components.LabelInline{Title: "Invoice date", Children: []components.PageInterface{
-											&components.FieldText{Getter: invoiceDatetimeStringGetter("$in.Datetime")},
+											&components.FieldDate{Getter: getters.Key[time.Time]("$in.Datetime")},
 										}},
 										&components.LabelInline{Title: "Customer", Children: []components.PageInterface{
 											&components.FieldLink{

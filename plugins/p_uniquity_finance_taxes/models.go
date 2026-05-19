@@ -1,8 +1,11 @@
 package p_uniquity_finance_taxes
 
 import (
+	"fmt"
+
 	"github.com/UniquityVentures/lamu/fields"
 	"github.com/UniquityVentures/lamu/lamu"
+	finance_accounts "github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_accounts"
 	"gorm.io/gorm"
 )
 
@@ -12,21 +15,35 @@ type Tax struct {
 
 	Name       string            `gorm:"not null"`
 	Percentage fields.DecimalSix `gorm:"type:numeric(19,6);not null"`
+	TaxType    TaxKind           `gorm:"column:tax_type;type:\"TaxKind\";not null"`
+
+	AccountID *uint                     `gorm:"column:account_id"`
+	Account   *finance_accounts.Account `gorm:"foreignKey:AccountID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT"`
 }
 
 func (t *Tax) BeforeCreate(_ *gorm.DB) error {
 	t.Percentage = t.Percentage.NormalizeDecimals()
+	if t.TaxType != TaxKindLevied && t.TaxType != TaxKindWithholding {
+		return fmt.Errorf("tax type is required")
+	}
+	if t.TaxType == TaxKindWithholding && (t.AccountID == nil || *t.AccountID == 0) {
+		return fmt.Errorf("withholding tax requires a ledger account")
+	}
 	return nil
 }
 
 func (t *Tax) BeforeUpdate(_ *gorm.DB) error {
 	t.Percentage = t.Percentage.NormalizeDecimals()
+	if t.TaxType == TaxKindWithholding && (t.AccountID == nil || *t.AccountID == 0) {
+		return fmt.Errorf("withholding tax requires a ledger account")
+	}
 	return nil
 }
 
 func init() {
 	lamu.RegistryAdmin.Register("p_uniquity_finance_taxes.Tax", lamu.AdminPanel[Tax]{
 		SearchField: "Name",
-		ListFields:  []string{"Name", "Percentage", "UpdatedAt"},
+		ListFields:  []string{"Name", "Percentage", "TaxType", "AccountID", "UpdatedAt"},
+		Preload:     []string{"Account"},
 	})
 }

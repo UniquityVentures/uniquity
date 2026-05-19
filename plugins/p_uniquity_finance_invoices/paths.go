@@ -10,6 +10,9 @@ func pluginRoutes() lamu.PluginFeatures[lamu.Route] {
 	inv := AppUrl + "i/"
 	posted := AppUrl + "posted/"
 	cancelled := AppUrl + "cancelled/"
+	payments := AppUrl + "payments/"
+	paidInv := AppUrl + "paid/"
+	partInv := AppUrl + "partial/"
 	return lamu.PluginFeatures[lamu.Route]{
 		Entries: []registry.Pair[string, lamu.Route]{
 			{Key: "finance_invoices.DefaultRoute", Value: lamu.Route{Path: AppUrl, Handler: lamu.NewDynamicView("finance_invoices.DraftInvoiceListView")}},
@@ -34,6 +37,16 @@ func pluginRoutes() lamu.PluginFeatures[lamu.Route] {
 			{Key: "finance_invoices.PaymentTermDetailRoute", Value: lamu.Route{Path: pt + "{id}/", Handler: lamu.NewDynamicView("finance_invoices.PaymentTermDetailView")}},
 			{Key: "finance_invoices.PaymentTermDeleteRoute", Value: lamu.Route{Path: pt + "{id}/delete/", Handler: lamu.NewDynamicView("finance_invoices.PaymentTermDeleteView")}},
 			{Key: "finance_invoices.PaymentTermFkSelectRoute", Value: lamu.Route{Path: AppUrl + "payment-terms/pick/", Handler: lamu.NewDynamicView("finance_invoices.PaymentTermFkSelectView")}},
+			{Key: "finance_invoices.PostedInvoiceFkSelectRoute", Value: lamu.Route{Path: AppUrl + "posted/pick/", Handler: lamu.NewDynamicView("finance_invoices.PostedInvoiceFkSelectView")}},
+
+			{Key: "finance_invoices.PaymentListRoute", Value: lamu.Route{Path: payments, Handler: lamu.NewDynamicView("finance_invoices.PaymentListView")}},
+			{Key: "finance_invoices.PaymentCreateRoute", Value: lamu.Route{Path: payments + "create/", Handler: lamu.NewDynamicView("finance_invoices.PaymentCreateView")}},
+			{Key: "finance_invoices.PaymentDetailRoute", Value: lamu.Route{Path: payments + "{id}/", Handler: lamu.NewDynamicView("finance_invoices.PaymentDetailView")}},
+
+			{Key: "finance_invoices.PaidInvoiceListRoute", Value: lamu.Route{Path: paidInv, Handler: lamu.NewDynamicView("finance_invoices.PaidInvoiceListView")}},
+			{Key: "finance_invoices.PaidInvoiceDetailRoute", Value: lamu.Route{Path: paidInv + "{id}/", Handler: lamu.NewDynamicView("finance_invoices.PaidInvoiceDetailView")}},
+			{Key: "finance_invoices.PartiallyPaidInvoiceListRoute", Value: lamu.Route{Path: partInv, Handler: lamu.NewDynamicView("finance_invoices.PartiallyPaidInvoiceListView")}},
+			{Key: "finance_invoices.PartiallyPaidInvoiceDetailRoute", Value: lamu.Route{Path: partInv + "{id}/", Handler: lamu.NewDynamicView("finance_invoices.PartiallyPaidInvoiceDetailView")}},
 		},
 	}
 }

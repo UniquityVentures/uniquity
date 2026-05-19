@@ -72,12 +72,17 @@ lineUntaxedNumber(line) {
 	const rate = parseFloat(String(line.rate ?? '').trim().replace(/,/g, '.')) || 0;
 	return q * rate;
 },
-lineTaxedAmountNumber(line) {
+taxKindForId(id) {
+	const k = this.tax_kind_by_id && this.tax_kind_by_id[id];
+	return k === 'withholding' ? 'withholding' : 'levied';
+},
+lineTaxAmountForKind(line, kind) {
 	const base = this.lineUntaxedNumber(line);
 	if (!Array.isArray(line.line_taxes) || line.line_taxes.length === 0) return 0;
 	let sum = 0;
 	for (const t of line.line_taxes) {
 		const id = String(t.Key);
+		if (this.taxKindForId(id) !== kind) continue;
 		const pctStr = this.tax_pct_by_id[id];
 		const pct = pctStr != null && pctStr !== '' ? parseFloat(String(pctStr)) : NaN;
 		if (!isNaN(pct)) {
@@ -86,26 +91,38 @@ lineTaxedAmountNumber(line) {
 	}
 	return sum;
 },
+lineLeviedTaxNumber(line) {
+	return this.lineTaxAmountForKind(line, 'levied');
+},
+lineWithholdingTaxNumber(line) {
+	return this.lineTaxAmountForKind(line, 'withholding');
+},
 lineUntaxedDisplay(line) {
 	const u = this.lineUntaxedNumber(line);
 	if (!line.product_id && u === 0) return '—';
 	return this.formatDec(u);
 },
-lineTaxedDisplay(line) {
+lineLeviedTaxDisplay(line) {
 	const u = this.lineUntaxedNumber(line);
-	const tax = this.lineTaxedAmountNumber(line);
+	const tax = this.lineLeviedTaxNumber(line);
 	if (!line.product_id && u === 0 && tax === 0) return '—';
 	return this.formatDec(tax);
 },
+lineWithholdingDisplay(line) {
+	const wh = this.lineWithholdingTaxNumber(line);
+	if (wh === 0) return '—';
+	return '(' + this.formatDec(wh) + ')';
+},
 lineTotal(line) {
 	const u = this.lineUntaxedNumber(line);
-	const tax = this.lineTaxedAmountNumber(line);
-	const tot = u + tax;
+	const lev = this.lineLeviedTaxNumber(line);
+	const wh = this.lineWithholdingTaxNumber(line);
+	const tot = u + lev - wh;
 	if (!line.product_id && tot === 0) return '—';
 	return this.formatDec(tot);
 },
 lineTotalNumber(line) {
-	return this.lineUntaxedNumber(line) + this.lineTaxedAmountNumber(line);
+	return this.lineUntaxedNumber(line) + this.lineLeviedTaxNumber(line) - this.lineWithholdingTaxNumber(line);
 },
 linesUntaxedSubtotalNumber() {
 	if (!Array.isArray(this.lines)) return 0;
@@ -115,13 +132,24 @@ linesUntaxedSubtotalNumber() {
 	}
 	return sum;
 },
-linesSubtotalNumber() {
+linesLeviedSubtotalNumber() {
 	if (!Array.isArray(this.lines)) return 0;
 	let sum = 0;
 	for (const line of this.lines) {
-		sum += this.lineTotalNumber(line);
+		sum += this.lineLeviedTaxNumber(line);
 	}
 	return sum;
+},
+linesWithholdingSubtotalNumber() {
+	if (!Array.isArray(this.lines)) return 0;
+	let sum = 0;
+	for (const line of this.lines) {
+		sum += this.lineWithholdingTaxNumber(line);
+	}
+	return sum;
+},
+linesSubtotalNumber() {
+	return this.linesUntaxedSubtotalNumber() + this.linesLeviedSubtotalNumber();
 },
 linesSubtotalDisplay() {
 	if (!Array.isArray(this.lines) || this.lines.length === 0) return '—';
@@ -133,18 +161,7 @@ invoiceTaxLabel(item) {
 	}
 	return 'Tax #' + String(item.Key);
 },
-invoiceTaxAmountDisplay(item) {
-	const base = this.linesUntaxedSubtotalNumber();
-	const id = String(item.Key);
-	const pctStr = this.tax_pct_by_id[id];
-	const pct = pctStr != null && pctStr !== '' ? parseFloat(String(pctStr)) : NaN;
-	if (isNaN(pct)) {
-		return '—';
-	}
-	const amt = base * (pct / 100);
-	return this.formatDec(amt);
-},
-invoiceHeaderTaxesSumNumber() {
+invoiceHeaderTaxAmountForKind(kind) {
 	const base = this.linesUntaxedSubtotalNumber();
 	const st = typeof Alpine !== 'undefined' && Alpine.store && Alpine.store('m2mSelections');
 	const sel = st && st.Taxes;
@@ -154,6 +171,7 @@ invoiceHeaderTaxesSumNumber() {
 	let sum = 0;
 	for (const item of sel) {
 		const id = String(item.Key);
+		if (this.taxKindForId(id) !== kind) continue;
 		const pctStr = this.tax_pct_by_id[id];
 		const pct = pctStr != null && pctStr !== '' ? parseFloat(String(pctStr)) : NaN;
 		if (!isNaN(pct)) {
@@ -162,10 +180,27 @@ invoiceHeaderTaxesSumNumber() {
 	}
 	return sum;
 },
+invoiceTaxAmountDisplay(item) {
+	const base = this.linesUntaxedSubtotalNumber();
+	const id = String(item.Key);
+	const kind = this.taxKindForId(id);
+	const pctStr = this.tax_pct_by_id[id];
+	const pct = pctStr != null && pctStr !== '' ? parseFloat(String(pctStr)) : NaN;
+	if (isNaN(pct)) {
+		return '—';
+	}
+	const amt = base * (pct / 100);
+	if (kind === 'withholding') {
+		return '(' + this.formatDec(amt) + ')';
+	}
+	return this.formatDec(amt);
+},
 invoiceGrandTotalDisplay() {
 	const sub = this.linesSubtotalNumber();
-	const tax = this.invoiceHeaderTaxesSumNumber();
-	const total = sub + tax;
+	const headerLevied = this.invoiceHeaderTaxAmountForKind('levied');
+	const headerWithholding = this.invoiceHeaderTaxAmountForKind('withholding');
+	const lineWh = this.linesWithholdingSubtotalNumber();
+	const total = sub + headerLevied - lineWh - headerWithholding;
 	const st = typeof Alpine !== 'undefined' && Alpine.store && Alpine.store('m2mSelections');
 	const sel = st && st.Taxes;
 	const hasTaxes = sel && Array.isArray(sel) && sel.length > 0;
@@ -179,18 +214,17 @@ invoiceGrandTotalDisplay() {
 func (e InputInvoiceLinesDraft) Build(ctx context.Context) Node {
 	var productsJSON []byte
 	var taxPctJSON = []byte("{}")
+	var taxKindJSON = []byte("{}")
 	var allTaxesJSON = []byte("[]")
 	if e.Preview != nil {
 		if s, err := e.Preview(ctx); err != nil {
 			slog.Error("InputInvoiceLinesDraft Preview failed", "error", err, "key", e.Key)
 		} else if strings.TrimSpace(s) != "" {
 			var prev struct {
-				Products   []invoiceLineProductOpt `json:"products"`
-				TaxPctByID map[string]string       `json:"tax_pct_by_id"`
-				AllTaxes   []struct {
-					ID   uint   `json:"id"`
-					Name string `json:"name"`
-				} `json:"all_taxes"`
+				Products    []invoiceLineProductOpt `json:"products"`
+				TaxPctByID  map[string]string       `json:"tax_pct_by_id"`
+				TaxKindByID map[string]string       `json:"tax_kind_by_id"`
+				AllTaxes    []invoiceLineTaxMeta    `json:"all_taxes"`
 			}
 			if err := json.Unmarshal([]byte(s), &prev); err != nil {
 				slog.Error("InputInvoiceLinesDraft Preview unmarshal", "error", err, "key", e.Key)
@@ -204,6 +238,11 @@ func (e InputInvoiceLinesDraft) Build(ctx context.Context) Node {
 				if prev.TaxPctByID != nil {
 					if b, err := json.Marshal(prev.TaxPctByID); err == nil {
 						taxPctJSON = b
+					}
+				}
+				if prev.TaxKindByID != nil {
+					if b, err := json.Marshal(prev.TaxKindByID); err == nil {
+						taxKindJSON = b
 					}
 				}
 				if prev.AllTaxes != nil {
@@ -262,8 +301,8 @@ func (e InputInvoiceLinesDraft) Build(ctx context.Context) Node {
 	if err != nil {
 		taxPickBaseJSON = []byte(`""`)
 	}
-	alpineData := fmt.Sprintf("{ lines: %s, products: %s, tax_pct_by_id: %s, all_taxes: %s, product_pick_base: %s, tax_pick_base: %s, %s }",
-		defaults, string(productsJSON), string(taxPctJSON), string(allTaxesJSON), string(pickBaseJSON), string(taxPickBaseJSON), strings.TrimSpace(invoiceLinesDraftAlpineMethods))
+	alpineData := fmt.Sprintf("{ lines: %s, products: %s, tax_pct_by_id: %s, tax_kind_by_id: %s, all_taxes: %s, product_pick_base: %s, tax_pick_base: %s, %s }",
+		defaults, string(productsJSON), string(taxPctJSON), string(taxKindJSON), string(allTaxesJSON), string(pickBaseJSON), string(taxPickBaseJSON), strings.TrimSpace(invoiceLinesDraftAlpineMethods))
 	initJS := fmt.Sprintf(`
 if (typeof Alpine !== 'undefined' && Alpine.store && !Alpine.store('m2mSelections')) {
 	Alpine.store('m2mSelections', {});
@@ -352,7 +391,8 @@ $el.closest('form').addEventListener('submit', (ev) => {
 							Th(Class("whitespace-nowrap w-32"), Text("Rate")),
 							Th(Class("whitespace-nowrap min-w-[10rem]"), Text("Line taxes")),
 							Th(Class("whitespace-nowrap min-w-[7rem] text-end"), Text("Untaxed amount")),
-							Th(Class("whitespace-nowrap min-w-[7rem] text-end"), Text("Taxed amount")),
+							Th(Class("whitespace-nowrap min-w-[7rem] text-end"), Text("Levied tax")),
+							Th(Class("whitespace-nowrap min-w-[7rem] text-end"), Text("Withholding")),
 							Th(Class("whitespace-nowrap min-w-[7rem] text-end"), Text("Line total")),
 							Th(Class("whitespace-nowrap w-24"), Text("Actions")),
 						)),
@@ -440,7 +480,13 @@ $el.closest('form').addEventListener('submit', (ev) => {
 									Td(Class("align-middle text-end tabular-nums whitespace-nowrap"),
 										Span(
 											Class("text-sm"),
-											Attr("x-text", "lineTaxedDisplay(line)"),
+											Attr("x-text", "lineLeviedTaxDisplay(line)"),
+										),
+									),
+									Td(Class("align-middle text-end tabular-nums whitespace-nowrap"),
+										Span(
+											Class("text-sm"),
+											Attr("x-text", "lineWithholdingDisplay(line)"),
 										),
 									),
 									Td(Class("align-middle text-end tabular-nums whitespace-nowrap"),
@@ -474,6 +520,16 @@ $el.closest('form').addEventListener('submit', (ev) => {
 						Div(
 							Class("text-sm tabular-nums text-end font-semibold shrink-0 min-w-[7rem]"),
 							Attr("x-text", "linesSubtotalDisplay()"),
+						),
+					),
+					Template(
+						Attr("x-show", "linesWithholdingSubtotalNumber() > 0"),
+						Div(Class("grid grid-cols-[1fr_auto] gap-x-4 items-center px-4 py-3"),
+							Div(Class("text-sm font-bold min-w-0 truncate"), Text("Withholding (lines)")),
+							Div(
+								Class("text-sm tabular-nums text-end font-semibold shrink-0 min-w-[7rem]"),
+								Attr("x-text", "'(' + formatDec(linesWithholdingSubtotalNumber()) + ')'"),
+							),
 						),
 					),
 					Template(

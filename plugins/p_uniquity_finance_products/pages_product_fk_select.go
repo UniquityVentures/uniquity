@@ -38,6 +38,9 @@ func pageEntriesProductFkSelectPages() []registry.Pair[string, components.PageIn
 						&components.TableButtonFilter{Child: lamu.DynamicPage{Name: "finance_products.ProductFkSelectionFilter"}},
 					},
 					Columns: []components.TableColumn{
+						{Label: "Reference", Name: "Reference", Children: []components.PageInterface{
+							&components.FieldText{Getter: getters.Key[string]("$row.Reference")},
+						}},
 						{Label: "Name", Name: "Name", Children: []components.PageInterface{
 							&components.FieldText{Getter: getters.Key[string]("$row.Name")},
 						}},

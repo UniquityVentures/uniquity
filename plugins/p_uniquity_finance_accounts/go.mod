@@ -6,6 +6,7 @@ require (
 	github.com/UniquityVentures/lamu v0.4.10
 	github.com/UniquityVentures/lamu/plugins/p_users v0.4.10
 	gorm.io/gorm v1.31.1
+	maragu.dev/gomponents v1.3.0
 )
 
 require (
@@ -64,5 +65,4 @@ require (
 	gorm.io/driver/mysql v1.5.6 // indirect
 	gorm.io/driver/postgres v1.6.0 // indirect
 	gorm.io/driver/sqlite v1.6.0 // indirect
-	maragu.dev/gomponents v1.3.0 // indirect
 )

@@ -27,6 +27,7 @@ func (SuperuserOnlyLayer) Next(_ views.View, next http.Handler) http.Handler {
 }
 
 func pluginViews() lamu.PluginFeatures[*views.View] {
+	qp := taxQueryPatchers()
 	return lamu.PluginFeatures[*views.View]{
 		Entries: []registry.Pair[string, *views.View]{
 			{
@@ -35,7 +36,8 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 					WithLayer("finance_taxes.superuser", SuperuserOnlyLayer{}).
 					WithLayer("finance_taxes.tax_list", views.LayerList[Tax]{
-						Key: getters.Static("taxes"),
+						Key:           getters.Static("taxes"),
+						QueryPatchers: qp,
 					}),
 			},
 			{
@@ -44,8 +46,9 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 					WithLayer("finance_taxes.superuser", SuperuserOnlyLayer{}).
 					WithLayer("finance_taxes.tax_detail", views.LayerDetail[Tax]{
-						Key:          getters.Static("tax"),
-						PathParamKey: getters.Static("id"),
+						Key:           getters.Static("tax"),
+						PathParamKey:  getters.Static("id"),
+						QueryPatchers: qp,
 					}),
 			},
 			{
@@ -65,8 +68,9 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 					WithLayer("finance_taxes.superuser", SuperuserOnlyLayer{}).
 					WithLayer("finance_taxes.tax_detail", views.LayerDetail[Tax]{
-						Key:          getters.Static("tax"),
-						PathParamKey: getters.Static("id"),
+						Key:           getters.Static("tax"),
+						PathParamKey:  getters.Static("id"),
+						QueryPatchers: qp,
 					}).
 					WithLayer("finance_taxes.tax_update", views.LayerUpdate[Tax]{
 						Key:        getters.Static("tax"),
@@ -79,8 +83,9 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 					WithLayer("finance_taxes.superuser", SuperuserOnlyLayer{}).
 					WithLayer("finance_taxes.tax_detail", views.LayerDetail[Tax]{
-						Key:          getters.Static("tax"),
-						PathParamKey: getters.Static("id"),
+						Key:           getters.Static("tax"),
+						PathParamKey:  getters.Static("id"),
+						QueryPatchers: qp,
 					}).
 					WithLayer("finance_taxes.tax_delete", views.LayerDelete[Tax]{
 						Key:        getters.Static("tax"),
@@ -93,7 +98,8 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 					WithLayer("finance_taxes.superuser", SuperuserOnlyLayer{}).
 					WithLayer("finance_taxes.tax_multiselect_list", views.LayerList[Tax]{
-						Key: getters.Static("taxes"),
+						Key:           getters.Static("taxes"),
+						QueryPatchers: qp,
 					}),
 			},
 		},

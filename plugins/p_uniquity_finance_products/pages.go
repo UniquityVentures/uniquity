@@ -15,6 +15,25 @@ import (
 
 const financeAccountsMainMenuProductsLinkKey = "finance_products.FinanceAccountsMainMenuLink"
 
+var productTypeChoices = getters.Static([]registry.Pair[ProductType, string]{
+	{Key: ProductTypeGoods, Value: "Goods"},
+	{Key: ProductTypeServices, Value: "Services"},
+	{Key: ProductTypeBoth, Value: "Both"},
+})
+
+func productTypeSelectGetter(ctxKey string) getters.Getter[registry.Pair[ProductType, string]] {
+	return func(ctx context.Context) (registry.Pair[ProductType, string], error) {
+		pt, err := getters.Key[ProductType](ctxKey)(ctx)
+		if err != nil {
+			return registry.Pair[ProductType, string]{}, err
+		}
+		if pt == "" {
+			return registry.Pair[ProductType, string]{}, nil
+		}
+		return registry.Pair[ProductType, string]{Key: pt, Value: string(pt)}, nil
+	}
+}
+
 func patchFinanceAccountsMainMenuForProducts(page components.PageInterface) components.PageInterface {
 	menu, ok := page.(*components.SidebarMenu)
 	if !ok {
@@ -101,6 +120,29 @@ func productCreateFormInputs() []components.PageInterface {
 			},
 		},
 		&components.ContainerError{
+			Error: getters.Key[error]("$error.Type"),
+			Children: []components.PageInterface{
+				&components.InputSelect[ProductType]{
+					Name:     "Type",
+					Label:    "Type",
+					Required: true,
+					Choices:  productTypeChoices,
+				},
+			},
+		},
+		&components.ContainerError{
+			Error: getters.Key[error]("$error.Reference"),
+			Children: []components.PageInterface{
+				&components.InputText{Name: "Reference", Label: "Reference", Required: true},
+			},
+		},
+		&components.ContainerError{
+			Error: getters.Key[error]("$error.Remarks"),
+			Children: []components.PageInterface{
+				&components.InputTextarea{Name: "Remarks", Label: "Remarks", Rows: 4},
+			},
+		},
+		&components.ContainerError{
 			Error: getters.Key[error]("$error.Taxes"),
 			Children: []components.PageInterface{
 				&components.InputManyToMany[finance_taxes.Tax]{
@@ -148,7 +190,7 @@ func productCreateFormInputs() []components.PageInterface {
 					Url:         lamu.RoutePath("finance_accounts.AccountSelectRoute", nil),
 					Display:     getters.Format("%s (#%d)", getters.Any(getters.Key[string]("$in.Name")), getters.Any(getters.Key[uint]("$in.ID"))),
 					Placeholder: "Select…",
-					Getter:      getters.Association[finance_accounts.Account, uint](getters.Key[uint]("$in.InventoryAccountID")),
+					Getter:      getters.Association[finance_accounts.Account, *uint](getters.Key[*uint]("$in.InventoryAccountID")),
 				},
 			},
 		},
@@ -161,7 +203,7 @@ func productCreateFormInputs() []components.PageInterface {
 					Url:         lamu.RoutePath("finance_accounts.AccountSelectRoute", nil),
 					Display:     getters.Format("%s (#%d)", getters.Any(getters.Key[string]("$in.Name")), getters.Any(getters.Key[uint]("$in.ID"))),
 					Placeholder: "Select…",
-					Getter:      getters.Association[finance_accounts.Account, uint](getters.Key[uint]("$in.CostOfSalesAcctID")),
+					Getter:      getters.Association[finance_accounts.Account, *uint](getters.Key[*uint]("$in.CostOfSalesAcctID")),
 				},
 			},
 		},
@@ -174,7 +216,7 @@ func productCreateFormInputs() []components.PageInterface {
 					Url:         lamu.RoutePath("finance_accounts.AccountSelectRoute", nil),
 					Display:     getters.Format("%s (#%d)", getters.Any(getters.Key[string]("$in.Name")), getters.Any(getters.Key[uint]("$in.ID"))),
 					Placeholder: "Optional",
-					Getter:      getters.Association[finance_accounts.Account, uint](getters.Key[uint]("$in.InputTaxAccountID")),
+					Getter:      getters.Association[finance_accounts.Account, *uint](getters.Key[*uint]("$in.InputTaxAccountID")),
 				},
 			},
 		},
@@ -187,6 +229,30 @@ func productUpdateFormInputs() []components.PageInterface {
 			Error: getters.Key[error]("$error.Name"),
 			Children: []components.PageInterface{
 				&components.InputText{Name: "Name", Label: "Name", Required: true, Getter: getters.Key[string]("$in.Name")},
+			},
+		},
+		&components.ContainerError{
+			Error: getters.Key[error]("$error.Type"),
+			Children: []components.PageInterface{
+				&components.InputSelect[ProductType]{
+					Name:     "Type",
+					Label:    "Type",
+					Required: true,
+					Choices:  productTypeChoices,
+					Getter:   productTypeSelectGetter("$in.Type"),
+				},
+			},
+		},
+		&components.ContainerError{
+			Error: getters.Key[error]("$error.Reference"),
+			Children: []components.PageInterface{
+				&components.InputText{Name: "Reference", Label: "Reference", Required: true, Getter: getters.Key[string]("$in.Reference")},
+			},
+		},
+		&components.ContainerError{
+			Error: getters.Key[error]("$error.Remarks"),
+			Children: []components.PageInterface{
+				&components.InputTextarea{Name: "Remarks", Label: "Remarks", Getter: getters.Key[string]("$in.Remarks"), Rows: 4},
 			},
 		},
 		&components.ContainerError{
@@ -240,7 +306,7 @@ func productUpdateFormInputs() []components.PageInterface {
 					Url:         lamu.RoutePath("finance_accounts.AccountSelectRoute", nil),
 					Display:     getters.Format("%s (#%d)", getters.Any(getters.Key[string]("$in.Name")), getters.Any(getters.Key[uint]("$in.ID"))),
 					Placeholder: "Select…",
-					Getter:      getters.Association[finance_accounts.Account, uint](getters.Key[uint]("$in.InventoryAccountID")),
+					Getter:      getters.Association[finance_accounts.Account, *uint](getters.Key[*uint]("$in.InventoryAccountID")),
 				},
 			},
 		},
@@ -253,7 +319,7 @@ func productUpdateFormInputs() []components.PageInterface {
 					Url:         lamu.RoutePath("finance_accounts.AccountSelectRoute", nil),
 					Display:     getters.Format("%s (#%d)", getters.Any(getters.Key[string]("$in.Name")), getters.Any(getters.Key[uint]("$in.ID"))),
 					Placeholder: "Select…",
-					Getter:      getters.Association[finance_accounts.Account, uint](getters.Key[uint]("$in.CostOfSalesAcctID")),
+					Getter:      getters.Association[finance_accounts.Account, *uint](getters.Key[*uint]("$in.CostOfSalesAcctID")),
 				},
 			},
 		},
@@ -266,7 +332,7 @@ func productUpdateFormInputs() []components.PageInterface {
 					Url:         lamu.RoutePath("finance_accounts.AccountSelectRoute", nil),
 					Display:     getters.Format("%s (#%d)", getters.Any(getters.Key[string]("$in.Name")), getters.Any(getters.Key[uint]("$in.ID"))),
 					Placeholder: "Optional",
-					Getter:      getters.Association[finance_accounts.Account, uint](getters.Key[uint]("$in.InputTaxAccountID")),
+					Getter:      getters.Association[finance_accounts.Account, *uint](getters.Key[*uint]("$in.InputTaxAccountID")),
 				},
 			},
 		},
@@ -296,6 +362,12 @@ func pageEntriesProductPages() []registry.Pair[string, components.PageInterface]
 						"id": getters.Any(getters.Key[uint]("$row.ID")),
 					})),
 					Columns: []components.TableColumn{
+						{Label: "Type", Name: "Type", Children: []components.PageInterface{
+							&components.FieldText{Getter: getters.Format("%s", getters.Any(getters.Key[ProductType]("$row.Type")))},
+						}},
+						{Label: "Reference", Name: "Reference", Children: []components.PageInterface{
+							&components.FieldText{Getter: getters.Key[string]("$row.Reference")},
+						}},
 						{Label: "Name", Name: "Name", Children: []components.PageInterface{
 							&components.FieldText{Getter: getters.Key[string]("$row.Name")},
 						}},
@@ -399,6 +471,15 @@ func pageEntriesProductPages() []registry.Pair[string, components.PageInterface]
 							Children: []components.PageInterface{
 								&components.LabelInline{Title: "Name", Children: []components.PageInterface{
 									&components.FieldText{Getter: getters.Key[string]("$in.Name")},
+								}},
+								&components.LabelInline{Title: "Type", Children: []components.PageInterface{
+									&components.FieldText{Getter: getters.Format("%s", getters.Any(getters.Key[ProductType]("$in.Type")))},
+								}},
+								&components.LabelInline{Title: "Reference", Children: []components.PageInterface{
+									&components.FieldText{Getter: getters.Key[string]("$in.Reference")},
+								}},
+								&components.LabelInline{Title: "Remarks", Children: []components.PageInterface{
+									&components.FieldText{Getter: getters.Key[string]("$in.Remarks")},
 								}},
 								&components.FieldManyToMany[finance_taxes.Tax]{
 									Label:   "Taxes",

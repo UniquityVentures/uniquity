@@ -11,8 +11,8 @@ import (
 
 	"github.com/UniquityVentures/lamu/getters"
 	"github.com/UniquityVentures/lamu/views"
-	"github.com/francescoalemanno/gotypst"
 	finance_accounts "github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_accounts"
+	"github.com/francescoalemanno/gotypst"
 	"gorm.io/gorm"
 )
 

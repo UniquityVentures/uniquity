@@ -1,0 +1,6 @@
+github.com/UniquityVentures/lamu v0.4.10 h1:L89gdpPg7VBDMGZh82NOHT/xlg2xfV16mTLtQQjOQ8I=
+github.com/UniquityVentures/lamu v0.4.10/go.mod h1:3/1olJuBIGRCMESBnm/M0bpXf+zLmHtOFGqpw2SO5vo=
+github.com/UniquityVentures/lamu/plugins/p_users v0.4.10 h1:t61EoAArwF/7/8LsidClJH8vzxzuY2XeBFSsN1AFMQk=
+github.com/UniquityVentures/lamu/plugins/p_users v0.4.10/go.mod h1:QP8H2mUubOyGOZQ0zZ3o575Zdc2IvnSg96SvkpSSBLE=
+gorm.io/gorm v1.31.1 h1:7CA8FTFz/gRfgqgpeKIBcervUn3xSyPUmr6B2WXJ7kg=
+gorm.io/gorm v1.31.1/go.mod h1:XyQVbO2k6YkOis7C2437jSit3SsDK72s7n7rsSHd+Gs=

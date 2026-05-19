@@ -12,6 +12,10 @@ import (
 type Product struct {
 	gorm.Model
 
+	Type      ProductType `gorm:"column:product_type;type:\"ProductType\";not null"`
+	Reference string      `gorm:"column:reference;not null;uniqueIndex"`
+	Remarks   string      `gorm:"column:remarks;type:text"`
+
 	Name       string              `gorm:"not null"`
 	Taxes      []finance_taxes.Tax `gorm:"many2many:product_taxes;"`
 	BaseCost   fields.DecimalSix   `gorm:"column:base_cost;type:numeric(19,6);not null"`
@@ -41,7 +45,7 @@ func (p *Product) BeforeUpdate(_ *gorm.DB) error {
 func init() {
 	lamu.RegistryAdmin.Register("p_uniquity_finance_products.Product", lamu.AdminPanel[Product]{
 		SearchField: "Name",
-		ListFields:  []string{"Name", "BaseCost", "SalesPrice", "HSNCode", "InventoryAccountID", "CostOfSalesAcctID", "InputTaxAccountID", "UpdatedAt"},
+		ListFields:  []string{"Type", "Reference", "Name", "BaseCost", "SalesPrice", "HSNCode", "InventoryAccountID", "CostOfSalesAcctID", "InputTaxAccountID", "UpdatedAt"},
 		Preload:     []string{"InventoryAccount", "CostOfSalesAccount", "InputTaxAccount"},
 	})
 }
