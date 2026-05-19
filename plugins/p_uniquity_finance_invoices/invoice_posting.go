@@ -173,15 +173,6 @@ func (d *DraftInvoice) NewPosted(tx *gorm.DB, postedAt time.Time) (*PostedInvoic
 			itemSpec{accountID: p.CostOfSalesAcctID, amount: costBase},
 			itemSpec{accountID: p.InventoryAccountID, amount: decNeg(costBase)},
 		)
-		if p.InputTaxAccountID != 0 && len(taxesLevied(line.Taxes)) > 0 {
-			ct := taxAmountOnBase(costBase, sumTaxPercents(taxesLevied(line.Taxes)))
-			if ct.R != nil && ct.R.Sign() != 0 {
-				specs = append(specs,
-					itemSpec{accountID: p.InputTaxAccountID, amount: ct},
-					itemSpec{accountID: p.InventoryAccountID, amount: decNeg(ct)},
-				)
-			}
-		}
 	}
 
 	var lineTotals invoiceLinesTotals

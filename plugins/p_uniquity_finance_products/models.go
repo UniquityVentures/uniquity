@@ -26,8 +26,6 @@ type Product struct {
 	InventoryAccount   *finance_accounts.Account `gorm:"foreignKey:InventoryAccountID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT"`
 	CostOfSalesAcctID  uint                      `gorm:"column:cost_of_sales_account_id"`
 	CostOfSalesAccount *finance_accounts.Account `gorm:"foreignKey:CostOfSalesAcctID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT"`
-	InputTaxAccountID  uint                      `gorm:"column:input_tax_account_id"`
-	InputTaxAccount    *finance_accounts.Account `gorm:"foreignKey:InputTaxAccountID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT"`
 }
 
 func (p *Product) BeforeCreate(_ *gorm.DB) error {
@@ -45,7 +43,7 @@ func (p *Product) BeforeUpdate(_ *gorm.DB) error {
 func init() {
 	lamu.RegistryAdmin.Register("p_uniquity_finance_products.Product", lamu.AdminPanel[Product]{
 		SearchField: "Name",
-		ListFields:  []string{"Type", "Reference", "Name", "BaseCost", "SalesPrice", "HSNCode", "InventoryAccountID", "CostOfSalesAcctID", "InputTaxAccountID", "UpdatedAt"},
-		Preload:     []string{"InventoryAccount", "CostOfSalesAccount", "InputTaxAccount"},
+		ListFields:  []string{"Type", "Reference", "Name", "BaseCost", "SalesPrice", "HSNCode", "InventoryAccountID", "CostOfSalesAcctID", "UpdatedAt"},
+		Preload:     []string{"InventoryAccount", "CostOfSalesAccount"},
 	})
 }

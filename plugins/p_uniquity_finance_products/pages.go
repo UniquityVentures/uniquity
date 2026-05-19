@@ -111,119 +111,7 @@ func pageEntriesProductMenus() []registry.Pair[string, components.PageInterface]
 	}
 }
 
-func productCreateFormInputs() []components.PageInterface {
-	return []components.PageInterface{
-		&components.ContainerError{
-			Error: getters.Key[error]("$error.Name"),
-			Children: []components.PageInterface{
-				&components.InputText{Name: "Name", Label: "Name", Required: true},
-			},
-		},
-		&components.ContainerError{
-			Error: getters.Key[error]("$error.Type"),
-			Children: []components.PageInterface{
-				&components.InputSelect[ProductType]{
-					Name:     "Type",
-					Label:    "Type",
-					Required: true,
-					Choices:  productTypeChoices,
-				},
-			},
-		},
-		&components.ContainerError{
-			Error: getters.Key[error]("$error.Reference"),
-			Children: []components.PageInterface{
-				&components.InputText{Name: "Reference", Label: "Reference", Required: true},
-			},
-		},
-		&components.ContainerError{
-			Error: getters.Key[error]("$error.Remarks"),
-			Children: []components.PageInterface{
-				&components.InputTextarea{Name: "Remarks", Label: "Remarks", Rows: 4},
-			},
-		},
-		&components.ContainerError{
-			Error: getters.Key[error]("$error.Taxes"),
-			Children: []components.PageInterface{
-				&components.InputManyToMany[finance_taxes.Tax]{
-					Label:       "Taxes",
-					Name:        "Taxes",
-					Display:     getters.Key[string]("$in.Name"),
-					Url:         lamu.RoutePath("finance_taxes.TaxMultiSelectRoute", nil),
-					Placeholder: "Select taxes…",
-					Classes:     "w-full",
-				},
-			},
-		},
-		&components.ContainerError{
-			Error: getters.Key[error]("$error.BaseCost"),
-			Children: []components.PageInterface{
-				&components.InputPointsDecimal{
-					Label:    "Base cost",
-					Name:     "BaseCost",
-					Required: true,
-				},
-			},
-		},
-		&components.ContainerError{
-			Error: getters.Key[error]("$error.SalesPrice"),
-			Children: []components.PageInterface{
-				&components.InputPointsDecimal{
-					Label:    "Sales price",
-					Name:     "SalesPrice",
-					Required: true,
-				},
-			},
-		},
-		&components.ContainerError{
-			Error: getters.Key[error]("$error.HSNCode"),
-			Children: []components.PageInterface{
-				&components.InputNumber[int64]{Label: "HSN code", Name: "HSNCode", Required: true},
-			},
-		},
-		&components.ContainerError{
-			Error: getters.Key[error]("$error.InventoryAccountID"),
-			Children: []components.PageInterface{
-				&components.InputForeignKey[finance_accounts.Account]{
-					Label:       "Inventory account",
-					Name:        "InventoryAccountID",
-					Url:         lamu.RoutePath("finance_accounts.AccountSelectRoute", nil),
-					Display:     getters.Format("%s (#%d)", getters.Any(getters.Key[string]("$in.Name")), getters.Any(getters.Key[uint]("$in.ID"))),
-					Placeholder: "Select…",
-					Getter:      getters.Association[finance_accounts.Account, uint](getters.Key[uint]("$in.InventoryAccountID")),
-				},
-			},
-		},
-		&components.ContainerError{
-			Error: getters.Key[error]("$error.CostOfSalesAcctID"),
-			Children: []components.PageInterface{
-				&components.InputForeignKey[finance_accounts.Account]{
-					Label:       "Cost of sales account",
-					Name:        "CostOfSalesAcctID",
-					Url:         lamu.RoutePath("finance_accounts.AccountSelectRoute", nil),
-					Display:     getters.Format("%s (#%d)", getters.Any(getters.Key[string]("$in.Name")), getters.Any(getters.Key[uint]("$in.ID"))),
-					Placeholder: "Select…",
-					Getter:      getters.Association[finance_accounts.Account, uint](getters.Key[uint]("$in.CostOfSalesAcctID")),
-				},
-			},
-		},
-		&components.ContainerError{
-			Error: getters.Key[error]("$error.InputTaxAccountID"),
-			Children: []components.PageInterface{
-				&components.InputForeignKey[finance_accounts.Account]{
-					Label:       "Input tax (ITC) account",
-					Name:        "InputTaxAccountID",
-					Url:         lamu.RoutePath("finance_accounts.AccountSelectRoute", nil),
-					Display:     getters.Format("%s (#%d)", getters.Any(getters.Key[string]("$in.Name")), getters.Any(getters.Key[uint]("$in.ID"))),
-					Placeholder: "Optional",
-					Getter:      getters.Association[finance_accounts.Account, uint](getters.Key[uint]("$in.InputTaxAccountID")),
-				},
-			},
-		},
-	}
-}
-
-func productUpdateFormInputs() []components.PageInterface {
+func productFormInputs() []components.PageInterface {
 	return []components.PageInterface{
 		&components.ContainerError{
 			Error: getters.Key[error]("$error.Name"),
@@ -323,20 +211,15 @@ func productUpdateFormInputs() []components.PageInterface {
 				},
 			},
 		},
-		&components.ContainerError{
-			Error: getters.Key[error]("$error.InputTaxAccountID"),
-			Children: []components.PageInterface{
-				&components.InputForeignKey[finance_accounts.Account]{
-					Label:       "Input tax (ITC) account",
-					Name:        "InputTaxAccountID",
-					Url:         lamu.RoutePath("finance_accounts.AccountSelectRoute", nil),
-					Display:     getters.Format("%s (#%d)", getters.Any(getters.Key[string]("$in.Name")), getters.Any(getters.Key[uint]("$in.ID"))),
-					Placeholder: "Optional",
-					Getter:      getters.Association[finance_accounts.Account, uint](getters.Key[uint]("$in.InputTaxAccountID")),
-				},
-			},
-		},
 	}
+}
+
+func productCreateFormInputs() []components.PageInterface {
+	return productFormInputs()
+}
+
+func productUpdateFormInputs() []components.PageInterface {
+	return productFormInputs()
 }
 
 func pageEntriesProductPages() []registry.Pair[string, components.PageInterface] {
@@ -504,9 +387,6 @@ func pageEntriesProductPages() []registry.Pair[string, components.PageInterface]
 								}},
 								&components.LabelInline{Title: "COGS GL", Children: []components.PageInterface{
 									&components.FieldText{Getter: getters.Format("%s", getters.Any(accountNameOrDash("$in.CostOfSalesAccount.Name")))},
-								}},
-								&components.LabelInline{Title: "Input tax GL", Children: []components.PageInterface{
-									&components.FieldText{Getter: getters.Format("%s", getters.Any(accountNameOrDash("$in.InputTaxAccount.Name")))},
 								}},
 							},
 						},
