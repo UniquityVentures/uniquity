@@ -97,7 +97,7 @@ func (d *DraftInvoice) NewPosted(tx *gorm.DB, postedAt time.Time) (*PostedInvoic
 	}
 	for i := range lines {
 		p := lines[i].Product
-		if p.InventoryAccountID == nil || *p.InventoryAccountID == 0 || p.CostOfSalesAcctID == nil || *p.CostOfSalesAcctID == 0 {
+		if p.InventoryAccountID == 0 || p.CostOfSalesAcctID == 0 {
 			return nil, fmt.Errorf("product %q must have inventory and cost-of-sales accounts for posting", p.Name)
 		}
 	}
@@ -170,15 +170,15 @@ func (d *DraftInvoice) NewPosted(tx *gorm.DB, postedAt time.Time) (*PostedInvoic
 		qty := line.Quantity
 		costBase := decMul(p.BaseCost, qty)
 		specs = append(specs,
-			itemSpec{accountID: *p.CostOfSalesAcctID, amount: costBase},
-			itemSpec{accountID: *p.InventoryAccountID, amount: decNeg(costBase)},
+			itemSpec{accountID: p.CostOfSalesAcctID, amount: costBase},
+			itemSpec{accountID: p.InventoryAccountID, amount: decNeg(costBase)},
 		)
-		if p.InputTaxAccountID != nil && *p.InputTaxAccountID != 0 && len(taxesLevied(line.Taxes)) > 0 {
+		if p.InputTaxAccountID != 0 && len(taxesLevied(line.Taxes)) > 0 {
 			ct := taxAmountOnBase(costBase, sumTaxPercents(taxesLevied(line.Taxes)))
 			if ct.R != nil && ct.R.Sign() != 0 {
 				specs = append(specs,
-					itemSpec{accountID: *p.InputTaxAccountID, amount: ct},
-					itemSpec{accountID: *p.InventoryAccountID, amount: decNeg(ct)},
+					itemSpec{accountID: p.InputTaxAccountID, amount: ct},
+					itemSpec{accountID: p.InventoryAccountID, amount: decNeg(ct)},
 				)
 			}
 		}

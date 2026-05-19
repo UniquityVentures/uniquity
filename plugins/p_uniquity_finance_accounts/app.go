@@ -8,7 +8,7 @@ import (
 	"github.com/UniquityVentures/lamu/registry"
 )
 
-const AppUrl = "/finance-accounts/"
+const AppUrl = "/finance/"
 
 // GetPlugin returns registry contributions for [lamu.BuildAllRegistries].
 func GetPlugin() registry.Pair[string, lamu.Plugin] {
@@ -22,7 +22,7 @@ func GetPlugin() registry.Pair[string, lamu.Plugin] {
 			Type:        lamu.PluginTypeApp,
 			Icon:        "building-library",
 			URL:         u,
-			VerboseName: "Finance accounts",
+			VerboseName: "Finance",
 			Roles:       []string{"superuser"},
 			Views:       lamu.PluginStages(pluginViews),
 			Pages:       lamu.PluginStages(pluginPages),

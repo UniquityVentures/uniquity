@@ -22,11 +22,11 @@ type Product struct {
 	SalesPrice fields.DecimalSix   `gorm:"column:sales_price;type:numeric(19,6);not null"`
 	HSNCode    int64               `gorm:"column:hsn_code;not null"`
 
-	InventoryAccountID *uint                     `gorm:"column:inventory_account_id"`
+	InventoryAccountID uint                      `gorm:"column:inventory_account_id"`
 	InventoryAccount   *finance_accounts.Account `gorm:"foreignKey:InventoryAccountID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT"`
-	CostOfSalesAcctID  *uint                     `gorm:"column:cost_of_sales_account_id"`
+	CostOfSalesAcctID  uint                      `gorm:"column:cost_of_sales_account_id"`
 	CostOfSalesAccount *finance_accounts.Account `gorm:"foreignKey:CostOfSalesAcctID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT"`
-	InputTaxAccountID  *uint                     `gorm:"column:input_tax_account_id"`
+	InputTaxAccountID  uint                      `gorm:"column:input_tax_account_id"`
 	InputTaxAccount    *finance_accounts.Account `gorm:"foreignKey:InputTaxAccountID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT"`
 }
 
