@@ -382,10 +382,10 @@ func pageEntriesProductPages() []registry.Pair[string, components.PageInterface]
 								&components.LabelInline{Title: "HSN code", Children: []components.PageInterface{
 									&components.FieldText{Getter: getters.Format("%d", getters.Any(getters.Key[int64]("$in.HSNCode")))},
 								}},
-								&components.LabelInline{Title: "Inventory GL", Children: []components.PageInterface{
+								&components.LabelInline{Title: "Inventory account", Children: []components.PageInterface{
 									&components.FieldText{Getter: getters.Format("%s", getters.Any(accountNameOrDash("$in.InventoryAccount.Name")))},
 								}},
-								&components.LabelInline{Title: "COGS GL", Children: []components.PageInterface{
+								&components.LabelInline{Title: "Cost of sales account", Children: []components.PageInterface{
 									&components.FieldText{Getter: getters.Format("%s", getters.Any(accountNameOrDash("$in.CostOfSalesAccount.Name")))},
 								}},
 							},
