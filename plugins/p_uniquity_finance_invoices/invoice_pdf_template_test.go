@@ -3,6 +3,7 @@ package p_uniquity_finance_invoices
 import (
 	"bytes"
 	"os"
+	"strings"
 	"text/template"
 	"testing"
 	"time"
@@ -50,7 +51,7 @@ func TestExampleInvoicePDFTemplateCompiles(t *testing.T) {
 			{Name: "CGST", Percentage: mustDec("9"), TaxType: finance_taxes.TaxKindLevied},
 		},
 	}
-	tmpl, err := template.New("invoice_pdf").Parse(string(b))
+	tmpl, err := template.New("invoice_pdf").Funcs(invoicePDFTemplateFuncs()).Parse(string(b))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -58,8 +59,12 @@ func TestExampleInvoicePDFTemplateCompiles(t *testing.T) {
 	if err := tmpl.Execute(&typstBuf, getters.MapFromStruct(inv)); err != nil {
 		t.Fatal(err)
 	}
+	out := typstBuf.String()
+	if !strings.Contains(out, "Sixty-Three Thousand Seven Hundred And Twenty Rupees") {
+		t.Fatalf("expected amount in words from num2words, got:\n%s", out)
+	}
 	if _, err := gotypst.PDF(typstBuf.Bytes()); err != nil {
-		t.Fatalf("gotypst: %v\n--- typst ---\n%s", err, typstBuf.String())
+		t.Fatalf("gotypst: %v\n--- typst ---\n%s", err, out)
 	}
 }
 

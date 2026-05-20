@@ -103,7 +103,7 @@ func serveInvoicePDFFromPrefs(w http.ResponseWriter, db *gorm.DB, templateRoot m
 		http.Error(w, "Configure the invoice PDF template in Accounting preferences first.", http.StatusBadRequest)
 		return
 	}
-	tmpl, err := template.New("invoice_pdf").Parse(tmplSrc)
+	tmpl, err := template.New("invoice_pdf").Funcs(invoicePDFTemplateFuncs()).Parse(tmplSrc)
 	if err != nil {
 		slog.Error(logPrefix+": parse preferences template", "error", err)
 		http.Error(w, "Invalid invoice PDF template in preferences.", http.StatusInternalServerError)

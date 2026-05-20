@@ -23,7 +23,7 @@ func pageAccountingPreferencesPages() []registry.Pair[string, components.PageInt
 						&components.FormComponent[AccountingPreferences]{
 							Attr:          getters.FormBubbling(formName),
 							Title:         "Accounting preferences",
-							Subtitle:      "Go text/template for posted invoice numbers when a draft has no number. Variables: FISCAL_CODE, YY, YYYY, POSTED_SEQ (next posted row id). Example: INV-{{.YYYY}}-{{.POSTED_SEQ}}. Default journal prefills new draft invoices. Draft and cancelled invoice PDFs share one Go text/template producing Typst (same root fields as each detail page’s $in); see Invoice PDF template.",
+							Subtitle:      "Go text/template for posted invoice numbers when a draft has no number. Variables: FISCAL_CODE, YY, YYYY, POSTED_SEQ (next posted row id). Example: INV-{{.YYYY}}-{{.POSTED_SEQ}}. Default journal prefills new draft invoices. Invoice PDF template: Go text/template → Typst; root fields match each detail page’s $in; funcs num2words, num2wordsAnd, num2wordsRupees, invoiceGrandTotalWords.",
 							ChildrenInput: accountingPreferencesFormInputs(),
 							ChildrenAction: []components.PageInterface{
 								&components.ButtonSubmit{Label: "Save preferences"},
