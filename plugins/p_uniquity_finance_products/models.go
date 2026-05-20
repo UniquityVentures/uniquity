@@ -3,7 +3,6 @@ package p_uniquity_finance_products
 import (
 	"github.com/UniquityVentures/lamu/fields"
 	"github.com/UniquityVentures/lamu/lamu"
-	finance_accounts "github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_accounts"
 	finance_taxes "github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_taxes"
 	"gorm.io/gorm"
 )
@@ -21,11 +20,6 @@ type Product struct {
 	BaseCost   fields.DecimalSix   `gorm:"column:base_cost;type:numeric(19,6);not null"`
 	SalesPrice fields.DecimalSix   `gorm:"column:sales_price;type:numeric(19,6);not null"`
 	HSNCode    int64               `gorm:"column:hsn_code;not null"`
-
-	InventoryAccountID uint                      `gorm:"column:inventory_account_id"`
-	InventoryAccount   *finance_accounts.Account `gorm:"foreignKey:InventoryAccountID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT"`
-	CostOfSalesAcctID  uint                      `gorm:"column:cost_of_sales_account_id"`
-	CostOfSalesAccount *finance_accounts.Account `gorm:"foreignKey:CostOfSalesAcctID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT"`
 }
 
 func (p *Product) BeforeCreate(_ *gorm.DB) error {
@@ -43,7 +37,7 @@ func (p *Product) BeforeUpdate(_ *gorm.DB) error {
 func init() {
 	lamu.RegistryAdmin.Register("p_uniquity_finance_products.Product", lamu.AdminPanel[Product]{
 		SearchField: "Name",
-		ListFields:  []string{"Type", "Reference", "Name", "BaseCost", "SalesPrice", "HSNCode", "InventoryAccountID", "CostOfSalesAcctID", "UpdatedAt"},
-		Preload:     []string{"InventoryAccount", "CostOfSalesAccount"},
+		ListFields:  []string{"Type", "Reference", "Name", "BaseCost", "SalesPrice", "HSNCode", "UpdatedAt"},
+		Preload:     []string{"Taxes"},
 	})
 }

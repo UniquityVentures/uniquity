@@ -8,6 +8,7 @@ import (
 	"github.com/UniquityVentures/lamu/fields"
 	finance_accounts "github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_accounts"
 	finance_creditnotes "github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_creditnotes"
+	finance_products "github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_products"
 	finance_taxes "github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_taxes"
 	"gorm.io/gorm"
 )
@@ -95,11 +96,13 @@ func (d *DraftInvoice) NewPosted(tx *gorm.DB, postedAt time.Time) (*PostedInvoic
 	if err := validateWithholdingTaxAccounts(allTaxes); err != nil {
 		return nil, err
 	}
-	for i := range lines {
-		p := lines[i].Product
-		if p.InventoryAccountID == 0 || p.CostOfSalesAcctID == 0 {
-			return nil, fmt.Errorf("product %q must have inventory and cost-of-sales accounts for posting", p.Name)
-		}
+	productPrefs := finance_products.LoadProductPreferences(tx)
+	if finance_products.OptionalUintValue(productPrefs.InventoryAccountID) == 0 || finance_products.OptionalUintValue(productPrefs.CostOfSalesAcctID) == 0 {
+		return nil, fmt.Errorf("product preferences must have inventory and cost-of-sales accounts for posting")
+	}
+	invoicePrefs := LoadInvoicePreferences(tx)
+	if err := ValidateInvoicePreferencesForPosting(tx, &invoicePrefs); err != nil {
+		return nil, err
 	}
 	prefs := finance_accounts.LoadAccountingPreferences(tx)
 	number, err := PostedInvoiceNumber(tx, &full, prefs)
@@ -130,7 +133,7 @@ func (d *DraftInvoice) NewPosted(tx *gorm.DB, postedAt time.Time) (*PostedInvoic
 	je := finance_accounts.JournalEntry{
 		Datetime:    full.Datetime,
 		SourceDocID: doc.ID,
-		JournalID:   full.JournalID,
+		JournalID:   finance_products.OptionalUintValue(invoicePrefs.JournalID),
 	}
 	if err := tx.Create(&je).Error; err != nil {
 		return nil, err
@@ -148,9 +151,9 @@ func (d *DraftInvoice) NewPosted(tx *gorm.DB, postedAt time.Time) (*PostedInvoic
 		lineBase := decMul(line.Rate, line.Quantity)
 		leviedTax := taxAmountOnBase(lineBase, sumTaxPercents(taxesLevied(line.Taxes)))
 		revItemSpecIndex[i] = len(specs)
-		specs = append(specs, itemSpec{accountID: full.AccountRevenueID, amount: decNeg(lineBase)})
+		specs = append(specs, itemSpec{accountID: finance_products.OptionalUintValue(invoicePrefs.AccountRevenueID), amount: decNeg(lineBase)})
 		if leviedTax.R != nil && leviedTax.R.Sign() != 0 {
-			specs = append(specs, itemSpec{accountID: full.AccountTaxPayableID, amount: decNeg(leviedTax)})
+			specs = append(specs, itemSpec{accountID: finance_products.OptionalUintValue(invoicePrefs.AccountTaxPayableID), amount: decNeg(leviedTax)})
 		}
 		for _, tax := range taxesWithholding(line.Taxes) {
 			whAmt := taxAmountForTax(lineBase, tax)
@@ -170,8 +173,8 @@ func (d *DraftInvoice) NewPosted(tx *gorm.DB, postedAt time.Time) (*PostedInvoic
 		qty := line.Quantity
 		costBase := decMul(p.BaseCost, qty)
 		specs = append(specs,
-			itemSpec{accountID: p.CostOfSalesAcctID, amount: costBase},
-			itemSpec{accountID: p.InventoryAccountID, amount: decNeg(costBase)},
+			itemSpec{accountID: finance_products.OptionalUintValue(productPrefs.CostOfSalesAcctID), amount: costBase},
+			itemSpec{accountID: finance_products.OptionalUintValue(productPrefs.InventoryAccountID), amount: decNeg(costBase)},
 		)
 	}
 
@@ -197,10 +200,10 @@ func (d *DraftInvoice) NewPosted(tx *gorm.DB, postedAt time.Time) (*PostedInvoic
 			specs = append(specs, itemSpec{accountID: acctID, amount: amt})
 			continue
 		}
-		specs = append(specs, itemSpec{accountID: full.AccountTaxPayableID, amount: decNeg(amt)})
+		specs = append(specs, itemSpec{accountID: finance_products.OptionalUintValue(invoicePrefs.AccountTaxPayableID), amount: decNeg(amt)})
 	}
 	totalAR := invoiceReceivableGrandTotal(lineTotals, full.Taxes, lineTaxIDs)
-	specs = append(specs, itemSpec{accountID: full.AccountReceivableID, amount: totalAR})
+	specs = append(specs, itemSpec{accountID: finance_products.OptionalUintValue(invoicePrefs.AccountReceivableID), amount: totalAR})
 
 	for _, sp := range specs {
 		it := finance_accounts.JournalEntryItem{
@@ -222,10 +225,10 @@ func (d *DraftInvoice) NewPosted(tx *gorm.DB, postedAt time.Time) (*PostedInvoic
 		DraftInvoiceID:      full.ID,
 		PostedAt:            &postedAt,
 		Number:              number,
-		AccountReceivableID: full.AccountReceivableID,
-		AccountRevenueID:    full.AccountRevenueID,
-		AccountTaxPayableID: full.AccountTaxPayableID,
-		JournalID:           full.JournalID,
+		AccountReceivableID: finance_products.OptionalUintValue(invoicePrefs.AccountReceivableID),
+		AccountRevenueID:    finance_products.OptionalUintValue(invoicePrefs.AccountRevenueID),
+		AccountTaxPayableID: finance_products.OptionalUintValue(invoicePrefs.AccountTaxPayableID),
+		JournalID:           finance_products.OptionalUintValue(invoicePrefs.JournalID),
 		Datetime:            full.Datetime,
 		CustomerID:          full.CustomerID,
 		PaymentTermType:     full.PaymentTermType,
@@ -382,12 +385,8 @@ func (c *CancelledInvoice) NewDraft(tx *gorm.DB) (*DraftInvoice, error) {
 		return nil, err
 	}
 	draft := DraftInvoice{
-		Number:              nil,
-		AccountReceivableID: full.AccountReceivableID,
-		AccountRevenueID:    full.AccountRevenueID,
-		AccountTaxPayableID: full.AccountTaxPayableID,
-		JournalID:           full.JournalID,
-		Datetime:            full.Datetime,
+		Number:   nil,
+		Datetime: full.Datetime,
 		CustomerID:          full.CustomerID,
 		PaymentTermType:     full.PaymentTermType,
 		PaymentTermID:       full.PaymentTermID,

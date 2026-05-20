@@ -201,6 +201,23 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 					}),
 			},
 			{
+				Key: "finance_invoices.PostedInvoicePdfView",
+				Value: lamu.GetPageView("finance_invoices.PostedInvoiceDetail").
+					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
+					WithLayer("finance_invoices.superuser", SuperuserOnlyLayer{}).
+					WithLayer("finance_invoices.posted_invoice_pdf_detail", views.LayerDetail[PostedInvoice]{
+						Key:          getters.Static("posted_invoice"),
+						PathParamKey: getters.Static("id"),
+						QueryPatchers: views.QueryPatchers[PostedInvoice]{
+							registry.Pair[string, views.QueryPatcher[PostedInvoice]]{Key: "finance_invoices.preload_posted_pdf", Value: views.QueryPatcherPreload[PostedInvoice]{Fields: postedInvoicePdfPreload}},
+						},
+					}).
+					WithLayer("finance_invoices.posted_invoice_pdf", views.MethodLayer{
+						Method:  http.MethodGet,
+						Handler: postedInvoicePdfHandler,
+					}),
+			},
+			{
 				Key: "finance_invoices.PostedInvoiceCancelView",
 				Value: lamu.GetPageView("finance_invoices.PostedInvoiceCancelForm").
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
@@ -381,8 +398,25 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 						Key:          getters.Static("paid_invoice"),
 						PathParamKey: getters.Static("id"),
 						QueryPatchers: views.QueryPatchers[PaidInvoice]{
-							registry.Pair[string, views.QueryPatcher[PaidInvoice]]{Key: "finance_invoices.preload_paid_invoice_detail", Value: views.QueryPatcherPreload[PaidInvoice]{Fields: []string{"Payment", "PostedInvoice", "PostedInvoice.Customer", "PriorPartial"}}},
+							registry.Pair[string, views.QueryPatcher[PaidInvoice]]{Key: "finance_invoices.preload_paid_invoice_detail", Value: views.QueryPatcherPreload[PaidInvoice]{Fields: settlementPostedInvoiceDetailPreload}},
 						},
+					}),
+			},
+			{
+				Key: "finance_invoices.PaidInvoicePdfView",
+				Value: lamu.GetPageView("finance_invoices.PaidInvoiceDetail").
+					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
+					WithLayer("finance_invoices.superuser", SuperuserOnlyLayer{}).
+					WithLayer("finance_invoices.paid_invoice_pdf_detail", views.LayerDetail[PaidInvoice]{
+						Key:          getters.Static("paid_invoice"),
+						PathParamKey: getters.Static("id"),
+						QueryPatchers: views.QueryPatchers[PaidInvoice]{
+							registry.Pair[string, views.QueryPatcher[PaidInvoice]]{Key: "finance_invoices.preload_paid_invoice_pdf", Value: views.QueryPatcherPreload[PaidInvoice]{Fields: settlementPostedInvoiceDetailPreload}},
+						},
+					}).
+					WithLayer("finance_invoices.paid_invoice_pdf", views.MethodLayer{
+						Method:  http.MethodGet,
+						Handler: paidInvoicePdfHandler,
 					}),
 			},
 			{
@@ -398,10 +432,30 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 						Key:          getters.Static("partially_paid_invoice"),
 						PathParamKey: getters.Static("id"),
 						QueryPatchers: views.QueryPatchers[PartiallyPaidInvoice]{
-							registry.Pair[string, views.QueryPatcher[PartiallyPaidInvoice]]{Key: "finance_invoices.preload_partially_paid_invoice_detail", Value: views.QueryPatcherPreload[PartiallyPaidInvoice]{Fields: []string{"Payment", "PostedInvoice", "PostedInvoice.Customer", "PriorPartial"}}},
+							registry.Pair[string, views.QueryPatcher[PartiallyPaidInvoice]]{Key: "finance_invoices.preload_partially_paid_invoice_detail", Value: views.QueryPatcherPreload[PartiallyPaidInvoice]{Fields: settlementPostedInvoiceDetailPreload}},
 						},
 					}),
 			},
+			{
+				Key: "finance_invoices.PartiallyPaidInvoicePdfView",
+				Value: lamu.GetPageView("finance_invoices.PartiallyPaidInvoiceDetail").
+					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
+					WithLayer("finance_invoices.superuser", SuperuserOnlyLayer{}).
+					WithLayer("finance_invoices.partially_paid_invoice_pdf_detail", views.LayerDetail[PartiallyPaidInvoice]{
+						Key:          getters.Static("partially_paid_invoice"),
+						PathParamKey: getters.Static("id"),
+						QueryPatchers: views.QueryPatchers[PartiallyPaidInvoice]{
+							registry.Pair[string, views.QueryPatcher[PartiallyPaidInvoice]]{Key: "finance_invoices.preload_partially_paid_invoice_pdf", Value: views.QueryPatcherPreload[PartiallyPaidInvoice]{Fields: settlementPostedInvoiceDetailPreload}},
+						},
+					}).
+					WithLayer("finance_invoices.partially_paid_invoice_pdf", views.MethodLayer{
+						Method:  http.MethodGet,
+						Handler: partiallyPaidInvoicePdfHandler,
+					}),
+			},
+		},
+		Patches: []registry.Pair[string, func(*views.View) *views.View]{
+			{Key: "finance_accounts.AccountingPreferencesView", Value: patchAccountingPreferencesView},
 		},
 	}
 }

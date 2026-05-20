@@ -14,7 +14,6 @@ import (
 	"github.com/UniquityVentures/lamu/getters"
 	"github.com/UniquityVentures/lamu/lamu"
 	"github.com/UniquityVentures/lamu/registry"
-	finance_accounts "github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_accounts"
 	finance_customer "github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_customer"
 	finance_products "github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_products"
 	finance_taxes "github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_taxes"
@@ -27,8 +26,6 @@ const (
 	financeAccountsMainMenuPostedInvoicesLinkKey      = "finance_invoices.FinanceAccountsMainMenuPostedLink"
 	financeAccountsMainMenuCancelledInvoicesLinkKey   = "finance_invoices.FinanceAccountsMainMenuCancelledLink"
 	financeAccountsMainMenuPaymentsLinkKey            = "finance_invoices.FinanceAccountsMainMenuPaymentsLink"
-	financeAccountsMainMenuPaidInvoicesLinkKey        = "finance_invoices.FinanceAccountsMainMenuPaidInvoicesLink"
-	financeAccountsMainMenuPartialPaymentsLinkKey     = "finance_invoices.FinanceAccountsMainMenuPartialPaymentsLink"
 )
 
 // invoiceLineTaxMeta is embedded in the invoice line editor preview JSON (id → name for chips).
@@ -143,22 +140,6 @@ func patchFinanceAccountsMainMenuForInvoices(page components.PageInterface) comp
 			Icon:  "banknotes",
 		})
 	}
-	if !sidebarMenuHasChildKeyFromList(newChildren, financeAccountsMainMenuPaidInvoicesLinkKey) {
-		newChildren = append(newChildren, &components.SidebarMenuItem{
-			Page:  components.Page{Key: financeAccountsMainMenuPaidInvoicesLinkKey, Roles: []string{"superuser"}},
-			Title: getters.Static("Paid invoices"),
-			Url:   invoiceHubURLWithTabGetter("paid"),
-			Icon:  "check-circle",
-		})
-	}
-	if !sidebarMenuHasChildKeyFromList(newChildren, financeAccountsMainMenuPartialPaymentsLinkKey) {
-		newChildren = append(newChildren, &components.SidebarMenuItem{
-			Page:  components.Page{Key: financeAccountsMainMenuPartialPaymentsLinkKey, Roles: []string{"superuser"}},
-			Title: getters.Static("Partial payments"),
-			Url:   invoiceHubURLWithTabGetter("partial"),
-			Icon:  "adjustments-horizontal",
-		})
-	}
 
 	if len(newChildren) == len(menu.Children) {
 		same := true
@@ -191,6 +172,7 @@ func pluginPages() lamu.PluginFeatures[components.PageInterface] {
 		Entries: e,
 		Patches: []registry.Pair[string, func(components.PageInterface) components.PageInterface]{
 			{Key: "finance_accounts.MainMenu", Value: patchFinanceAccountsMainMenuForInvoices},
+			{Key: "finance_accounts.AccountingPreferencesForm", Value: patchAccountingPreferencesForm},
 		},
 	}
 }
@@ -341,29 +323,6 @@ func invoiceLineEditorPreviewGetter() getters.Getter[string] {
 
 func invoiceProductFkPickURLGetter() getters.Getter[string] {
 	return lamu.RoutePath("finance_products.ProductFkSelectRoute", nil)
-}
-
-// draftInvoiceJournalIDPrefillGetter returns the draft's journal ID, or when it is zero (new draft),
-// the default journal from accounting preferences if one is set.
-func draftInvoiceJournalIDPrefillGetter() getters.Getter[uint] {
-	return func(ctx context.Context) (uint, error) {
-		id, err := getters.Key[uint]("$in.JournalID")(ctx)
-		if err != nil {
-			return 0, err
-		}
-		if id != 0 {
-			return id, nil
-		}
-		db, err := getters.DBFromContext(ctx)
-		if err != nil {
-			return 0, nil
-		}
-		prefs := finance_accounts.LoadAccountingPreferences(db)
-		if prefs.DefaultJournalID != nil && *prefs.DefaultJournalID != 0 {
-			return *prefs.DefaultJournalID, nil
-		}
-		return 0, nil
-	}
 }
 
 func invoiceLinesDraftJSONGetter() getters.Getter[string] {
@@ -640,62 +599,6 @@ func draftInvoiceCreateEditInputs() []components.PageInterface {
 			},
 		},
 		&components.ContainerError{
-			Error: getters.Key[error]("$error.AccountReceivableID"),
-			Children: []components.PageInterface{
-				&components.InputForeignKey[finance_accounts.Account]{
-					Label:       "Accounts receivable",
-					Name:        "AccountReceivableID",
-					Required:    true,
-					Url:         finance_accounts.AccountSelectRouteURL(finance_accounts.BalanceTypeDebit),
-					Display:     getters.Format("%s (#%d)", getters.Any(getters.Key[string]("$in.Name")), getters.Any(getters.Key[uint]("$in.ID"))),
-					Placeholder: "Select debit account…",
-					Getter:      getters.Association[finance_accounts.Account, uint](getters.Key[uint]("$in.AccountReceivableID")),
-				},
-			},
-		},
-		&components.ContainerError{
-			Error: getters.Key[error]("$error.AccountRevenueID"),
-			Children: []components.PageInterface{
-				&components.InputForeignKey[finance_accounts.Account]{
-					Label:       "Revenue account",
-					Name:        "AccountRevenueID",
-					Required:    true,
-					Url:         finance_accounts.AccountSelectRouteURL(finance_accounts.BalanceTypeCredit),
-					Display:     getters.Format("%s (#%d)", getters.Any(getters.Key[string]("$in.Name")), getters.Any(getters.Key[uint]("$in.ID"))),
-					Placeholder: "Select credit account…",
-					Getter:      getters.Association[finance_accounts.Account, uint](getters.Key[uint]("$in.AccountRevenueID")),
-				},
-			},
-		},
-		&components.ContainerError{
-			Error: getters.Key[error]("$error.AccountTaxPayableID"),
-			Children: []components.PageInterface{
-				&components.InputForeignKey[finance_accounts.Account]{
-					Label:       "Tax payable",
-					Name:        "AccountTaxPayableID",
-					Required:    true,
-					Url:         finance_accounts.AccountSelectRouteURL(finance_accounts.BalanceTypeCredit),
-					Display:     getters.Format("%s (#%d)", getters.Any(getters.Key[string]("$in.Name")), getters.Any(getters.Key[uint]("$in.ID"))),
-					Placeholder: "Select credit account…",
-					Getter:      getters.Association[finance_accounts.Account, uint](getters.Key[uint]("$in.AccountTaxPayableID")),
-				},
-			},
-		},
-		&components.ContainerError{
-			Error: getters.Key[error]("$error.JournalID"),
-			Children: []components.PageInterface{
-				&components.InputForeignKey[finance_accounts.Journal]{
-					Label:       "Journal",
-					Name:        "JournalID",
-					Required:    true,
-					Url:         lamu.RoutePath("finance_accounts.JournalSelectRoute", nil),
-					Display:     getters.Key[string]("$in.Name"),
-					Placeholder: "Select journal…",
-					Getter:      getters.Association[finance_accounts.Journal, uint](draftInvoiceJournalIDPrefillGetter()),
-				},
-			},
-		},
-		&components.ContainerError{
 			Error: getters.Key[error]("$error.Taxes"),
 			Children: []components.PageInterface{
 				&components.InputManyToMany[finance_taxes.Tax]{
@@ -952,15 +855,7 @@ func pageEntriesDraftInvoicePages() []registry.Pair[string, components.PageInter
 													ModalUID:    "finance-draft-invoice-post-modal",
 													Classes:     "btn btn-primary",
 												},
-												&components.ButtonDownload{
-													Page:    components.Page{Roles: []string{"superuser"}},
-													Label:   "Download PDF",
-													Icon:    "arrow-down-tray",
-													Classes: "btn-outline btn-secondary",
-													Link: lamu.RoutePath("finance_invoices.DraftInvoicePdfRoute", map[string]getters.Getter[any]{
-														"id": getters.Any(getters.Key[uint]("draft_invoice.ID")),
-													}),
-												},
+												invoicePdfDownloadButton("finance_invoices.DraftInvoicePdfRoute", "draft_invoice.ID"),
 											},
 										},
 										&components.LabelInline{Title: "Number", Children: []components.PageInterface{
@@ -1149,6 +1044,18 @@ func journalEntryLinkGetter(jeIDKey string) getters.Getter[string] {
 	})
 }
 
+func invoicePdfDownloadButton(routeKey, recordIDKey string) components.PageInterface {
+	return &components.ButtonDownload{
+		Page:    components.Page{Roles: []string{"superuser"}},
+		Label:   "Download PDF",
+		Icon:    "arrow-down-tray",
+		Classes: "btn-outline btn-secondary",
+		Link: lamu.RoutePath(routeKey, map[string]getters.Getter[any]{
+			"id": getters.Any(getters.Key[uint](recordIDKey)),
+		}),
+	}
+}
+
 func invoiceCustomerDetailLinkHrefGetter() getters.Getter[string] {
 	return lamu.RoutePath("finance_customers.CustomerDetailRoute", map[string]getters.Getter[any]{
 		"id": getters.Any(getters.Key[uint]("$in.CustomerID")),
@@ -1204,8 +1111,14 @@ func pageEntriesPostedInvoicePages() []registry.Pair[string, components.PageInte
 									Classes: "p-4",
 									Children: []components.PageInterface{
 										&components.ContainerRow{
-											Classes: "mb-4",
+											Classes: "mb-4 flex flex-wrap gap-2 items-center",
 											Children: []components.PageInterface{
+												&components.ButtonLink{
+													Page:    components.Page{Roles: []string{"superuser"}},
+													Label:   "Pay",
+													Link:    paymentCreateURLForPostedInvoiceID("posted_invoice.ID"),
+													Classes: "btn-primary",
+												},
 												&components.ButtonModalForm{
 													Page:  components.Page{Roles: []string{"superuser"}},
 													Label: "Cancel invoice",
@@ -1219,6 +1132,7 @@ func pageEntriesPostedInvoicePages() []registry.Pair[string, components.PageInte
 													ModalUID: "finance-posted-invoice-cancel-modal",
 													Classes:  "btn btn-error",
 												},
+												invoicePdfDownloadButton("finance_invoices.PostedInvoicePdfRoute", "posted_invoice.ID"),
 											},
 										},
 										&components.LabelInline{Title: "Number", Children: []components.PageInterface{
@@ -1348,15 +1262,7 @@ func pageEntriesCancelledInvoicePages() []registry.Pair[string, components.PageI
 													ModalUID: "finance-cancelled-invoice-new-draft-modal",
 													Classes:  "btn btn-primary",
 												},
-												&components.ButtonDownload{
-													Page:    components.Page{Roles: []string{"superuser"}},
-													Label:   "Download PDF",
-													Icon:    "arrow-down-tray",
-													Classes: "btn-outline btn-secondary",
-													Link: lamu.RoutePath("finance_invoices.CancelledInvoicePdfRoute", map[string]getters.Getter[any]{
-														"id": getters.Any(getters.Key[uint]("cancelled_invoice.ID")),
-													}),
-												},
+												invoicePdfDownloadButton("finance_invoices.CancelledInvoicePdfRoute", "cancelled_invoice.ID"),
 											},
 										},
 										&components.LabelInline{Title: "Number", Children: []components.PageInterface{

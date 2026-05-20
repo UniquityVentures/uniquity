@@ -2,14 +2,12 @@ package p_uniquity_finance_products
 
 import (
 	"context"
-	"strings"
 
 	"github.com/UniquityVentures/lamu/components"
 	"github.com/UniquityVentures/lamu/fields"
 	"github.com/UniquityVentures/lamu/getters"
 	"github.com/UniquityVentures/lamu/lamu"
 	"github.com/UniquityVentures/lamu/registry"
-	finance_accounts "github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_accounts"
 	finance_taxes "github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_taxes"
 )
 
@@ -64,6 +62,7 @@ func pluginPages() lamu.PluginFeatures[components.PageInterface] {
 		Entries: e,
 		Patches: []registry.Pair[string, func(components.PageInterface) components.PageInterface]{
 			{Key: "finance_accounts.MainMenu", Value: patchFinanceAccountsMainMenuForProducts},
+			{Key: "finance_accounts.AccountingPreferencesForm", Value: patchAccountingPreferencesForm},
 		},
 	}
 }
@@ -183,32 +182,6 @@ func productFormInputs() []components.PageInterface {
 			Error: getters.Key[error]("$error.HSNCode"),
 			Children: []components.PageInterface{
 				&components.InputNumber[int64]{Label: "HSN code", Name: "HSNCode", Required: true, Getter: getters.Key[int64]("$in.HSNCode")},
-			},
-		},
-		&components.ContainerError{
-			Error: getters.Key[error]("$error.InventoryAccountID"),
-			Children: []components.PageInterface{
-				&components.InputForeignKey[finance_accounts.Account]{
-					Label:       "Inventory account",
-					Name:        "InventoryAccountID",
-					Url:         lamu.RoutePath("finance_accounts.AccountSelectRoute", nil),
-					Display:     getters.Format("%s (#%d)", getters.Any(getters.Key[string]("$in.Name")), getters.Any(getters.Key[uint]("$in.ID"))),
-					Placeholder: "Select…",
-					Getter:      getters.Association[finance_accounts.Account, uint](getters.Key[uint]("$in.InventoryAccountID")),
-				},
-			},
-		},
-		&components.ContainerError{
-			Error: getters.Key[error]("$error.CostOfSalesAcctID"),
-			Children: []components.PageInterface{
-				&components.InputForeignKey[finance_accounts.Account]{
-					Label:       "Cost of sales account",
-					Name:        "CostOfSalesAcctID",
-					Url:         lamu.RoutePath("finance_accounts.AccountSelectRoute", nil),
-					Display:     getters.Format("%s (#%d)", getters.Any(getters.Key[string]("$in.Name")), getters.Any(getters.Key[uint]("$in.ID"))),
-					Placeholder: "Select…",
-					Getter:      getters.Association[finance_accounts.Account, uint](getters.Key[uint]("$in.CostOfSalesAcctID")),
-				},
 			},
 		},
 	}
@@ -382,27 +355,11 @@ func pageEntriesProductPages() []registry.Pair[string, components.PageInterface]
 								&components.LabelInline{Title: "HSN code", Children: []components.PageInterface{
 									&components.FieldText{Getter: getters.Format("%d", getters.Any(getters.Key[int64]("$in.HSNCode")))},
 								}},
-								&components.LabelInline{Title: "Inventory account", Children: []components.PageInterface{
-									&components.FieldText{Getter: getters.Format("%s", getters.Any(accountNameOrDash("$in.InventoryAccount.Name")))},
-								}},
-								&components.LabelInline{Title: "Cost of sales account", Children: []components.PageInterface{
-									&components.FieldText{Getter: getters.Format("%s", getters.Any(accountNameOrDash("$in.CostOfSalesAccount.Name")))},
-								}},
 							},
 						},
 					},
 				},
 			},
 		}},
-	}
-}
-
-func accountNameOrDash(ctxKey string) getters.Getter[string] {
-	return func(ctx context.Context) (string, error) {
-		s, err := getters.Key[string](ctxKey)(ctx)
-		if err != nil || strings.TrimSpace(s) == "" {
-			return "—", nil
-		}
-		return s, nil
 	}
 }

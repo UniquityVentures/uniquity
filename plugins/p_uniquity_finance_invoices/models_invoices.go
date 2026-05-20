@@ -18,15 +18,6 @@ type DraftInvoice struct {
 
 	Number *string `gorm:"column:number"`
 
-	AccountReceivableID uint                     `gorm:"column:account_receivable_id;not null"`
-	AccountReceivable   finance_accounts.Account `gorm:"foreignKey:AccountReceivableID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT"`
-	AccountRevenueID    uint                     `gorm:"column:account_revenue_id;not null"`
-	AccountRevenue      finance_accounts.Account `gorm:"foreignKey:AccountRevenueID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT"`
-	AccountTaxPayableID uint                     `gorm:"column:account_tax_payable_id;not null"`
-	AccountTaxPayable   finance_accounts.Account `gorm:"foreignKey:AccountTaxPayableID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT"`
-	JournalID           uint                     `gorm:"column:journal_id;not null"`
-	Journal             finance_accounts.Journal `gorm:"foreignKey:JournalID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT"`
-
 	Datetime time.Time `gorm:"column:datetime;not null"`
 
 	CustomerID uint                      `gorm:"column:customer_id;not null"`

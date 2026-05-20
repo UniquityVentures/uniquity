@@ -85,6 +85,7 @@ func (accountDetailChildrenLayer) Next(_ views.View, next http.Handler) http.Han
 			NumPages: 1,
 			Total:    n,
 		}
+		ol = prependAccountParentUpRow(ol)
 		ctx = context.WithValue(ctx, accountChildrenContextKey, ol)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
@@ -381,7 +382,8 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 							{Key: "finance_accounts.preload_parent", Value: accountListPreload{}},
 							{Key: "finance_accounts.account_select_balance_type_scope", Value: accountSelectBalanceTypeScope{}},
 						},
-					}),
+					}).
+					WithLayer("finance_accounts.account_select_parent_up", accountSelectParentUpLayer{}),
 			},
 			{
 				Key: "finance_accounts.CurrencyListView",

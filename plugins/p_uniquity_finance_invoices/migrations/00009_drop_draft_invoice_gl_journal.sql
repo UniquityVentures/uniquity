@@ -1,0 +1,16 @@
+-- +goose Up
+ALTER TABLE draft_invoices
+    DROP COLUMN IF EXISTS account_receivable_id,
+    DROP COLUMN IF EXISTS account_revenue_id,
+    DROP COLUMN IF EXISTS journal_id;
+
+-- +goose Down
+ALTER TABLE draft_invoices
+    ADD COLUMN IF NOT EXISTS account_receivable_id BIGINT NOT NULL DEFAULT 0 REFERENCES accounts (id) ON UPDATE CASCADE ON DELETE RESTRICT,
+    ADD COLUMN IF NOT EXISTS account_revenue_id BIGINT NOT NULL DEFAULT 0 REFERENCES accounts (id) ON UPDATE CASCADE ON DELETE RESTRICT,
+    ADD COLUMN IF NOT EXISTS journal_id BIGINT NOT NULL DEFAULT 0 REFERENCES journals (id) ON UPDATE CASCADE ON DELETE RESTRICT;
+
+ALTER TABLE draft_invoices
+    ALTER COLUMN account_receivable_id DROP DEFAULT,
+    ALTER COLUMN account_revenue_id DROP DEFAULT,
+    ALTER COLUMN journal_id DROP DEFAULT;

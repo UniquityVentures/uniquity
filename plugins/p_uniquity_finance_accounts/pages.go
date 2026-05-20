@@ -302,12 +302,8 @@ func pageAccountCRUD() []registry.Pair[string, components.PageInterface] {
 					})),
 					Columns: []components.TableColumn{
 						{Label: "Name", Name: "Name", Children: accountTableNameCell("$row")},
-						{Label: "Code", Name: "Code", Children: []components.PageInterface{
-							&components.FieldText{Getter: getters.Format("%d", getters.Any(getters.Key[int]("$row.Code")))},
-						}},
-						{Label: "Balance type", Name: "BalanceType", Children: []components.PageInterface{
-							&components.FieldText{Getter: getters.Format("%s", getters.Any(getters.Key[BalanceType]("$row.BalanceType")))},
-						}},
+						{Label: "Code", Name: "Code", Children: accountTableCodeCell("$row")},
+						{Label: "Balance type", Name: "BalanceType", Children: accountTableBalanceTypeCell("$row")},
 					},
 				},
 			},
@@ -460,17 +456,11 @@ func pageAccountCRUD() []registry.Pair[string, components.PageInterface] {
 							Subtitle: "Direct children of this account",
 							Classes:  "w-full",
 							Data:     getters.Key[components.ObjectList[Account]](accountChildrenContextKey),
-							RowAttr: getters.RowAttrNavigate(lamu.RoutePath("finance_accounts.AccountDetailRoute", map[string]getters.Getter[any]{
-								"id": getters.Any(getters.Key[uint]("$row.ID")),
-							})),
+							RowAttr:  accountChildrenTableRowAttr(),
 							Columns: []components.TableColumn{
 								{Label: "Name", Name: "Name", Children: accountTableNameCell("$row")},
-								{Label: "Code", Name: "Code", Children: []components.PageInterface{
-									&components.FieldText{Getter: getters.Format("%d", getters.Any(getters.Key[int]("$row.Code")))},
-								}},
-								{Label: "Balance type", Name: "BalanceType", Children: []components.PageInterface{
-									&components.FieldText{Getter: getters.Format("%s", getters.Any(getters.Key[BalanceType]("$row.BalanceType")))},
-								}},
+								{Label: "Code", Name: "Code", Children: accountTableCodeCell("$row")},
+								{Label: "Balance type", Name: "BalanceType", Children: accountTableBalanceTypeCell("$row")},
 							},
 						},
 					},
@@ -497,15 +487,9 @@ func pageAccountCRUD() []registry.Pair[string, components.PageInterface] {
 						getters.Key[bool]("$row.IsGroup"),
 					),
 					Columns: []components.TableColumn{
-						{Label: "Code", Name: "Code", Children: []components.PageInterface{
-							&components.FieldText{Getter: getters.Format("%d", getters.Any(getters.Key[int]("$row.Code")))},
-						}},
-						{Label: "Name", Name: "Name", Children: []components.PageInterface{
-							&components.FieldText{Getter: getters.Key[string]("$row.Name")},
-						}},
-						{Label: "Type", Name: "BalanceType", Children: []components.PageInterface{
-							&components.FieldText{Getter: getters.Format("%s", getters.Any(getters.Key[BalanceType]("$row.BalanceType")))},
-						}},
+						{Label: "Code", Name: "Code", Children: accountTableCodeCell("$row")},
+						{Label: "Name", Name: "Name", Children: accountTableNameCell("$row")},
+						{Label: "Type", Name: "BalanceType", Children: accountTableBalanceTypeCell("$row")},
 					},
 				},
 			},

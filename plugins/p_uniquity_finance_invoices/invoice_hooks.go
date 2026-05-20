@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/UniquityVentures/lamu/fields"
-	finance_accounts "github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_accounts"
 	finance_products "github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_products"
 	finance_taxes "github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_taxes"
 	"gorm.io/gorm"
@@ -29,15 +28,6 @@ func (d *DraftInvoice) BeforeSave(tx *gorm.DB) error {
 		return fmt.Errorf("load payment term: %w", err)
 	}
 	d.PaymentTermType = pt.Type
-	if err := finance_accounts.ValidateLeafAccountBalanceType(tx, d.AccountReceivableID, finance_accounts.BalanceTypeDebit, "accounts receivable"); err != nil {
-		return err
-	}
-	if err := finance_accounts.ValidateLeafAccountBalanceType(tx, d.AccountRevenueID, finance_accounts.BalanceTypeCredit, "revenue account"); err != nil {
-		return err
-	}
-	if err := finance_accounts.ValidateLeafAccountBalanceType(tx, d.AccountTaxPayableID, finance_accounts.BalanceTypeCredit, "tax payable account"); err != nil {
-		return err
-	}
 	return nil
 }
 

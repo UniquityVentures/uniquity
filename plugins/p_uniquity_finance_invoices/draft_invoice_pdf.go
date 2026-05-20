@@ -44,6 +44,58 @@ func cancelledInvoiceFromContext(ctx context.Context) (CancelledInvoice, bool) {
 	}
 }
 
+func postedInvoiceFromContext(ctx context.Context) (PostedInvoice, bool) {
+	switch v := ctx.Value("posted_invoice").(type) {
+	case PostedInvoice:
+		return v, true
+	case *PostedInvoice:
+		if v == nil {
+			return PostedInvoice{}, false
+		}
+		return *v, true
+	default:
+		return PostedInvoice{}, false
+	}
+}
+
+func paidInvoiceFromContext(ctx context.Context) (PaidInvoice, bool) {
+	switch v := ctx.Value("paid_invoice").(type) {
+	case PaidInvoice:
+		return v, true
+	case *PaidInvoice:
+		if v == nil {
+			return PaidInvoice{}, false
+		}
+		return *v, true
+	default:
+		return PaidInvoice{}, false
+	}
+}
+
+func partiallyPaidInvoiceFromContext(ctx context.Context) (PartiallyPaidInvoice, bool) {
+	switch v := ctx.Value("partially_paid_invoice").(type) {
+	case PartiallyPaidInvoice:
+		return v, true
+	case *PartiallyPaidInvoice:
+		if v == nil {
+			return PartiallyPaidInvoice{}, false
+		}
+		return *v, true
+	default:
+		return PartiallyPaidInvoice{}, false
+	}
+}
+
+var postedInvoicePdfPreload = []string{"Customer", "PaymentTerm", "Taxes", "Lines", "Lines.Product", "Lines.Taxes"}
+
+func servePostedInvoicePDF(w http.ResponseWriter, db *gorm.DB, posted PostedInvoice, logPrefix string) {
+	base := fmt.Sprintf("invoice-%d", posted.ID)
+	if strings.TrimSpace(posted.Number) != "" {
+		base = sanitizeInvoicePdfFilenameBase(posted.Number)
+	}
+	serveInvoicePDFFromPrefs(w, db, getters.MapFromStruct(posted), base, logPrefix, posted.ID)
+}
+
 func serveInvoicePDFFromPrefs(w http.ResponseWriter, db *gorm.DB, templateRoot map[string]any, filenameBase string, logPrefix string, entityID uint) {
 	prefs := finance_accounts.LoadAccountingPreferences(db)
 	tmplSrc := strings.TrimSpace(prefs.InvoicePDFTemplate)
@@ -119,6 +171,63 @@ func cancelledInvoicePdfHandler(_ *views.View) http.Handler {
 			base = sanitizeInvoicePdfFilenameBase(inv.Number)
 		}
 		serveInvoicePDFFromPrefs(w, db, getters.MapFromStruct(inv), base, "cancelled_invoice_pdf", inv.ID)
+	})
+}
+
+func postedInvoicePdfHandler(_ *views.View) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		posted, ok := postedInvoiceFromContext(ctx)
+		if !ok {
+			slog.Error("posted_invoice_pdf: missing posted_invoice in context")
+			http.Error(w, "Posted invoice not found", http.StatusInternalServerError)
+			return
+		}
+		db, err := getters.DBFromContext(ctx)
+		if err != nil {
+			slog.Error("posted_invoice_pdf: db", "error", err)
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
+			return
+		}
+		servePostedInvoicePDF(w, db, posted, "posted_invoice_pdf")
+	})
+}
+
+func paidInvoicePdfHandler(_ *views.View) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		paid, ok := paidInvoiceFromContext(ctx)
+		if !ok {
+			slog.Error("paid_invoice_pdf: missing paid_invoice in context")
+			http.Error(w, "Paid invoice not found", http.StatusInternalServerError)
+			return
+		}
+		db, err := getters.DBFromContext(ctx)
+		if err != nil {
+			slog.Error("paid_invoice_pdf: db", "error", err)
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
+			return
+		}
+		servePostedInvoicePDF(w, db, paid.PostedInvoice, "paid_invoice_pdf")
+	})
+}
+
+func partiallyPaidInvoicePdfHandler(_ *views.View) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		partial, ok := partiallyPaidInvoiceFromContext(ctx)
+		if !ok {
+			slog.Error("partially_paid_invoice_pdf: missing partially_paid_invoice in context")
+			http.Error(w, "Partially paid invoice not found", http.StatusInternalServerError)
+			return
+		}
+		db, err := getters.DBFromContext(ctx)
+		if err != nil {
+			slog.Error("partially_paid_invoice_pdf: db", "error", err)
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
+			return
+		}
+		servePostedInvoicePDF(w, db, partial.PostedInvoice, "partially_paid_invoice_pdf")
 	})
 }
 

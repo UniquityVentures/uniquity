@@ -104,5 +104,8 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 					}),
 			},
 		},
+		Patches: []registry.Pair[string, func(*views.View) *views.View]{
+			{Key: "finance_accounts.AccountingPreferencesView", Value: patchAccountingPreferencesView},
+		},
 	}
 }

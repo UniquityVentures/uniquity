@@ -25,6 +25,7 @@ func pluginRoutes() lamu.PluginFeatures[lamu.Route] {
 
 			{Key: "finance_invoices.PostedInvoiceListRoute", Value: lamu.Route{Path: posted, Handler: lamu.NewDynamicView("finance_invoices.PostedInvoiceListView")}},
 			{Key: "finance_invoices.PostedInvoiceDetailRoute", Value: lamu.Route{Path: posted + "{id}/", Handler: lamu.NewDynamicView("finance_invoices.PostedInvoiceDetailView")}},
+			{Key: "finance_invoices.PostedInvoicePdfRoute", Value: lamu.Route{Path: posted + "{id}/pdf/", Handler: lamu.NewDynamicView("finance_invoices.PostedInvoicePdfView")}},
 			{Key: "finance_invoices.PostedInvoiceCancelRoute", Value: lamu.Route{Path: posted + "{id}/cancel/", Handler: lamu.NewDynamicView("finance_invoices.PostedInvoiceCancelView")}},
 
 			{Key: "finance_invoices.CancelledInvoiceListRoute", Value: lamu.Route{Path: cancelled, Handler: lamu.NewDynamicView("finance_invoices.CancelledInvoiceListView")}},
@@ -45,8 +46,10 @@ func pluginRoutes() lamu.PluginFeatures[lamu.Route] {
 
 			{Key: "finance_invoices.PaidInvoiceListRoute", Value: lamu.Route{Path: paidInv, Handler: lamu.NewDynamicView("finance_invoices.PaidInvoiceListView")}},
 			{Key: "finance_invoices.PaidInvoiceDetailRoute", Value: lamu.Route{Path: paidInv + "{id}/", Handler: lamu.NewDynamicView("finance_invoices.PaidInvoiceDetailView")}},
+			{Key: "finance_invoices.PaidInvoicePdfRoute", Value: lamu.Route{Path: paidInv + "{id}/pdf/", Handler: lamu.NewDynamicView("finance_invoices.PaidInvoicePdfView")}},
 			{Key: "finance_invoices.PartiallyPaidInvoiceListRoute", Value: lamu.Route{Path: partInv, Handler: lamu.NewDynamicView("finance_invoices.PartiallyPaidInvoiceListView")}},
 			{Key: "finance_invoices.PartiallyPaidInvoiceDetailRoute", Value: lamu.Route{Path: partInv + "{id}/", Handler: lamu.NewDynamicView("finance_invoices.PartiallyPaidInvoiceDetailView")}},
+			{Key: "finance_invoices.PartiallyPaidInvoicePdfRoute", Value: lamu.Route{Path: partInv + "{id}/pdf/", Handler: lamu.NewDynamicView("finance_invoices.PartiallyPaidInvoicePdfView")}},
 		},
 	}
 }

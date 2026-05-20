@@ -24,6 +24,23 @@ func accountSelectionTableRowAttr(
 	isGroupGetter getters.Getter[bool],
 ) getters.Getter[gomponents.Node] {
 	return func(ctx context.Context) (gomponents.Node, error) {
+		rowID, err := idGetter(ctx)
+		if err != nil {
+			return nil, err
+		}
+		if rowID == accountParentUpRowID {
+			drillURL, err := accountSelectBuildParentUpURL(ctx)
+			if err != nil {
+				return nil, err
+			}
+			return gomponents.Group{
+				ghtml.Class("cursor-pointer hover:bg-base-200 transition-colors"),
+				gomponents.Attr("hx-get", drillURL),
+				gomponents.Attr("hx-target", "#"+accountSelectionModalElementID),
+				gomponents.Attr("hx-swap", "outerHTML"),
+				gomponents.Attr("hx-push-url", "false"),
+			}, nil
+		}
 		isGroup, err := isGroupGetter(ctx)
 		if err != nil {
 			return nil, err

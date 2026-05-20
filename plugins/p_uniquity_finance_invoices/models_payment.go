@@ -8,6 +8,7 @@ import (
 
 	"github.com/UniquityVentures/lamu/fields"
 	finance_accounts "github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_accounts"
+	finance_products "github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_products"
 	finance_taxes "github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_taxes"
 	"gorm.io/gorm"
 )
@@ -102,14 +103,18 @@ func (p *Payment) BeforeCreate(tx *gorm.DB) error {
 	if p.PostedInvoiceID == 0 {
 		return fmt.Errorf("posted invoice is required")
 	}
-	if p.AccountID == 0 {
-		return fmt.Errorf("account is required")
-	}
 	if p.JournalEntryID != 0 {
 		return fmt.Errorf("journal entry must not be set manually")
 	}
 	if p.Amount.R == nil || p.Amount.R.Sign() <= 0 {
 		return fmt.Errorf("amount must be positive")
+	}
+	paymentPrefs := LoadPaymentPreferences(tx)
+	if err := ValidatePaymentPreferencesForCreate(tx, &paymentPrefs); err != nil {
+		return err
+	}
+	if p.AccountID == 0 {
+		p.AccountID = finance_products.OptionalUintValue(paymentPrefs.PaymentAccountID)
 	}
 	if err := finance_accounts.ValidateLeafAccountBalanceType(tx, p.AccountID, finance_accounts.BalanceTypeDebit, "payment account"); err != nil {
 		return err
