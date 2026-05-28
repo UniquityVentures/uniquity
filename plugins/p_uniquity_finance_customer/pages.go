@@ -75,43 +75,43 @@ func customerCreateFormInputs() []components.PageInterface {
 		&components.ContainerError{
 			Error: getters.Key[error]("$error.Name"),
 			Children: []components.PageInterface{
-				&components.InputText{Name: "Name", Label: "Name", Required: true},
+				&components.InputText{Name: "Name", Label: "Name", Required: true, Getter: getters.Key[string]("$in.Name")},
 			},
 		},
 		&components.ContainerError{
 			Error: getters.Key[error]("$error.Address"),
 			Children: []components.PageInterface{
-				&components.InputTextarea{Name: "Address", Label: "Address", Rows: 4},
+				&components.InputTextarea{Name: "Address", Label: "Address", Getter: getters.Key[string]("$in.Address"), Rows: 4},
 			},
 		},
 		&components.ContainerError{
 			Error: getters.Key[error]("$error.GSTIN"),
 			Children: []components.PageInterface{
-				&components.InputText{Name: "GSTIN", Label: "GSTIN"},
+				&components.InputText{Name: "GSTIN", Label: "GSTIN", Getter: getters.Key[string]("$in.GSTIN")},
 			},
 		},
 		&components.ContainerError{
 			Error: getters.Key[error]("$error.PAN"),
 			Children: []components.PageInterface{
-				&components.InputText{Name: "PAN", Label: "PAN"},
+				&components.InputText{Name: "PAN", Label: "PAN", Getter: getters.Key[string]("$in.PAN")},
 			},
 		},
 		&components.ContainerError{
 			Error: getters.Key[error]("$error.Phone"),
 			Children: []components.PageInterface{
-				&components.InputPhone{Name: "Phone", Label: "Phone"},
+				&components.InputPhone{Name: "Phone", Label: "Phone", Getter: getters.Key[string]("$in.Phone")},
 			},
 		},
 		&components.ContainerError{
 			Error: getters.Key[error]("$error.Email"),
 			Children: []components.PageInterface{
-				&components.InputEmail{Name: "Email", Label: "Email"},
+				&components.InputEmail{Name: "Email", Label: "Email", Getter: getters.Key[string]("$in.Email")},
 			},
 		},
 		&components.ContainerError{
 			Error: getters.Key[error]("$error.Website"),
 			Children: []components.PageInterface{
-				&components.InputText{Name: "Website", Label: "Website"},
+				&components.InputText{Name: "Website", Label: "Website", Getter: getters.Key[string]("$in.Website")},
 			},
 		},
 	}
