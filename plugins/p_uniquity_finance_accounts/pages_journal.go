@@ -11,22 +11,11 @@ import (
 	"github.com/UniquityVentures/lamu/registry"
 )
 
-var journalTypeChoices = getters.Static([]registry.Pair[JournalType, string]{
+var journalTypeChoiceList = []registry.Pair[JournalType, string]{
 	{Key: JournalTypeGeneral, Value: "General"},
-})
-
-func journalTypeSelectGetter(ctxKey string) getters.Getter[registry.Pair[JournalType, string]] {
-	return func(ctx context.Context) (registry.Pair[JournalType, string], error) {
-		jt, err := getters.Key[JournalType](ctxKey)(ctx)
-		if err != nil {
-			return registry.Pair[JournalType, string]{}, err
-		}
-		if jt == "" {
-			return registry.Pair[JournalType, string]{}, nil
-		}
-		return registry.Pair[JournalType, string]{Key: jt, Value: string(jt)}, nil
-	}
 }
+
+var journalTypeChoices = getters.Static(journalTypeChoiceList)
 
 func journalCurrencyDetailHref() getters.Getter[string] {
 	return func(ctx context.Context) (string, error) {
@@ -155,7 +144,7 @@ func pageJournalCRUD() []registry.Pair[string, components.PageInterface] {
 		Label:    "Type",
 		Required: true,
 		Choices:  journalTypeChoices,
-		Getter:   journalTypeSelectGetter("$in.Type"),
+		Getter:   registry.PairFromGetter(getters.Key[JournalType]("$in.Type"), journalTypeChoiceList),
 	}
 
 	return []registry.Pair[string, components.PageInterface]{
@@ -509,7 +498,7 @@ func pageJournalFKSelectPages() []registry.Pair[string, components.PageInterface
 					Label:    "Type",
 					Required: false,
 					Choices:  journalTypeChoices,
-					Getter:   journalTypeSelectGetter("$get.Type"),
+					Getter:   registry.PairFromGetter(getters.Key[JournalType]("$get.Type"), journalTypeChoiceList),
 				},
 			},
 			ChildrenAction: []components.PageInterface{

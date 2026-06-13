@@ -13,24 +13,13 @@ import (
 
 const financeAccountsMainMenuProductsLinkKey = "finance_products.FinanceAccountsMainMenuLink"
 
-var productTypeChoices = getters.Static([]registry.Pair[ProductType, string]{
+var productTypeChoiceList = []registry.Pair[ProductType, string]{
 	{Key: ProductTypeGoods, Value: "Goods"},
 	{Key: ProductTypeServices, Value: "Services"},
 	{Key: ProductTypeBoth, Value: "Both"},
-})
-
-func productTypeSelectGetter(ctxKey string) getters.Getter[registry.Pair[ProductType, string]] {
-	return func(ctx context.Context) (registry.Pair[ProductType, string], error) {
-		pt, err := getters.Key[ProductType](ctxKey)(ctx)
-		if err != nil {
-			return registry.Pair[ProductType, string]{}, err
-		}
-		if pt == "" {
-			return registry.Pair[ProductType, string]{}, nil
-		}
-		return registry.Pair[ProductType, string]{Key: pt, Value: string(pt)}, nil
-	}
 }
+
+var productTypeChoices = getters.Static(productTypeChoiceList)
 
 func patchFinanceAccountsMainMenuForProducts(page components.PageInterface) components.PageInterface {
 	menu, ok := page.(*components.SidebarMenu)
@@ -126,7 +115,7 @@ func productFormInputs() []components.PageInterface {
 					Label:    "Type",
 					Required: true,
 					Choices:  productTypeChoices,
-					Getter:   productTypeSelectGetter("$in.Type"),
+					Getter:   registry.PairFromGetter(getters.Key[ProductType]("$in.Type"), productTypeChoiceList),
 				},
 			},
 		},

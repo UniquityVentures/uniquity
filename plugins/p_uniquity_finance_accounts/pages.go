@@ -11,23 +11,12 @@ import (
 	"gorm.io/gorm"
 )
 
-var balanceTypeChoices = getters.Static([]registry.Pair[BalanceType, string]{
+var balanceTypeChoiceList = []registry.Pair[BalanceType, string]{
 	{Key: BalanceTypeCredit, Value: "Credit"},
 	{Key: BalanceTypeDebit, Value: "Debit"},
-})
-
-func balanceTypeSelectGetter(ctxKey string) getters.Getter[registry.Pair[BalanceType, string]] {
-	return func(ctx context.Context) (registry.Pair[BalanceType, string], error) {
-		bt, err := getters.Key[BalanceType](ctxKey)(ctx)
-		if err != nil {
-			return registry.Pair[BalanceType, string]{}, err
-		}
-		if bt == "" {
-			return registry.Pair[BalanceType, string]{}, nil
-		}
-		return registry.Pair[BalanceType, string]{Key: bt, Value: string(bt)}, nil
-	}
 }
+
+var balanceTypeChoices = getters.Static(balanceTypeChoiceList)
 
 // accountParentLabel returns "code — name" for the FK in list/detail rows, or "—" if none.
 func accountParentLabel(rowPrefix string) getters.Getter[string] {
@@ -269,7 +258,7 @@ func pageAccountCRUD() []registry.Pair[string, components.PageInterface] {
 		Label:    "Balance type",
 		Required: true,
 		Choices:  balanceTypeChoices,
-		Getter:   balanceTypeSelectGetter("$in.BalanceType"),
+		Getter:   registry.PairFromGetter(getters.Key[BalanceType]("$in.BalanceType"), balanceTypeChoiceList),
 	}
 	parentPicker := &components.InputForeignKey[Account]{
 		Name:        "ParentID",

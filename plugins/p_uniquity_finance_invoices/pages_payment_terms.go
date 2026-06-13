@@ -13,11 +13,33 @@ import (
 	. "maragu.dev/gomponents"
 )
 
+var paymentTermKindChoiceList = []registry.Pair[string, string]{
+	{Key: PaymentTermTypeDueDate, Value: "Due on calendar date"},
+	{Key: PaymentTermTypeRelative, Value: "Relative"},
+}
+
 func paymentTermKindChoices() getters.Getter[[]registry.Pair[string, string]] {
-	return getters.Static([]registry.Pair[string, string]{
-		{Key: PaymentTermTypeDueDate, Value: "Due on calendar date"},
-		{Key: PaymentTermTypeRelative, Value: "Relative"},
-	})
+	return getters.Static(paymentTermKindChoiceList)
+}
+
+func paymentTermCreateTypeGetter() getters.Getter[registry.Pair[string, string]] {
+	return registry.PairFromGetter(func(ctx context.Context) (string, error) {
+		s, err := getters.Key[string]("$in.Type")(ctx)
+		if err != nil {
+			return "", err
+		}
+		if s == "" {
+			if m, ok := paymentTermGetQuery(ctx); ok {
+				if raw, ok := m["Type"].(string); ok && raw != "" {
+					s = raw
+				}
+			}
+		}
+		if s == "" {
+			s = PaymentTermTypeDueDate
+		}
+		return s, nil
+	}, paymentTermKindChoiceList)
 }
 
 func paymentTermGetQuery(ctx context.Context) (map[string]any, bool) {
@@ -37,34 +59,6 @@ func paymentTermCreateLinkWithQuery(typeParam string) getters.Getter[string] {
 	}
 }
 
-func paymentTermCreateTypePairGetter() getters.Getter[registry.Pair[string, string]] {
-	return func(ctx context.Context) (registry.Pair[string, string], error) {
-		s, err := getters.Key[string]("$in.Type")(ctx)
-		if err != nil || s == "" {
-			if m, ok := paymentTermGetQuery(ctx); ok {
-				if raw, ok := m["Type"].(string); ok && raw != "" {
-					s = raw
-				}
-			}
-		}
-		if s == "" {
-			return registry.Pair[string, string]{Key: PaymentTermTypeDueDate, Value: "Due on calendar date"}, nil
-		}
-		if p, ok := registry.PairFromPairs(s, *paymentTermKindChoicesStatic()); ok {
-			return p, nil
-		}
-		return registry.Pair[string, string]{Key: s, Value: s}, nil
-	}
-}
-
-func paymentTermKindChoicesStatic() *[]registry.Pair[string, string] {
-	s := []registry.Pair[string, string]{
-		{Key: PaymentTermTypeDueDate, Value: "Due on calendar date"},
-		{Key: PaymentTermTypeRelative, Value: "Relative"},
-	}
-	return &s
-}
-
 func paymentTermCreateDueDatetimeGetter() getters.Getter[time.Time] {
 	return func(ctx context.Context) (time.Time, error) {
 		t, err := getters.Key[time.Time]("$in.DueDatetime")(ctx)
@@ -82,19 +76,6 @@ func paymentTermCreateDurationGetter() getters.Getter[*time.Duration] {
 			return nil, nil
 		}
 		return d, nil
-	}
-}
-
-func paymentTermTypeLabelRowGetter() getters.Getter[string] {
-	return func(ctx context.Context) (string, error) {
-		s, err := getters.Key[string]("$row.Type")(ctx)
-		if err != nil {
-			return "", err
-		}
-		if p, ok := registry.PairFromPairs(s, *paymentTermKindChoicesStatic()); ok {
-			return p.Value, nil
-		}
-		return s, nil
 	}
 }
 
@@ -153,7 +134,7 @@ func paymentTermCreateFormInputs() []components.PageInterface {
 							Name:     "Type",
 							Required: true,
 							Choices:  paymentTermKindChoices(),
-							Getter:   paymentTermCreateTypePairGetter(),
+							Getter:   paymentTermCreateTypeGetter(),
 							Attr:     getters.Static(Attr("x-model", "paymentTermType")),
 						},
 					},
@@ -230,7 +211,7 @@ func pageEntriesPaymentTermPages() []registry.Pair[string, components.PageInterf
 							&components.FieldText{Getter: getters.Format("%d", getters.Any(getters.Key[uint]("$row.ID")))},
 						}},
 						{Label: "Kind", Name: "Type", Children: []components.PageInterface{
-							&components.FieldText{Getter: paymentTermTypeLabelRowGetter()},
+							&components.FieldText{Getter: registry.PairValueFromKey(getters.Key[string]("$row.Type"), paymentTermKindChoiceList)},
 						}},
 						{Label: "Summary", Name: "Summary", Children: []components.PageInterface{
 							&components.FieldText{Getter: paymentTermRowSummaryGetter()},

@@ -65,47 +65,12 @@ func taxDecimalGetter(ctxKey string) getters.Getter[fields.DecimalSix] {
 	}
 }
 
-var taxKindChoices = getters.Static([]registry.Pair[TaxKind, string]{
+var taxKindChoiceList = []registry.Pair[TaxKind, string]{
 	{Key: TaxKindLevied, Value: "Levied"},
 	{Key: TaxKindWithholding, Value: "Withholding"},
-})
-
-func taxKindSelectGetter(ctxKey string) getters.Getter[registry.Pair[TaxKind, string]] {
-	return func(ctx context.Context) (registry.Pair[TaxKind, string], error) {
-		k, err := getters.Key[TaxKind](ctxKey)(ctx)
-		if err != nil {
-			return registry.Pair[TaxKind, string]{}, err
-		}
-		if k == "" {
-			return registry.Pair[TaxKind, string]{}, nil
-		}
-		label := string(k)
-		if k == TaxKindLevied {
-			label = "Levied"
-		}
-		if k == TaxKindWithholding {
-			label = "Withholding"
-		}
-		return registry.Pair[TaxKind, string]{Key: k, Value: label}, nil
-	}
 }
 
-func taxKindLabel(ctxKey string) getters.Getter[string] {
-	return func(ctx context.Context) (string, error) {
-		k, err := getters.Key[TaxKind](ctxKey)(ctx)
-		if err != nil {
-			return "", err
-		}
-		switch k {
-		case TaxKindLevied:
-			return "Levied", nil
-		case TaxKindWithholding:
-			return "Withholding", nil
-		default:
-			return string(k), nil
-		}
-	}
-}
+var taxKindChoices = getters.Static(taxKindChoiceList)
 
 func taxAccountLabel(rowPrefix string) getters.Getter[string] {
 	return func(ctx context.Context) (string, error) {
@@ -171,7 +136,7 @@ func taxCreateFormInputs() []components.PageInterface {
 					Label:    "Type",
 					Required: true,
 					Choices:  taxKindChoices,
-					Getter:   taxKindSelectGetter("$in.TaxType"),
+					Getter:   registry.PairFromGetter(getters.Key[TaxKind]("$in.TaxType"), taxKindChoiceList),
 				},
 			},
 		},
@@ -218,7 +183,7 @@ func taxUpdateFormInputs() []components.PageInterface {
 					Label:    "Type",
 					Required: true,
 					Choices:  taxKindChoices,
-					Getter:   taxKindSelectGetter("$in.TaxType"),
+					Getter:   registry.PairFromGetter(getters.Key[TaxKind]("$in.TaxType"), taxKindChoiceList),
 				},
 			},
 		},
@@ -277,7 +242,7 @@ func pageEntriesTaxPages() []registry.Pair[string, components.PageInterface] {
 							&components.FieldText{Getter: getters.Key[string]("$row.Name")},
 						}},
 						{Label: "Type", Name: "TaxType", Children: []components.PageInterface{
-							&components.FieldText{Getter: taxKindLabel("$row.TaxType")},
+							&components.FieldText{Getter: registry.PairValueFromKey(getters.Key[TaxKind]("$row.TaxType"), taxKindChoiceList)},
 						}},
 						{Label: "Percentage", Name: "Percentage", Children: []components.PageInterface{
 							&components.FieldText{Getter: taxDecimalStringGetter("$row.Percentage")},
@@ -378,7 +343,7 @@ func pageEntriesTaxPages() []registry.Pair[string, components.PageInterface] {
 									&components.FieldText{Getter: getters.Key[string]("$in.Name")},
 								}},
 								&components.LabelInline{Title: "Type", Children: []components.PageInterface{
-									&components.FieldText{Getter: taxKindLabel("$in.TaxType")},
+									&components.FieldText{Getter: registry.PairValueFromKey(getters.Key[TaxKind]("$in.TaxType"), taxKindChoiceList)},
 								}},
 								&components.LabelInline{Title: "Percentage", Children: []components.PageInterface{
 									&components.FieldText{Getter: taxDecimalStringGetter("$in.Percentage")},

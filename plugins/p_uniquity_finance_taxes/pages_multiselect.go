@@ -45,7 +45,7 @@ func pageEntriesTaxMultiSelectPages() []registry.Pair[string, components.PageInt
 							&components.FieldText{Getter: getters.Key[string]("$row.Name")},
 						}},
 						{Label: "Type", Name: "TaxType", Children: []components.PageInterface{
-							&components.FieldText{Getter: taxKindLabel("$row.TaxType")},
+							&components.FieldText{Getter: registry.PairValueFromKey(getters.Key[TaxKind]("$row.TaxType"), taxKindChoiceList)},
 						}},
 						{Label: "Percentage", Name: "Percentage", Children: []components.PageInterface{
 							&components.FieldText{Getter: taxDecimalStringGetter("$row.Percentage")},

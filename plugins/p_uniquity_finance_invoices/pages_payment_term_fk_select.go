@@ -21,7 +21,7 @@ func pageEntriesPaymentTermFkSelectPages() []registry.Pair[string, components.Pa
 					),
 					Columns: []components.TableColumn{
 						{Label: "Kind", Name: "Type", Children: []components.PageInterface{
-							&components.FieldText{Getter: paymentTermTypeLabelRowGetter()},
+							&components.FieldText{Getter: registry.PairValueFromKey(getters.Key[string]("$row.Type"), paymentTermKindChoiceList)},
 						}},
 						{Label: "Summary", Name: "Summary", Children: []components.PageInterface{
 							&components.FieldText{Getter: paymentTermRowSummaryGetter()},
