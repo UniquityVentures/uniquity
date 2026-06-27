@@ -8,6 +8,8 @@ import (
 
 	"github.com/UniquityVentures/lamu/plugins/p_dashboard"
 	"github.com/UniquityVentures/lamu/plugins/p_filesystem"
+	"github.com/UniquityVentures/lamu/plugins/p_google_genai"
+	"github.com/UniquityVentures/lamu/plugins/p_llm_assistant"
 	"github.com/UniquityVentures/lamu/plugins/p_livereloading"
 	"github.com/UniquityVentures/lamu/plugins/p_otp"
 	"github.com/UniquityVentures/lamu/plugins/p_pwa"
@@ -28,6 +30,8 @@ func main() {
 	plugins := []registry.Pair[string, lamu.Plugin]{
 		p_dashboard.GetPlugin(),
 		p_filesystem.GetPlugin(),
+		p_google_genai.GetPlugin(),
+		p_llm_assistant.GetPlugin(),
 		p_users.GetPlugin(),
 		p_uniquity_employees.GetPlugin(),
 		p_uniquity_finance_accounts.GetPlugin(),
