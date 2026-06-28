@@ -251,4 +251,59 @@ func init() {
 			return pt, nil
 		}
 	}))
+
+	p_llm_assistant.ExprEnvRegistry.Register("find_due_date_payment_term", p_llm_assistant.ContextualFunc(func(ctx context.Context, db *gorm.DB) any {
+		return func(dateVal any) (uint, error) {
+			var dt time.Time
+			switch v := dateVal.(type) {
+			case time.Time:
+				dt = v
+			case string:
+				var err error
+				dt, err = time.Parse("2006-01-02", v)
+				if err != nil {
+					dt, err = time.Parse(time.RFC3339, v)
+					if err != nil {
+						return 0, fmt.Errorf("invalid date format: %w", err)
+					}
+				}
+			default:
+				return 0, fmt.Errorf("invalid date kind: %T", dateVal)
+			}
+			if dt.IsZero() {
+				return 0, fmt.Errorf("datetime is required")
+			}
+
+			var backing PaymentTermDueDate
+			err := db.WithContext(ctx).Where("datetime = ?", dt).First(&backing).Error
+			if err == nil {
+				var umbrella PaymentTerm
+				err = db.WithContext(ctx).Where("type = ? AND backing_id = ?", PaymentTermTypeDueDate, backing.ID).First(&umbrella).Error
+				if err == nil {
+					return umbrella.ID, nil
+				}
+			}
+
+			var pt uint
+			err = db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+				backing = PaymentTermDueDate{Datetime: dt}
+				if err := tx.Create(&backing).Error; err != nil {
+					return err
+				}
+				umbrella := PaymentTerm{
+					Type:      PaymentTermTypeDueDate,
+					BackingID: backing.ID,
+				}
+				if err := tx.Create(&umbrella).Error; err != nil {
+					return err
+				}
+				pt = umbrella.ID
+				return nil
+			})
+			if err != nil {
+				return 0, err
+			}
+			return pt, nil
+		}
+	}))
 }

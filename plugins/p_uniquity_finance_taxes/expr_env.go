@@ -2,6 +2,7 @@ package p_uniquity_finance_taxes
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"github.com/UniquityVentures/lamu/plugins/p_llm_assistant"
@@ -15,7 +16,7 @@ type taxResult struct {
 
 func init() {
 	p_llm_assistant.ExprEnvRegistry.Register("search_taxes", p_llm_assistant.ContextualFunc(func(ctx context.Context, db *gorm.DB) any {
-		return func(query string) ([]taxResult, error) {
+		return func(query string, percentage float64) ([]taxResult, error) {
 			var taxes []Tax
 			q := db.WithContext(ctx).Model(&Tax{})
 
@@ -23,6 +24,7 @@ func init() {
 			if query != "" {
 				q = q.Where("name LIKE ?", "%"+query+"%")
 			}
+			q = q.Where("percentage = ?", fmt.Sprintf("%.6f", percentage))
 
 			if err := q.Order("name ASC").Find(&taxes).Error; err != nil {
 				return nil, err
