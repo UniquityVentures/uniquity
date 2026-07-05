@@ -3,7 +3,7 @@ module github.com/UniquityVentures/uniquity
 go 1.26.1
 
 require (
-	github.com/UniquityVentures/lamu v0.6.1
+	github.com/UniquityVentures/lamu v0.6.6
 	github.com/divan/num2words v1.0.3
 	github.com/francescoalemanno/gotypst v0.2.0
 	golang.org/x/text v0.38.0
@@ -112,3 +112,5 @@ require (
 	gorm.io/driver/postgres v1.6.0 // indirect
 	gorm.io/driver/sqlite v1.6.0 // indirect
 )
+
+replace github.com/UniquityVentures/lamu => ../../lamu
