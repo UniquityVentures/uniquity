@@ -42,8 +42,8 @@ github.com/GoogleCloudPlatform/opentelemetry-operations-go/internal/resourcemapp
 github.com/GoogleCloudPlatform/opentelemetry-operations-go/internal/resourcemapping v0.57.0/go.mod h1:YqwkQPrWSC7+byyc1VlKbWLBF5JsW5IoL6xUkemYSXk=
 github.com/MakeNowJust/heredoc v1.0.0 h1:cXCdzVdstXyiTqTvfqk9SDHpKNjxuom+DOlyEeQ4pzQ=
 github.com/MakeNowJust/heredoc v1.0.0/go.mod h1:mG5amYoWBHf8vpLOuehzbGGw0EHxpZZ6lCpQ4fNJ8LE=
-github.com/UniquityVentures/lamu v0.6.7 h1:0SyzrgR2jmAlVAKAqVqA8iZFvOShG1qRqDq8JB9KnR8=
-github.com/UniquityVentures/lamu v0.6.7/go.mod h1:nWZ7TlAF7H5Cpq8ikwL7jyzrs+hJz0Z+Pwswot0Vsmk=
+github.com/UniquityVentures/lamu v0.6.8 h1:qjrbQv+YIOeVq5CLizQP7+X/pRBMfq8/JulCheJ86tc=
+github.com/UniquityVentures/lamu v0.6.8/go.mod h1:nWZ7TlAF7H5Cpq8ikwL7jyzrs+hJz0Z+Pwswot0Vsmk=
 github.com/atotto/clipboard v0.1.4 h1:EH0zSVneZPSuFR11BlR9YppQTVDbh5+16AmcJi4g1z4=
 github.com/atotto/clipboard v0.1.4/go.mod h1:ZY9tmq7sm5xIbd9bOK4onWV4S6X0u6GY7Vn0Yu86PYI=
 github.com/aymanbagabas/go-udiff v0.4.1 h1:OEIrQ8maEeDBXQDoGCbbTTXYJMYRCRO1fnodZ12Gv5o=
