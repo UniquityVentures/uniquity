@@ -1,8 +1,6 @@
 package p_uniquity_finance_accounts
 
 import (
-	"context"
-
 	"github.com/UniquityVentures/lamu/components"
 	"github.com/UniquityVentures/lamu/getters"
 	"github.com/UniquityVentures/lamu/lamu"
@@ -49,20 +47,6 @@ func accountingPreferencesFormInputs() []components.PageInterface {
 			},
 		},
 		&components.ContainerError{
-			Error: getters.Key[error]("$error.DefaultJournalID"),
-			Children: []components.PageInterface{
-				&components.InputForeignKey[Journal]{
-					Name:        "DefaultJournalID",
-					Label:       "Default journal (draft invoices)",
-					Required:    false,
-					Url:         lamu.RoutePath("finance_accounts.JournalSelectRoute", nil),
-					Display:     getters.Key[string]("$in.Name"),
-					Placeholder: "None — user must choose each time",
-					Getter:      getters.Association[Journal, uint](accountingPrefsDefaultJournalIDUintGetter()),
-				},
-			},
-		},
-		&components.ContainerError{
 			Error: getters.Key[error]("$error.InvoicePDFTemplate"),
 			Children: []components.PageInterface{
 				&components.InputTextarea{
@@ -74,15 +58,5 @@ func accountingPreferencesFormInputs() []components.PageInterface {
 				},
 			},
 		},
-	}
-}
-
-func accountingPrefsDefaultJournalIDUintGetter() getters.Getter[uint] {
-	return func(ctx context.Context) (uint, error) {
-		ptr, err := getters.Key[*uint]("$in.DefaultJournalID")(ctx)
-		if err != nil || ptr == nil {
-			return 0, nil
-		}
-		return *ptr, nil
 	}
 }

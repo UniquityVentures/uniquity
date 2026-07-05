@@ -17,6 +17,7 @@ type PostedInvoiceNumberTemplateData struct {
 	FISCAL_CODE string
 	YY          string
 	YYYY        string
+	YYD         string
 	POSTED_SEQ  int64
 }
 
@@ -39,6 +40,7 @@ func FormatPostedInvoiceNumber(tx *gorm.DB, format string, invoiceDatetime time.
 		FISCAL_CODE: fiscalCode,
 		YY:          invoiceDatetime.Format("06"),
 		YYYY:        invoiceDatetime.Format("2006"),
+		YYD:         fmt.Sprintf("%s-%s", fy.Start.Format("06"), fy.End.Format("06")),
 		POSTED_SEQ:  postedSeq,
 	}
 	tpl, err := template.New("invoiceNumber").Parse(format)

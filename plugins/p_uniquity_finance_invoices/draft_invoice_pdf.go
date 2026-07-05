@@ -97,6 +97,25 @@ func servePostedInvoicePDF(w http.ResponseWriter, db *gorm.DB, posted PostedInvo
 }
 
 func serveInvoicePDFFromPrefs(w http.ResponseWriter, db *gorm.DB, templateRoot map[string]any, filenameBase string, logPrefix string, entityID uint) {
+	var payments []Payment
+	if logPrefix != "draft_invoice_pdf" {
+		var postedID uint
+		if logPrefix == "cancelled_invoice_pdf" {
+			var cancelled CancelledInvoice
+			if err := db.First(&cancelled, entityID).Error; err == nil {
+				postedID = cancelled.PostedInvoiceID
+			}
+		} else {
+			postedID = entityID
+		}
+		if postedID != 0 {
+			if err := db.Where("posted_invoice_id = ?", postedID).Order("datetime ASC").Find(&payments).Error; err != nil {
+				slog.Error(logPrefix+": load payments", "error", err, "posted_id", postedID)
+			}
+		}
+	}
+	templateRoot["Payments"] = payments
+
 	prefs := finance_accounts.LoadAccountingPreferences(db)
 	tmplSrc := strings.TrimSpace(prefs.InvoicePDFTemplate)
 	if tmplSrc == "" {

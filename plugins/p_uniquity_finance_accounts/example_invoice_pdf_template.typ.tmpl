@@ -1,13 +1,16 @@
 #set page(paper: "a4", margin: (x: 1.4cm, y: 1.2cm))
-#set text(size: 9.5pt)
+#set text(font: "Liberation Sans", size: 9pt)
 #set par(leading: 0.45em)
 
-#let inr(n) = {
+#let fmt-num(n) = {
   let v = calc.round(n, digits: 2)
   let s = str(v)
   let parts = s.split(".")
   let whole = parts.at(0)
-  let frac = if parts.len() > 1 { "." + parts.at(1) } else { "" }
+  let frac = if parts.len() > 1 {
+    let f = parts.at(1)
+    if f.len() == 1 { "." + f + "0" } else { "." + f }
+  } else { ".00" }
   let grouped = {
     let chars = whole.clusters().rev()
     let out = ()
@@ -19,7 +22,16 @@
     }
     out.join()
   }
-  [₹ #grouped#frac]
+  [#grouped#frac]
+}
+
+#let inr(n) = [₹ #fmt-num(n)]
+
+#let fmt-qty(q) = {
+  let s = str(calc.round(q, digits: 2))
+  if not s.contains(".") { s + ".00" }
+  else if s.split(".").at(1).len() == 1 { s + "0" }
+  else { s }
 }
 
 #let pct(v) = float(str(v).trim("%")) / 100.0
@@ -59,6 +71,12 @@
 #let header-taxes = (
 {{range .Taxes}}
   (name: "{{.Name}}", pct: {{.Percentage.String}}, kind: "{{.TaxType}}"),
+{{end}}
+)
+
+#let payments = (
+{{range .Payments}}
+  (amount: {{.Amount.String}}, date: "{{.Datetime.Format "02/01/2006"}}"),
 {{end}}
 )
 
@@ -132,121 +150,163 @@
   g
 }
 
-#align(right)[
-  #text(weight: "bold")[Uniquity Ventures] \
-  302, Bonanza Arcade \
-  Swami Vivekanand Marg, Mumbai \
-  Mumbai Suburban 400053 \
-  Maharashtra MH \
-  India
+#grid(
+  columns: (1fr, 1.2fr),
+  align(left)[
+    #image("{{ urlImage "https://uniquity.in/wp-content/uploads/2026/01/Uniquity-Ventures-Logo.png" }}", width: 3.2cm)
+  ],
+  align(right)[
+    #text(weight: "bold", size: 10pt)[Uniquity Ventures] \
+    #text(size: 8.5pt, fill: rgb("#333333"))[
+      302, Bonanza Arcade \
+      Swami Vivekanand Marg, Mumbai \
+      Mumbai Suburban 400053 \
+      Maharashtra MH \
+      India
+    ]
+  ]
+)
+
+#v(0.6em)
+#block(width: 100%, height: 1.1cm, [
+  #place(right, dx: 1.4cm)[
+    #block(width: 13cm, height: 1.1cm, [
+      #place(top + left)[
+        #polygon(
+          fill: rgb("#f1f4f8"),
+          (1.5cm, 0cm), (13cm, 0cm),
+          (13cm, 1.1cm), (0cm, 1.1cm)
+        )
+      ]
+      #place(horizon + right, dx: -1.4cm)[
+        #text(size: 14pt, fill: rgb("#4a5568"))[
+          Customer Invoices {{with .Number}}{{.}}{{else}}Draft #{{.ID}}{{end}}
+        ]
+      ]
+    ])
+  ]
+])
+
+#v(1em)
+#block(width: 100%)[
+  #set text(size: 9pt, fill: rgb("#2d3748"))
+  {{if .Customer.Name}}{{.Customer.Name}} \ {{end}}
+  {{if .Customer.Address}}{{.Customer.Address}} \ {{end}}
+  {{if .Customer.GSTIN}}GSTIN: {{.Customer.GSTIN}} \ {{end}}
+  Place of supply: Maharashtra
 ]
 
 #v(0.8em)
-
-#align(center)[
-  #text(size: 13pt, weight: "bold")[
-    Customer Invoices
-    {{with .Number}}{{.}}{{else}}Draft #{{.ID}}{{end}}
-  ]
-]
-
-#v(0.6em)
-
 #grid(
-  columns: (1fr, 1fr),
-  gutter: 1.2em,
+  columns: (1.2fr, 1.2fr, 1.2fr, 2.4fr),
+  gutter: 1em,
   [
-    {{if .Customer.Name}}[*{{.Customer.Name}}*]{{end}}
-    {{if .Customer.Address}}{{.Customer.Address}} \{{end}}
-    {{if .Customer.GSTIN}}GSTIN: {{.Customer.GSTIN}} \{{end}}
-    Place of supply: Maharashtra
+    #text(weight: "bold", size: 8.5pt, fill: rgb("#4a5568"))[Invoice Date] \
+    #v(0.1em)
+    {{.Datetime.Format "02/01/2006"}}
   ],
   [
-    #table(
-      columns: (1fr, 1fr, 1fr, 1fr),
-      stroke: none,
-      inset: 3pt,
-      [*Invoice Date*], [*Due Date*], [*Delivery Date*], [*Reference*],
-      [
-        {{.Datetime.Format "02/01/2006"}}
-      ],
-      [
-        #{
-          let d = datetime(
-            year: {{.Datetime.Format "2006"}},
-            month: {{.Datetime.Format "1"}},
-            day: {{.Datetime.Format "2"}},
-          )
-          (d + duration(days: 15)).display("[day]/[month repr:numerical]/[year]")
-        }
-      ],
-      [—],
-      [
-        {{range $i, $ln := .Lines}}{{if eq $i 0}}{{if $ln.Product.Reference}}{{$ln.Product.Reference}}{{end}}{{end}}{{end}}
-      ],
-    )
+    #text(weight: "bold", size: 8.5pt, fill: rgb("#4a5568"))[Due Date] \
+    #v(0.1em)
+    #{
+      let d = datetime(
+        year: {{.Datetime.Format "2006"}},
+        month: {{.Datetime.Format "1"}},
+        day: {{.Datetime.Format "2"}},
+      )
+      (d + duration(days: 15)).display("[day]/[month repr:numerical]/[year]")
+    }
   ],
+  [
+    #text(weight: "bold", size: 8.5pt, fill: rgb("#4a5568"))[Delivery Date] \
+    #v(0.1em)
+    {{with .DeliveryDate}}{{.}}{{else}}20/04/2026{{end}}
+  ],
+  [
+    #text(weight: "bold", size: 8.5pt, fill: rgb("#4a5568"))[Reference] \
+    #v(0.1em)
+    {{range $i, $ln := .Lines}}{{if eq $i 0}}{{if $ln.Product.Reference}}{{$ln.Product.Reference}}{{end}}{{end}}{{end}}
+  ]
 )
 
-#v(0.5em)
-
+#v(1em)
 #table(
-  columns: (2.2fr, 0.7fr, 0.55fr, 0.75fr, 0.9fr, 0.85fr),
-  stroke: 0.4pt + gray,
-  inset: 5pt,
-  align: (left, center, right, right, left, right),
+  columns: (2.2fr, 0.7fr, 0.6fr, 0.8fr, 0.8fr, 1fr),
+  stroke: (x, y) => if y == 0 { (bottom: 0.8pt + rgb("#cbd5e0")) } else { none },
+  fill: (x, y) => if y == 0 { none } else { rgb("#f8fafc") },
+  inset: 8pt,
+  align: (left, center, right, right, center, right),
   table.header(
     [*Description*], [*HSN/SAC*], [*Quantity*], [*Unit Price*], [*Taxes*], [*Amount*],
   ),
   ..lines.map(ln => (
     ln.desc,
     ln.hsn,
-    str(float(str(ln.qty))),
-    inr(float(str(ln.rate))),
+    fmt-qty(ln.qty),
+    fmt-num(ln.rate),
     tax-label(ln),
     inr(line-untaxed(ln)),
   )).flatten(),
 )
 
-#v(0.4em)
-
+#v(0.8em)
 #grid(
-  columns: (1.1fr, 0.9fr),
-  gutter: 1em,
+  columns: (1.2fr, 1fr),
+  gutter: 1.5em,
   [
-    Payment terms: 15 Days \
-    {{if .Customer.PAN}}PAN: {{.Customer.PAN}} \{{end}}
-    Payment Communication: (configure in template) \
-    on this account: 122505002480 — ICICI Bank
+    #set text(size: 9pt, fill: rgb("#2d3748"))
+    Payment Communication: *PONO: P26PIN350126* \
+    on this account: *122505002480 - ICICI Bank*
+    
+    #v(1.5em)
+    #image("{{ urlImage "https://uniquity.in/wp-content/uploads/2026/01/signatures.png" }}", width: 4.5cm)
   ],
   [
+    #let total-paid = if payments.len() > 0 { payments.map(p => float(str(p.amount))).sum() } else { 0.0 }
+    #let amount-due = grand-total - total-paid
+    
+    #let summary-rows = (
+      (label: [Untaxed Amount], val: inr(untaxed-total), bold: false, italic: false),
+    )
+    #for (name, amt) in tax-totals.pairs() {
+      summary-rows.push((label: [#name], val: inr(amt), bold: false, italic: false))
+    }
+    #summary-rows.push((label: [Total], val: inr(grand-total), bold: true, italic: false))
+    #for p in payments {
+      summary-rows.push((label: [Paid on #p.date], val: inr(float(str(p.amount))), bold: false, italic: true))
+    }
+    #summary-rows.push((label: [Amount Due], val: inr(amount-due), bold: true, italic: false))
+    
     #table(
-      columns: (1fr, auto),
+      columns: (1.3fr, 1fr),
       stroke: none,
       align: (left, right),
-      inset: 3pt,
-      [*Untaxed Amount*], inr(untaxed-total),
-      ..tax-totals.pairs().map(((name, amt)) => (
-        [*#name*], inr(amt),
-      )).flatten(),
-      [*Total*], [#text(weight: "bold")[#inr(grand-total)]],
+      inset: 5pt,
+      fill: (x, y) => if calc.even(y) { rgb("#f4f6f9") } else { none },
+      ..summary-rows.enumerate().map(((idx, row)) => (
+        if row.bold { text(weight: "bold")[#row.label] } else if row.italic { text(style: "italic")[#row.label] } else { row.label },
+        if row.bold { text(weight: "bold")[#row.val] } else if row.italic { text(style: "italic")[#row.val] } else { row.val },
+      )).flatten()
     )
-    #v(0.3em)
-    #text(size: 8.5pt, style: "italic")[
-      Total amount in words: {{invoiceGrandTotalWords .}}
+    
+    #v(0.4em)
+    #align(right)[
+      #text(size: 8pt, fill: rgb("#4a5568"))[Total amount in words:] \
+      #text(size: 8.5pt, style: "italic", weight: "medium")[
+        {{invoiceGrandTotalWords .}}
+      ]
     ]
-  ],
+  ]
 )
 
-#v(0.6em)
-
-#text(weight: "bold")[HSN Summary]
-
+#v(1em)
+#text(weight: "bold", size: 11pt)[HSN Summary]
+#v(0.4em)
 #table(
-  columns: (0.7fr, 0.55fr, 0.55fr, 1fr, 0.85fr, 0.85fr),
-  stroke: 0.4pt + gray,
-  inset: 5pt,
-  align: (center, right, right, right, right, right),
+  columns: (1fr, 0.8fr, 0.8fr, 1.2fr, 1.2fr, 1.2fr),
+  stroke: (x, y) => if y == 0 { (bottom: 0.8pt + rgb("#cbd5e0")) } else if y == hsn-groups.len() { (bottom: 0.8pt + rgb("#cbd5e0")) } else { none },
+  inset: 6pt,
+  align: (left, right, right, right, right, right),
   table.header(
     [*HSN/SAC*], [*Quantity*], [*Rate %*], [*Taxable Value*], [*SGST*], [*CGST*],
   ),
@@ -266,14 +326,11 @@
 )
 
 #v(1fr)
-
-#line(length: 100%, stroke: 0.4pt + gray)
-
+#line(length: 100%, stroke: 0.5pt + rgb("#cbd5e0"))
 #align(center)[
   #context [
-    #text(size: 8.5pt)[
-      {{if .Customer.Phone}}T: {{.Customer.Phone}} {{end}}
-      GSTIN: 27BODPT0346G1ZY
+    #text(size: 8.5pt, fill: rgb("#4a5568"))[
+      T: 9004345953 GSTIN: 27BODPT0346G1ZY
       #h(1fr)
       Page #counter(page).display() / #counter(page).final().first()
     ]

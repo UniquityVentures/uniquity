@@ -1,9 +1,18 @@
 package p_uniquity_finance_invoices
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
+	"image"
+	"image/color"
+	"image/png"
+	"io"
 	"math"
 	"math/big"
+	"net/http"
+	"os"
+	"path/filepath"
 	"strings"
 	"text/template"
 
@@ -22,6 +31,7 @@ func invoicePDFTemplateFuncs() template.FuncMap {
 		"num2wordsAnd":           num2wordsAndTemplate,
 		"num2wordsRupees":        num2wordsRupeesTemplate,
 		"invoiceGrandTotalWords": invoiceGrandTotalWordsTemplate,
+		"urlImage":               urlImageTemplate,
 	}
 }
 
@@ -148,4 +158,59 @@ func decimalSixRoundedInt(d fields.DecimalSix) (int, error) {
 		return 0, fmt.Errorf("num2words: non-finite decimal")
 	}
 	return int(math.Round(f)), nil
+}
+
+func urlImageTemplate(urlStr string) (string, error) {
+	if urlStr == "" {
+		return "", fmt.Errorf("urlImage: empty URL")
+	}
+	h := sha256.New()
+	h.Write([]byte(urlStr))
+	hashName := hex.EncodeToString(h.Sum(nil))
+
+	ext := filepath.Ext(urlStr)
+	if idx := strings.Index(ext, "?"); idx != -1 {
+		ext = ext[:idx]
+	}
+	if ext == "" {
+		ext = ".png"
+	}
+
+	filename := hashName + ext
+	tmpPath := filepath.Join("/tmp", filename)
+
+	if _, err := os.Stat(tmpPath); err == nil {
+		return filename, nil
+	}
+
+	writeFallback := func() {
+		img := image.NewRGBA(image.Rect(0, 0, 1, 1))
+		img.Set(0, 0, color.Transparent)
+		f, err := os.Create(tmpPath)
+		if err == nil {
+			_ = png.Encode(f, img)
+			f.Close()
+		}
+	}
+
+	resp, err := http.Get(urlStr)
+	if err != nil || resp.StatusCode != http.StatusOK {
+		writeFallback()
+		return filename, nil
+	}
+	defer resp.Body.Close()
+
+	out, err := os.Create(tmpPath)
+	if err != nil {
+		writeFallback()
+		return filename, nil
+	}
+	defer out.Close()
+
+	if _, err := io.Copy(out, resp.Body); err != nil {
+		writeFallback()
+		return filename, nil
+	}
+
+	return filename, nil
 }

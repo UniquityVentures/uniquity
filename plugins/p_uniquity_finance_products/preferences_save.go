@@ -92,7 +92,6 @@ func SaveAccountingAndProductPreferencesTx(tx *gorm.DB, values map[string]any) e
 	accountingRegular, accountingAssoc := views.SplitAssociationValues(accountingValues)
 	productRegular, _ := views.SplitAssociationValues(productValues)
 
-	NormalizeOptionalUintFKValues(accountingRegular, "DefaultJournalID")
 	NormalizeOptionalUintFKValues(productRegular,
 		ProductPrefInventoryAccountIDField,
 		ProductPrefCostOfSalesAcctIDField,
