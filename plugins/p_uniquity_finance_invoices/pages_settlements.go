@@ -134,7 +134,7 @@ func settlementInvoiceActionRow(showPayAction bool, pdfRoute, recordIDKey string
 		children = append([]components.PageInterface{
 			&components.ButtonLink{
 				Page:    components.Page{Roles: []string{"superuser"}},
-				Label:   "Pay",
+				Label:   getters.Static("Pay"),
 				Link:    paymentCreateURLForPostedInvoiceID("$in.PostedInvoiceID"),
 				Classes: "btn-primary",
 			},

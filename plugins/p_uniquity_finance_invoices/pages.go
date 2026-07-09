@@ -1115,7 +1115,7 @@ func pageEntriesPostedInvoicePages() []registry.Pair[string, components.PageInte
 											Children: []components.PageInterface{
 												&components.ButtonLink{
 													Page:    components.Page{Roles: []string{"superuser"}},
-													Label:   "Pay",
+													Label:   getters.Static("Pay"),
 													Link:    paymentCreateURLForPostedInvoiceID("posted_invoice.ID"),
 													Classes: "btn-primary",
 												},
