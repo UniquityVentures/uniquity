@@ -11,32 +11,7 @@ import (
 
 func init() {
 	p_llm_assistant.ExprEnvRegistry.Register("create_draft_invoice", p_llm_assistant.ContextualFunc(func(ctx context.Context, db *gorm.DB) any {
-		return func(customerIDVal any, paymentTermIDVal any, dateStr string, linesVal []any) (uint, error) {
-			toUint := func(v any) (uint, error) {
-				switch val := v.(type) {
-				case int:
-					return uint(val), nil
-				case int64:
-					return uint(val), nil
-				case float64:
-					return uint(val), nil
-				case uint:
-					return val, nil
-				default:
-					return 0, fmt.Errorf("invalid numeric value: %v", v)
-				}
-			}
-
-			customerID, err := toUint(customerIDVal)
-			if err != nil {
-				return 0, fmt.Errorf("customer_id: %w", err)
-			}
-
-			paymentTermID, err := toUint(paymentTermIDVal)
-			if err != nil {
-				return 0, fmt.Errorf("payment_term_id: %w", err)
-			}
-
+		return func(customerID uint, paymentTermID uint, dateStr string, linesVal []any) (uint, error) {
 			var dt time.Time
 			if dateStr == "" {
 				dt = time.Now()
@@ -78,10 +53,11 @@ func init() {
 				if prodIDVal == nil {
 					return 0, fmt.Errorf("line %d: missing product_id", idx+1)
 				}
-				prodID, err := toUint(prodIDVal)
-				if err != nil {
-					return 0, fmt.Errorf("line %d product_id: %w", idx+1, err)
+				prodIDFloat, ok := prodIDVal.(float64)
+				if !ok {
+					return 0, fmt.Errorf("line %d: invalid product_id: %v", idx+1, prodIDVal)
 				}
+				prodID := uint(prodIDFloat)
 
 				qtyVal := getVal("quantity", "Quantity")
 				if qtyVal == nil {
@@ -98,17 +74,9 @@ func init() {
 				if tIDsVal := getVal("tax_ids", "taxIds", "TaxIDs"); tIDsVal != nil {
 					if slice, ok := tIDsVal.([]any); ok {
 						for _, sVal := range slice {
-							tid, err := toUint(sVal)
-							if err != nil {
-								return 0, fmt.Errorf("line %d tax_id: %w", idx+1, err)
+							if tidFloat, ok := sVal.(float64); ok {
+								taxIDs = append(taxIDs, uint(tidFloat))
 							}
-							taxIDs = append(taxIDs, tid)
-						}
-					} else if slice, ok := tIDsVal.([]uint); ok {
-						taxIDs = slice
-					} else if slice, ok := tIDsVal.([]int); ok {
-						for _, i := range slice {
-							taxIDs = append(taxIDs, uint(i))
 						}
 					}
 				}

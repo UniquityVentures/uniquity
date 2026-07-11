@@ -12,17 +12,6 @@ import (
 
 var _ components.FormInterface = CancelInvoiceConfirmation{}
 
-type cancelInvoiceConfirmSubmitBtn struct {
-	components.Page
-}
-
-func (e cancelInvoiceConfirmSubmitBtn) GetKey() string     { return e.Key }
-func (e cancelInvoiceConfirmSubmitBtn) GetRoles() []string { return e.Roles }
-
-func (cancelInvoiceConfirmSubmitBtn) Build(context.Context) Node {
-	return Button(Type("submit"), Class("btn btn-error my-2"), Text("Cancel invoice"))
-}
-
 // CancelInvoiceConfirmation is the modal body for cancelling a posted invoice (warning + reason + submit).
 type CancelInvoiceConfirmation struct {
 	components.Page
@@ -50,7 +39,7 @@ func (e CancelInvoiceConfirmation) Build(ctx context.Context) Node {
 		ChildrenInput: []components.PageInterface{
 			&components.InputText{Name: "Reason", Label: "Reason"},
 		},
-		ChildrenAction: []components.PageInterface{cancelInvoiceConfirmSubmitBtn{}},
+		ChildrenAction: []components.PageInterface{&components.ButtonSubmit{Label: "Cancel invoice", Classes: "btn-error my-2"}},
 	}
 
 	title := e.Title
@@ -79,7 +68,7 @@ func (e CancelInvoiceConfirmation) ParseForm(r *http.Request) (map[string]any, m
 		ChildrenInput: []components.PageInterface{
 			&components.InputText{Name: "Reason", Label: "Reason"},
 		},
-		ChildrenAction: []components.PageInterface{cancelInvoiceConfirmSubmitBtn{}},
+		ChildrenAction: []components.PageInterface{&components.ButtonSubmit{Label: "Cancel invoice", Classes: "btn-error my-2"}},
 	}
 	return inner.ParseForm(r)
 }

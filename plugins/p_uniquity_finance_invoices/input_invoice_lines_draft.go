@@ -367,6 +367,13 @@ $el.closest('form').addEventListener('submit', (ev) => {
 		const prod = products.find(p => p.id === pid);
 		const sp = prod && prod.sales_price != null && String(prod.sales_price).trim() !== '' ? String(prod.sales_price).trim() : '';
 		line.rate = sp;
+		if (prod && Array.isArray(prod.tax_ids) && Array.isArray(all_taxes)) {
+			line.line_taxes = [];
+			for (const tid of prod.tax_ids) {
+				const t = all_taxes.find(x => x.id === tid);
+				if (t) line.line_taxes.push({ Key: String(t.id), Value: t.name });
+			}
+		}
 		break;
 	}`),
 				Attr("@fk-multi-select.window", `if (!$event.detail) return;

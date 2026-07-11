@@ -11,13 +11,8 @@ type youtubePublishedMetaLayer struct{}
 func (youtubePublishedMetaLayer) Next(_ views.View, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-		switch v := ctx.Value("publishedVideo").(type) {
-		case PublishedVideo:
+		if v, err := views.GetValueFromContext[string, PublishedVideo](ctx, "publishedVideo"); err == nil {
 			ctx = attachYouTubeMetaToContext(ctx, v)
-		case *PublishedVideo:
-			if v != nil {
-				ctx = attachYouTubeMetaToContext(ctx, *v)
-			}
 		}
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})

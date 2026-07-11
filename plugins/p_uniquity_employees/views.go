@@ -15,20 +15,6 @@ import (
 	"gorm.io/gorm"
 )
 
-// SuperuserOnlyLayer returns 401 unless the authenticated user is a superuser.
-type SuperuserOnlyLayer struct{}
-
-func (SuperuserOnlyLayer) Next(_ views.View, next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		user := p_users.UserFromContext(r.Context(), "employees.SuperuserOnlyLayer")
-		if !user.IsSuperuser {
-			slog.Error("employees.SuperuserOnlyLayer: forbidden", "user_id", user.ID)
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
-			return
-		}
-		next.ServeHTTP(w, r)
-	})
-}
 
 // employeePointsTotalContextKey is where [employeeDetailPointsTotalLayer] stores the
 // display string for SUM(points) (must not contain '.' — [getters.Key] path rules).
@@ -105,7 +91,7 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 				Key: "employees.EmployeeListView",
 				Value: lamu.GetPageView("employees.EmployeeTable").
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
-					WithLayer("employees.superuser", SuperuserOnlyLayer{}).
+					WithLayer("employees.superuser", p_users.SuperuserOnlyLayer{}).
 					WithLayer("employees.employee_list", views.LayerList[Employee]{
 						Key: getters.Static("employees"),
 						QueryPatchers: views.QueryPatchers[Employee]{
@@ -117,7 +103,7 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 				Key: "employees.EmployeeDetailView",
 				Value: lamu.GetPageView("employees.EmployeeDetail").
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
-					WithLayer("employees.superuser", SuperuserOnlyLayer{}).
+					WithLayer("employees.superuser", p_users.SuperuserOnlyLayer{}).
 					WithLayer("employees.employee_detail", views.LayerDetail[Employee]{
 						Key:          getters.Static("employee"),
 						PathParamKey: getters.Static("id"),
@@ -131,7 +117,7 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 				Key: "employees.EmployeeCreateView",
 				Value: lamu.GetPageView("employees.EmployeeCreateForm").
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
-					WithLayer("employees.superuser", SuperuserOnlyLayer{}).
+					WithLayer("employees.superuser", p_users.SuperuserOnlyLayer{}).
 					WithLayer("employees.employee_create", views.LayerCreate[Employee]{
 						SuccessURL: lamu.RoutePath("employees.EmployeeDetailRoute", map[string]getters.Getter[any]{
 							"id": getters.Any(getters.Key[uint]("$id")),
@@ -142,7 +128,7 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 				Key: "employees.EmployeeUpdateView",
 				Value: lamu.GetPageView("employees.EmployeeUpdateForm").
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
-					WithLayer("employees.superuser", SuperuserOnlyLayer{}).
+					WithLayer("employees.superuser", p_users.SuperuserOnlyLayer{}).
 					WithLayer("employees.employee_detail", views.LayerDetail[Employee]{
 						Key:          getters.Static("employee"),
 						PathParamKey: getters.Static("id"),
@@ -159,7 +145,7 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 				Key: "employees.EmployeeDeleteView",
 				Value: lamu.GetPageView("employees.EmployeeDeleteForm").
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
-					WithLayer("employees.superuser", SuperuserOnlyLayer{}).
+					WithLayer("employees.superuser", p_users.SuperuserOnlyLayer{}).
 					WithLayer("employees.employee_detail", views.LayerDetail[Employee]{
 						Key:          getters.Static("employee"),
 						PathParamKey: getters.Static("id"),
@@ -176,7 +162,7 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 				Key: "employees.EmployeeSelectView",
 				Value: lamu.GetPageView("employees.EmployeeSelectionTable").
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
-					WithLayer("employees.superuser", SuperuserOnlyLayer{}).
+					WithLayer("employees.superuser", p_users.SuperuserOnlyLayer{}).
 					WithLayer("employees.employee_select_list", views.LayerList[Employee]{
 						Key: getters.Static("employees"),
 						QueryPatchers: views.QueryPatchers[Employee]{
@@ -188,7 +174,7 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 				Key: "employees.PointsListView",
 				Value: lamu.GetPageView("employees.PointsTransactionTable").
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
-					WithLayer("employees.superuser", SuperuserOnlyLayer{}).
+					WithLayer("employees.superuser", p_users.SuperuserOnlyLayer{}).
 					WithLayer("employees.points_list", views.LayerList[PointsTransaction]{
 						Key: getters.Static("pointsTransactions"),
 						QueryPatchers: views.QueryPatchers[PointsTransaction]{
@@ -200,7 +186,7 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 				Key: "employees.PointsDetailView",
 				Value: lamu.GetPageView("employees.PointsTransactionDetail").
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
-					WithLayer("employees.superuser", SuperuserOnlyLayer{}).
+					WithLayer("employees.superuser", p_users.SuperuserOnlyLayer{}).
 					WithLayer("employees.points_detail", views.LayerDetail[PointsTransaction]{
 						Key:          getters.Static("pointsTransaction"),
 						PathParamKey: getters.Static("id"),
@@ -213,7 +199,7 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 				Key: "employees.PointsCreateView",
 				Value: lamu.GetPageView("employees.PointsTransactionCreateForm").
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
-					WithLayer("employees.superuser", SuperuserOnlyLayer{}).
+					WithLayer("employees.superuser", p_users.SuperuserOnlyLayer{}).
 					WithLayer("employees.points_create", views.LayerCreate[PointsTransaction]{
 						SuccessURL: lamu.RoutePath("employees.PointsDetailRoute", map[string]getters.Getter[any]{
 							"id": getters.Any(getters.Key[uint]("$id")),

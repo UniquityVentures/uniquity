@@ -3,6 +3,8 @@ package p_uniquity_finance_invoices
 import (
 	"errors"
 	"fmt"
+	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/UniquityVentures/lamu/fields"
@@ -31,12 +33,41 @@ func (d *DraftInvoice) BeforeSave(tx *gorm.DB) error {
 	return nil
 }
 
+func loadHeaderTaxes(tx *gorm.DB, d *DraftInvoice) ([]finance_taxes.Tax, error) {
+	var headerTaxes []finance_taxes.Tax
+	if ctx := tx.Statement.Context; ctx != nil {
+		if r, _ := ctx.Value("$request").(*http.Request); r != nil {
+			_ = r.ParseForm()
+			taxIDsStr := r.Form["Taxes"]
+			if len(taxIDsStr) > 0 {
+				var taxIDs []uint
+				for _, s := range taxIDsStr {
+					if id, err := strconv.ParseUint(s, 10, 64); err == nil {
+						taxIDs = append(taxIDs, uint(id))
+					}
+				}
+				if len(taxIDs) > 0 {
+					if err := tx.Where("id IN ?", taxIDs).Find(&headerTaxes).Error; err != nil {
+						return nil, err
+					}
+				}
+			}
+		}
+	}
+	if len(headerTaxes) == 0 && d.ID > 0 {
+		if err := tx.Model(d).Association("Taxes").Find(&headerTaxes); err != nil {
+			return nil, err
+		}
+	}
+	return headerTaxes, nil
+}
+
 func (d *DraftInvoice) AfterCreate(tx *gorm.DB) error {
 	if len(d.PendingLines) == 0 {
 		return nil
 	}
-	var headerTaxes []finance_taxes.Tax
-	if err := tx.Model(d).Association("Taxes").Find(&headerTaxes); err != nil {
+	headerTaxes, err := loadHeaderTaxes(tx, d)
+	if err != nil {
 		return err
 	}
 	for _, row := range d.PendingLines {
@@ -66,8 +97,8 @@ func (d *DraftInvoice) AfterUpdate(tx *gorm.DB) error {
 	if err := tx.Where("draft_invoice_id = ?", d.ID).Delete(&DraftInvoiceLine{}).Error; err != nil {
 		return err
 	}
-	var headerTaxes []finance_taxes.Tax
-	if err := tx.Model(d).Association("Taxes").Find(&headerTaxes); err != nil {
+	headerTaxes, err := loadHeaderTaxes(tx, d)
+	if err != nil {
 		return err
 	}
 	for _, row := range d.PendingLines {
@@ -121,20 +152,22 @@ func buildDraftLineFromPending(tx *gorm.DB, draftID uint, row DraftLinePending, 
 			return nil, fmt.Errorf("rate must be non-negative")
 		}
 	}
-	merged := mergeTaxesUnique(append([]finance_taxes.Tax{}, headerTaxes...), prod.Taxes)
-	if len(row.TaxIDs) > 0 {
-		var extra []finance_taxes.Tax
-		if err := tx.Where("id IN ?", row.TaxIDs).Find(&extra).Error; err != nil {
-			return nil, fmt.Errorf("load line taxes: %w", err)
+	var merged []finance_taxes.Tax
+	if row.TaxIDs != nil {
+		if len(row.TaxIDs) > 0 {
+			if err := tx.Where("id IN ?", row.TaxIDs).Find(&merged).Error; err != nil {
+				return nil, fmt.Errorf("load line taxes: %w", err)
+			}
+			seen := map[uint]struct{}{}
+			for _, id := range row.TaxIDs {
+				seen[id] = struct{}{}
+			}
+			if len(merged) != len(seen) {
+				return nil, fmt.Errorf("one or more line tax ids are invalid")
+			}
 		}
-		seen := map[uint]struct{}{}
-		for _, id := range row.TaxIDs {
-			seen[id] = struct{}{}
-		}
-		if len(extra) != len(seen) {
-			return nil, fmt.Errorf("one or more line tax ids are invalid")
-		}
-		merged = mergeTaxesUnique(merged, extra)
+	} else {
+		merged = mergeTaxesUnique(append([]finance_taxes.Tax{}, headerTaxes...), prod.Taxes)
 	}
 	line := &DraftInvoiceLine{
 		DraftInvoiceID: draftID,

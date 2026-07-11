@@ -292,7 +292,7 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 				Key: "video.PublishedEditorPointsCreateView",
 				Value: lamu.GetPageView("video.PublishedEditorPointsForm").
 					WithLayer("p_users.auth", auth).
-					WithLayer("employees.superuser", uniqempl.SuperuserOnlyLayer{}).
+					WithLayer("employees.superuser", p_users.SuperuserOnlyLayer{}).
 					WithLayer("video.published_detail", views.LayerDetail[PublishedVideo]{
 						Key:          getters.Static("publishedVideo"),
 						PathParamKey: getters.Static("id"),

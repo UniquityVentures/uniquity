@@ -2,7 +2,6 @@ package p_uniquity_finance_invoices
 
 import (
 	"bytes"
-	"context"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -16,75 +15,6 @@ import (
 	"gorm.io/gorm"
 )
 
-func draftInvoiceFromContext(ctx context.Context) (DraftInvoice, bool) {
-	switch v := ctx.Value("draft_invoice").(type) {
-	case DraftInvoice:
-		return v, true
-	case *DraftInvoice:
-		if v == nil {
-			return DraftInvoice{}, false
-		}
-		return *v, true
-	default:
-		return DraftInvoice{}, false
-	}
-}
-
-func cancelledInvoiceFromContext(ctx context.Context) (CancelledInvoice, bool) {
-	switch v := ctx.Value("cancelled_invoice").(type) {
-	case CancelledInvoice:
-		return v, true
-	case *CancelledInvoice:
-		if v == nil {
-			return CancelledInvoice{}, false
-		}
-		return *v, true
-	default:
-		return CancelledInvoice{}, false
-	}
-}
-
-func postedInvoiceFromContext(ctx context.Context) (PostedInvoice, bool) {
-	switch v := ctx.Value("posted_invoice").(type) {
-	case PostedInvoice:
-		return v, true
-	case *PostedInvoice:
-		if v == nil {
-			return PostedInvoice{}, false
-		}
-		return *v, true
-	default:
-		return PostedInvoice{}, false
-	}
-}
-
-func paidInvoiceFromContext(ctx context.Context) (PaidInvoice, bool) {
-	switch v := ctx.Value("paid_invoice").(type) {
-	case PaidInvoice:
-		return v, true
-	case *PaidInvoice:
-		if v == nil {
-			return PaidInvoice{}, false
-		}
-		return *v, true
-	default:
-		return PaidInvoice{}, false
-	}
-}
-
-func partiallyPaidInvoiceFromContext(ctx context.Context) (PartiallyPaidInvoice, bool) {
-	switch v := ctx.Value("partially_paid_invoice").(type) {
-	case PartiallyPaidInvoice:
-		return v, true
-	case *PartiallyPaidInvoice:
-		if v == nil {
-			return PartiallyPaidInvoice{}, false
-		}
-		return *v, true
-	default:
-		return PartiallyPaidInvoice{}, false
-	}
-}
 
 var postedInvoicePdfPreload = []string{"Customer", "PaymentTerm", "Taxes", "Lines", "Lines.Product", "Lines.Taxes"}
 
@@ -150,9 +80,9 @@ func serveInvoicePDFFromPrefs(w http.ResponseWriter, db *gorm.DB, templateRoot m
 func draftInvoicePdfHandler(_ *views.View) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-		draft, ok := draftInvoiceFromContext(ctx)
-		if !ok {
-			slog.Error("draft_invoice_pdf: missing draft_invoice in context")
+		draft, err := views.GetValueFromContext[string, DraftInvoice](ctx, "draft_invoice")
+		if err != nil {
+			slog.Error("draft_invoice_pdf: missing draft_invoice in context", "error", err)
 			http.Error(w, "Draft invoice not found", http.StatusInternalServerError)
 			return
 		}
@@ -173,9 +103,9 @@ func draftInvoicePdfHandler(_ *views.View) http.Handler {
 func cancelledInvoicePdfHandler(_ *views.View) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-		inv, ok := cancelledInvoiceFromContext(ctx)
-		if !ok {
-			slog.Error("cancelled_invoice_pdf: missing cancelled_invoice in context")
+		inv, err := views.GetValueFromContext[string, CancelledInvoice](ctx, "cancelled_invoice")
+		if err != nil {
+			slog.Error("cancelled_invoice_pdf: missing cancelled_invoice in context", "error", err)
 			http.Error(w, "Cancelled invoice not found", http.StatusInternalServerError)
 			return
 		}
@@ -196,9 +126,9 @@ func cancelledInvoicePdfHandler(_ *views.View) http.Handler {
 func postedInvoicePdfHandler(_ *views.View) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-		posted, ok := postedInvoiceFromContext(ctx)
-		if !ok {
-			slog.Error("posted_invoice_pdf: missing posted_invoice in context")
+		posted, err := views.GetValueFromContext[string, PostedInvoice](ctx, "posted_invoice")
+		if err != nil {
+			slog.Error("posted_invoice_pdf: missing posted_invoice in context", "error", err)
 			http.Error(w, "Posted invoice not found", http.StatusInternalServerError)
 			return
 		}
@@ -215,9 +145,9 @@ func postedInvoicePdfHandler(_ *views.View) http.Handler {
 func paidInvoicePdfHandler(_ *views.View) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-		paid, ok := paidInvoiceFromContext(ctx)
-		if !ok {
-			slog.Error("paid_invoice_pdf: missing paid_invoice in context")
+		paid, err := views.GetValueFromContext[string, PaidInvoice](ctx, "paid_invoice")
+		if err != nil {
+			slog.Error("paid_invoice_pdf: missing paid_invoice in context", "error", err)
 			http.Error(w, "Paid invoice not found", http.StatusInternalServerError)
 			return
 		}
@@ -234,9 +164,9 @@ func paidInvoicePdfHandler(_ *views.View) http.Handler {
 func partiallyPaidInvoicePdfHandler(_ *views.View) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-		partial, ok := partiallyPaidInvoiceFromContext(ctx)
-		if !ok {
-			slog.Error("partially_paid_invoice_pdf: missing partially_paid_invoice in context")
+		partial, err := views.GetValueFromContext[string, PartiallyPaidInvoice](ctx, "partially_paid_invoice")
+		if err != nil {
+			slog.Error("partially_paid_invoice_pdf: missing partially_paid_invoice in context", "error", err)
 			http.Error(w, "Partially paid invoice not found", http.StatusInternalServerError)
 			return
 		}

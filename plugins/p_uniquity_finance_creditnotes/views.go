@@ -1,7 +1,6 @@
 package p_uniquity_finance_creditnotes
 
 import (
-	"log/slog"
 	"net/http"
 	"time"
 
@@ -14,20 +13,6 @@ import (
 	"gorm.io/gorm"
 )
 
-// SuperuserOnlyLayer returns 401 unless the authenticated user is a superuser.
-type SuperuserOnlyLayer struct{}
-
-func (SuperuserOnlyLayer) Next(_ views.View, next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		user := p_users.UserFromContext(r.Context(), "finance_credit_notes.SuperuserOnlyLayer")
-		if !user.IsSuperuser {
-			slog.Error("finance_credit_notes.SuperuserOnlyLayer: forbidden", "user_id", user.ID)
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
-			return
-		}
-		next.ServeHTTP(w, r)
-	})
-}
 
 type creditNoteCreateFormDefaults struct{}
 
@@ -54,7 +39,7 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 				Key: "finance_credit_notes.CreditNoteListView",
 				Value: lamu.GetPageView("finance_credit_notes.CreditNoteTable").
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
-					WithLayer("finance_credit_notes.superuser", SuperuserOnlyLayer{}).
+					WithLayer("finance_credit_notes.superuser", p_users.SuperuserOnlyLayer{}).
 					WithLayer("finance_credit_notes.credit_note_list", views.LayerList[CreditNote]{
 						Key: getters.Static("credit_notes"),
 					}),
@@ -63,7 +48,7 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 				Key: "finance_credit_notes.CreditNoteCreateView",
 				Value: lamu.GetPageView("finance_credit_notes.CreditNoteCreateForm").
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
-					WithLayer("finance_credit_notes.superuser", SuperuserOnlyLayer{}).
+					WithLayer("finance_credit_notes.superuser", p_users.SuperuserOnlyLayer{}).
 					WithLayer("finance_credit_notes.credit_note_create", views.LayerCreate[CreditNote]{
 						SuccessURL: lamu.RoutePath("finance_credit_notes.DefaultRoute", nil),
 						FormPatchers: views.FormPatchers{
@@ -75,7 +60,7 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 				Key: "finance_credit_notes.CreditNoteDetailView",
 				Value: lamu.GetPageView("finance_credit_notes.CreditNoteDetail").
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
-					WithLayer("finance_credit_notes.superuser", SuperuserOnlyLayer{}).
+					WithLayer("finance_credit_notes.superuser", p_users.SuperuserOnlyLayer{}).
 					WithLayer("finance_credit_notes.credit_note_detail", views.LayerDetail[CreditNote]{
 						Key:          getters.Static("credit_note"),
 						PathParamKey: getters.Static("id"),
@@ -88,7 +73,7 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 				Key: "finance_credit_notes.JournalEntryFkSelectView",
 				Value: lamu.GetPageView("finance_credit_notes.JournalEntryFkSelectionTable").
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
-					WithLayer("finance_credit_notes.superuser", SuperuserOnlyLayer{}).
+					WithLayer("finance_credit_notes.superuser", p_users.SuperuserOnlyLayer{}).
 					WithLayer("finance_credit_notes.journal_entry_fk_list", views.LayerList[finance_accounts.JournalEntry]{
 						Key: getters.Static("journal_entries"),
 						QueryPatchers: views.QueryPatchers[finance_accounts.JournalEntry]{
