@@ -3,12 +3,12 @@ package p_uniquity_finance_invoices
 import (
 	"time"
 
-	"github.com/UniquityVentures/lamu/fields"
 	finance_accounts "github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_accounts"
 	finance_creditnotes "github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_creditnotes"
 	finance_customer "github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_customer"
 	finance_products "github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_products"
 	finance_taxes "github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_taxes"
+	"github.com/lariv-in/lago/fields"
 	"gorm.io/gorm"
 )
 

@@ -1,11 +1,11 @@
 package p_uniquity_finance_invoices
 
 import (
-	"github.com/UniquityVentures/lamu/components"
-	"github.com/UniquityVentures/lamu/getters"
-	"github.com/UniquityVentures/lamu/lamu"
 	finance_accounts "github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_accounts"
 	finance_products "github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_products"
+	"github.com/lariv-in/lago"
+	"github.com/lariv-in/lago/components"
+	"github.com/lariv-in/lago/getters"
 )
 
 func invoicePreferencesFormInputs() []components.PageInterface {
@@ -55,7 +55,7 @@ func invoicePreferencesFormInputs() []components.PageInterface {
 				&components.InputForeignKey[finance_accounts.Journal]{
 					Label:       "Journal (invoices)",
 					Name:        InvoicePrefJournalIDField,
-					Url:         lamu.RoutePath("finance_accounts.JournalSelectRoute", nil),
+					Url:         lago.RoutePath("finance_accounts.JournalSelectRoute", nil),
 					Display:     getters.Key[string]("$in.Name"),
 					Placeholder: "Select journal…",
 					Getter:      getters.Association[finance_accounts.Journal, uint](finance_products.OptionalPrefUintGetter(InvoicePrefJournalIDField)),

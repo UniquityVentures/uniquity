@@ -3,8 +3,8 @@ package p_uniquity_finance_products
 import (
 	"slices"
 
-	"github.com/UniquityVentures/lamu/components"
 	finance_accounts "github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_accounts"
+	"github.com/lariv-in/lago/components"
 )
 
 func accountingPreferencesFormHasProductPrefs(parent components.ParentInterface) bool {

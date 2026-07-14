@@ -3,10 +3,10 @@ package p_uniquity_finance_fiscal_year
 import (
 	"time"
 
-	"github.com/UniquityVentures/lamu/components"
-	"github.com/UniquityVentures/lamu/getters"
-	"github.com/UniquityVentures/lamu/lamu"
-	"github.com/UniquityVentures/lamu/registry"
+	"github.com/lariv-in/lago"
+	"github.com/lariv-in/lago/components"
+	"github.com/lariv-in/lago/getters"
+	"github.com/lariv-in/lago/registry"
 )
 
 const financeAccountsMainMenuFiscalYearsLinkKey = "finance_fiscal_years.FinanceAccountsMainMenuLink"
@@ -25,7 +25,7 @@ func patchFinanceAccountsMainMenuForFiscalYears(page components.PageInterface) c
 	newChildren = append(newChildren, &components.SidebarMenuItem{
 		Page:  components.Page{Key: financeAccountsMainMenuFiscalYearsLinkKey, Roles: []string{"superuser"}},
 		Title: getters.Static("Fiscal years"),
-		Url:   lamu.RoutePath("finance_fiscal_years.DefaultRoute", nil),
+		Url:   lago.RoutePath("finance_fiscal_years.DefaultRoute", nil),
 		Icon:  "calendar-days",
 	})
 	cloned := *menu
@@ -33,11 +33,11 @@ func patchFinanceAccountsMainMenuForFiscalYears(page components.PageInterface) c
 	return &cloned
 }
 
-func pluginPages() lamu.PluginFeatures[components.PageInterface] {
+func pluginPages() lago.PluginFeatures[components.PageInterface] {
 	e := pageEntriesFiscalYearMenus()
 	e = append(e, pageEntriesFiscalYearPages()...)
 	e = append(e, pageEntriesFiscalYearSelectionPages()...)
-	return lamu.PluginFeatures[components.PageInterface]{
+	return lago.PluginFeatures[components.PageInterface]{
 		Entries: e,
 		Patches: []registry.Pair[string, func(components.PageInterface) components.PageInterface]{
 			{Key: "finance_accounts.MainMenu", Value: patchFinanceAccountsMainMenuForFiscalYears},
@@ -51,19 +51,19 @@ func pageEntriesFiscalYearMenus() []registry.Pair[string, components.PageInterfa
 			Title: getters.Format("%s", getters.Any(getters.Key[string]("fiscal_year.Name"))),
 			Back: &components.SidebarMenuItem{
 				Title: getters.Static("All fiscal years"),
-				Url:   lamu.RoutePath("finance_fiscal_years.DefaultRoute", nil),
+				Url:   lago.RoutePath("finance_fiscal_years.DefaultRoute", nil),
 			},
 			Children: []components.PageInterface{
 				&components.SidebarMenuItem{
 					Title: getters.Static("Detail"),
-					Url: lamu.RoutePath("finance_fiscal_years.FiscalYearDetailRoute", map[string]getters.Getter[any]{
+					Url: lago.RoutePath("finance_fiscal_years.FiscalYearDetailRoute", map[string]getters.Getter[any]{
 						"id": getters.Any(getters.Key[uint]("fiscal_year.ID")),
 					}),
 				},
 				&components.SidebarMenuItem{
 					Page:  components.Page{Roles: []string{"superuser"}},
 					Title: getters.Static("Edit"),
-					Url: lamu.RoutePath("finance_fiscal_years.FiscalYearUpdateRoute", map[string]getters.Getter[any]{
+					Url: lago.RoutePath("finance_fiscal_years.FiscalYearUpdateRoute", map[string]getters.Getter[any]{
 						"id": getters.Any(getters.Key[uint]("fiscal_year.ID")),
 					}),
 				},
@@ -139,7 +139,7 @@ func pageEntriesFiscalYearPages() []registry.Pair[string, components.PageInterfa
 
 	return []registry.Pair[string, components.PageInterface]{
 		{Key: "finance_fiscal_years.FiscalYearTable", Value: &components.ShellScaffold{
-			Sidebar: []components.PageInterface{lamu.DynamicPage{Name: "finance_accounts.MainMenu"}},
+			Sidebar: []components.PageInterface{lago.DynamicPage{Name: "finance_accounts.MainMenu"}},
 			Children: []components.PageInterface{
 				&components.DataTable[FiscalYear]{
 					UID:     "finance-fiscal-year-table",
@@ -147,11 +147,11 @@ func pageEntriesFiscalYearPages() []registry.Pair[string, components.PageInterfa
 					Data:    getters.Key[components.ObjectList[FiscalYear]]("fiscal_years"),
 					Actions: []components.PageInterface{
 						&components.TableButtonCreate{
-							Link: lamu.RoutePath("finance_fiscal_years.FiscalYearCreateRoute", nil),
+							Link: lago.RoutePath("finance_fiscal_years.FiscalYearCreateRoute", nil),
 							Page: components.Page{Roles: []string{"superuser"}},
 						},
 					},
-					RowAttr: getters.RowAttrNavigate(lamu.RoutePath("finance_fiscal_years.FiscalYearDetailRoute", map[string]getters.Getter[any]{
+					RowAttr: getters.RowAttrNavigate(lago.RoutePath("finance_fiscal_years.FiscalYearDetailRoute", map[string]getters.Getter[any]{
 						"id": getters.Any(getters.Key[uint]("$row.ID")),
 					})),
 					Columns: []components.TableColumn{
@@ -176,11 +176,11 @@ func pageEntriesFiscalYearPages() []registry.Pair[string, components.PageInterfa
 		}},
 		{Key: "finance_fiscal_years.FiscalYearCreateForm", Value: &components.ShellScaffold{
 			Page:    components.Page{Roles: []string{"superuser"}},
-			Sidebar: []components.PageInterface{lamu.DynamicPage{Name: "finance_accounts.MainMenu"}},
+			Sidebar: []components.PageInterface{lago.DynamicPage{Name: "finance_accounts.MainMenu"}},
 			Children: []components.PageInterface{
 				&components.FormListenBoostedPost{
 					Name:      createName,
-					ActionURL: lamu.RoutePath("finance_fiscal_years.FiscalYearCreateRoute", nil),
+					ActionURL: lago.RoutePath("finance_fiscal_years.FiscalYearCreateRoute", nil),
 					Children: []components.PageInterface{
 						&components.FormComponent[FiscalYear]{
 							Attr:          getters.FormBubbling(createName),
@@ -197,11 +197,11 @@ func pageEntriesFiscalYearPages() []registry.Pair[string, components.PageInterfa
 		}},
 		{Key: "finance_fiscal_years.FiscalYearUpdateForm", Value: &components.ShellScaffold{
 			Page:    components.Page{Roles: []string{"superuser"}},
-			Sidebar: []components.PageInterface{lamu.DynamicPage{Name: "finance_fiscal_years.FiscalYearDetailMenu"}},
+			Sidebar: []components.PageInterface{lago.DynamicPage{Name: "finance_fiscal_years.FiscalYearDetailMenu"}},
 			Children: []components.PageInterface{
 				&components.FormListenBoostedPost{
 					Name: updateName,
-					ActionURL: lamu.RoutePath("finance_fiscal_years.FiscalYearUpdateRoute", map[string]getters.Getter[any]{
+					ActionURL: lago.RoutePath("finance_fiscal_years.FiscalYearUpdateRoute", map[string]getters.Getter[any]{
 						"id": getters.Any(getters.Key[uint]("fiscal_year.ID")),
 					}),
 					Children: []components.PageInterface{
@@ -224,8 +224,8 @@ func pageEntriesFiscalYearPages() []registry.Pair[string, components.PageInterfa
 													Label:       "Delete",
 													Icon:        "trash",
 													Name:        deleteName,
-													Url:         lamu.RoutePath("finance_fiscal_years.FiscalYearDeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("fiscal_year.ID"))}),
-													FormPostURL: lamu.RoutePath("finance_fiscal_years.FiscalYearDeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("fiscal_year.ID"))}),
+													Url:         lago.RoutePath("finance_fiscal_years.FiscalYearDeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("fiscal_year.ID"))}),
+													FormPostURL: lago.RoutePath("finance_fiscal_years.FiscalYearDeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("fiscal_year.ID"))}),
 													ModalUID:    "finance-fiscal-year-delete-modal",
 													Classes:     "btn-error",
 												},
@@ -251,7 +251,7 @@ func pageEntriesFiscalYearPages() []registry.Pair[string, components.PageInterfa
 			},
 		}},
 		{Key: "finance_fiscal_years.FiscalYearDetail", Value: &components.ShellScaffold{
-			Sidebar: []components.PageInterface{lamu.DynamicPage{Name: "finance_fiscal_years.FiscalYearDetailMenu"}},
+			Sidebar: []components.PageInterface{lago.DynamicPage{Name: "finance_fiscal_years.FiscalYearDetailMenu"}},
 			Children: []components.PageInterface{
 				&components.Detail[FiscalYear]{
 					Getter: getters.Key[FiscalYear]("fiscal_year"),

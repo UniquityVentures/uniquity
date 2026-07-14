@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/UniquityVentures/lamu/components"
-	"github.com/UniquityVentures/lamu/getters"
-	"github.com/UniquityVentures/lamu/lamu"
-	"github.com/UniquityVentures/lamu/registry"
 	finance_taxes "github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_taxes"
+	"github.com/lariv-in/lago"
+	"github.com/lariv-in/lago/components"
+	"github.com/lariv-in/lago/getters"
+	"github.com/lariv-in/lago/registry"
 )
 
 var settlementPostedInvoiceDetailPreload = []string{
@@ -65,7 +65,7 @@ func settlementPaymentDetailLabelGetter() getters.Getter[string] {
 }
 
 func settlementPostedCustomerLinkGetter() getters.Getter[string] {
-	return lamu.RoutePath("finance_customers.CustomerDetailRoute", map[string]getters.Getter[any]{
+	return lago.RoutePath("finance_customers.CustomerDetailRoute", map[string]getters.Getter[any]{
 		"id": getters.Any(getters.Key[uint]("$in.PostedInvoice.CustomerID")),
 	})
 }
@@ -193,7 +193,7 @@ func settlementPaymentDetailFields() []components.PageInterface {
 	return []components.PageInterface{
 		&components.LabelInline{Title: "Payment", Children: []components.PageInterface{
 			&components.FieldLink{
-				Href: lamu.RoutePath("finance_invoices.PaymentDetailRoute", map[string]getters.Getter[any]{
+				Href: lago.RoutePath("finance_invoices.PaymentDetailRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("$in.PaymentID")),
 				}),
 				Label:   settlementPaymentDetailLabelGetter(),
@@ -222,7 +222,7 @@ func paidInvoiceHubTable() *components.DataTable[PaidInvoice] {
 		UID:     "finance-paid-invoice-table",
 		Classes: "w-full",
 		Data:    getters.Key[components.ObjectList[PaidInvoice]]("paid_invoices"),
-		RowAttr: getters.RowAttrNavigate(lamu.RoutePath("finance_invoices.PaidInvoiceDetailRoute", map[string]getters.Getter[any]{
+		RowAttr: getters.RowAttrNavigate(lago.RoutePath("finance_invoices.PaidInvoiceDetailRoute", map[string]getters.Getter[any]{
 			"id": getters.Any(getters.Key[uint]("$row.ID")),
 		})),
 		Columns: []components.TableColumn{
@@ -250,7 +250,7 @@ func partiallyPaidInvoiceHubTable() *components.DataTable[PartiallyPaidInvoice] 
 		UID:     "finance-partially-paid-invoice-table",
 		Classes: "w-full",
 		Data:    getters.Key[components.ObjectList[PartiallyPaidInvoice]]("partially_paid_invoices"),
-		RowAttr: getters.RowAttrNavigate(lamu.RoutePath("finance_invoices.PartiallyPaidInvoiceDetailRoute", map[string]getters.Getter[any]{
+		RowAttr: getters.RowAttrNavigate(lago.RoutePath("finance_invoices.PartiallyPaidInvoiceDetailRoute", map[string]getters.Getter[any]{
 			"id": getters.Any(getters.Key[uint]("$row.ID")),
 		})),
 		Columns: []components.TableColumn{
@@ -276,7 +276,7 @@ func partiallyPaidInvoiceHubTable() *components.DataTable[PartiallyPaidInvoice] 
 func pageEntriesSettlementPages() []registry.Pair[string, components.PageInterface] {
 	return []registry.Pair[string, components.PageInterface]{
 		{Key: "finance_invoices.PaidInvoiceDetail", Value: &components.ShellScaffold{
-			Sidebar: []components.PageInterface{lamu.DynamicPage{Name: "finance_invoices.PaidInvoiceDetailMenu"}},
+			Sidebar: []components.PageInterface{lago.DynamicPage{Name: "finance_invoices.PaidInvoiceDetailMenu"}},
 			Children: []components.PageInterface{
 				&components.ContainerError{
 					Error: getters.Key[error]("$error._global"),
@@ -285,7 +285,7 @@ func pageEntriesSettlementPages() []registry.Pair[string, components.PageInterfa
 							Getter: getters.Key[PaidInvoice]("paid_invoice"),
 							Children: []components.PageInterface{
 								&components.ContainerColumn{
-									Classes: "p-4",
+									Classes:  "p-4",
 									Children: settlementInvoiceDetailColumnChildren(false, "finance_invoices.PaidInvoicePdfRoute", "paid_invoice.ID"),
 								},
 							},
@@ -303,7 +303,7 @@ func pageEntriesSettlementPages() []registry.Pair[string, components.PageInterfa
 			Children: []components.PageInterface{
 				&components.SidebarMenuItem{
 					Title: getters.Static("Detail"),
-					Url: lamu.RoutePath("finance_invoices.PaidInvoiceDetailRoute", map[string]getters.Getter[any]{
+					Url: lago.RoutePath("finance_invoices.PaidInvoiceDetailRoute", map[string]getters.Getter[any]{
 						"id": getters.Any(getters.Key[uint]("paid_invoice.ID")),
 					}),
 				},
@@ -311,7 +311,7 @@ func pageEntriesSettlementPages() []registry.Pair[string, components.PageInterfa
 		}},
 
 		{Key: "finance_invoices.PartiallyPaidInvoiceDetail", Value: &components.ShellScaffold{
-			Sidebar: []components.PageInterface{lamu.DynamicPage{Name: "finance_invoices.PartiallyPaidInvoiceDetailMenu"}},
+			Sidebar: []components.PageInterface{lago.DynamicPage{Name: "finance_invoices.PartiallyPaidInvoiceDetailMenu"}},
 			Children: []components.PageInterface{
 				&components.ContainerError{
 					Error: getters.Key[error]("$error._global"),
@@ -338,7 +338,7 @@ func pageEntriesSettlementPages() []registry.Pair[string, components.PageInterfa
 			Children: []components.PageInterface{
 				&components.SidebarMenuItem{
 					Title: getters.Static("Detail"),
-					Url: lamu.RoutePath("finance_invoices.PartiallyPaidInvoiceDetailRoute", map[string]getters.Getter[any]{
+					Url: lago.RoutePath("finance_invoices.PartiallyPaidInvoiceDetailRoute", map[string]getters.Getter[any]{
 						"id": getters.Any(getters.Key[uint]("partially_paid_invoice.ID")),
 					}),
 				},

@@ -4,8 +4,8 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/UniquityVentures/lamu/components"
-	"github.com/UniquityVentures/lamu/getters"
+	"github.com/lariv-in/lago/components"
+	"github.com/lariv-in/lago/getters"
 	. "maragu.dev/gomponents"
 	. "maragu.dev/gomponents/html"
 )
@@ -59,9 +59,11 @@ func (e PostInvoiceConfirmation) Build(ctx context.Context) Node {
 		msg = "Posting creates a permanent journal entry and locks this invoice. You cannot undo posting or return to draft. Reversal requires cancelling the posted invoice later (credit note), which creates additional accounting entries."
 	}
 
-	return Div(Class("container mx-auto "+e.Classes),
+	return Div(
+		Class("container mx-auto "+e.Classes),
 		H2(Class("text-xl font-bold"), Text(title)),
-		Div(Class("alert alert-warning text-sm my-3 leading-relaxed flex flex-col gap-2 items-stretch"),
+		Div(
+			Class("alert alert-warning text-sm my-3 leading-relaxed flex flex-col gap-2 items-stretch"),
 			P(Class("font-semibold"), Text("This action cannot be reverted.")),
 			P(Class("m-0"), Text(msg)),
 		),

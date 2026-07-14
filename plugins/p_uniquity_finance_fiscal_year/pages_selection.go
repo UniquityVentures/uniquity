@@ -3,16 +3,16 @@ package p_uniquity_finance_fiscal_year
 import (
 	"time"
 
-	"github.com/UniquityVentures/lamu/components"
-	"github.com/UniquityVentures/lamu/getters"
-	"github.com/UniquityVentures/lamu/lamu"
-	"github.com/UniquityVentures/lamu/registry"
+	"github.com/lariv-in/lago"
+	"github.com/lariv-in/lago/components"
+	"github.com/lariv-in/lago/getters"
+	"github.com/lariv-in/lago/registry"
 )
 
 func pageEntriesFiscalYearSelectionPages() []registry.Pair[string, components.PageInterface] {
 	return []registry.Pair[string, components.PageInterface]{
 		{Key: "finance_fiscal_years.FiscalYearSelectionFilter", Value: &components.FormComponent[FiscalYear]{
-			Attr: getters.FormBoostedGet(lamu.RoutePath("finance_fiscal_years.FiscalYearSelectRoute", nil)),
+			Attr: getters.FormBoostedGet(lago.RoutePath("finance_fiscal_years.FiscalYearSelectRoute", nil)),
 			ChildrenInput: []components.PageInterface{
 				&components.InputText{Label: "Code", Name: "Code", Getter: getters.Key[string]("$get.Code")},
 				&components.InputText{Label: "Name", Name: "Name", Getter: getters.Key[string]("$get.Name")},
@@ -32,9 +32,10 @@ func pageEntriesFiscalYearSelectionPages() []registry.Pair[string, components.Pa
 					Title: "Select fiscal year",
 					Data:  getters.Key[components.ObjectList[FiscalYear]]("fiscal_years"),
 					Actions: []components.PageInterface{
-						&components.TableButtonFilter{Child: lamu.DynamicPage{Name: "finance_fiscal_years.FiscalYearSelectionFilter"}},
+						&components.TableButtonFilter{Child: lago.DynamicPage{Name: "finance_fiscal_years.FiscalYearSelectionFilter"}},
 					},
-					RowAttr: getters.RowAttrSelect("FiscalYearID",
+					RowAttr: getters.RowAttrSelect(
+						"FiscalYearID",
 						getters.Key[uint]("$row.ID"),
 						getters.Key[string]("$row.Name"),
 					),

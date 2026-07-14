@@ -3,7 +3,7 @@ package p_uniquity_finance_accounts
 import (
 	"time"
 
-	"github.com/UniquityVentures/lamu/fields"
+	"github.com/lariv-in/lago/fields"
 	"gorm.io/gorm"
 )
 

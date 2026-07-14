@@ -1,7 +1,7 @@
 package p_uniquity_finance_accounts
 
 import (
-	"github.com/UniquityVentures/lamu/lamu"
+	"github.com/lariv-in/lago"
 	"gorm.io/gorm"
 )
 
@@ -9,10 +9,10 @@ import (
 type Account struct {
 	gorm.Model
 
-	Name          string      `gorm:"not null"`
-	Code          int         `gorm:"not null"`
-	IsGroup       bool        `gorm:"column:is_group;not null"`
-	BalanceType   BalanceType `gorm:"type:\"BalanceType\";not null"`
+	Name        string      `gorm:"not null"`
+	Code        int         `gorm:"not null"`
+	IsGroup     bool        `gorm:"column:is_group;not null"`
+	BalanceType BalanceType `gorm:"type:\"BalanceType\";not null"`
 
 	ParentID *uint
 	Parent   *Account `gorm:"foreignKey:ParentID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`
@@ -29,26 +29,26 @@ type Currency struct {
 }
 
 func init() {
-	lamu.RegistryAdmin.Register("p_uniquity_finance_accounts.Account", lamu.AdminPanel[Account]{
+	lago.RegistryAdmin.Register("p_uniquity_finance_accounts.Account", lago.AdminPanel[Account]{
 		SearchField: "Name",
 		ListFields:  []string{"Name", "Code", "IsGroup", "BalanceType", "Parent.Name", "UpdatedAt"},
 		Preload:     []string{"Parent"},
 	})
-	lamu.RegistryAdmin.Register("p_uniquity_finance_accounts.Currency", lamu.AdminPanel[Currency]{
+	lago.RegistryAdmin.Register("p_uniquity_finance_accounts.Currency", lago.AdminPanel[Currency]{
 		SearchField: "Name",
 		ListFields:  []string{"Code", "Name", "Symbol", "MinorUnit", "UpdatedAt"},
 	})
-	lamu.RegistryAdmin.Register("p_uniquity_finance_accounts.Journal", lamu.AdminPanel[Journal]{
+	lago.RegistryAdmin.Register("p_uniquity_finance_accounts.Journal", lago.AdminPanel[Journal]{
 		SearchField: "Name",
 		ListFields:  []string{"Name", "IsActive", "Currency.Name", "Type", "UpdatedAt"},
 		Preload:     []string{"Currency"},
 	})
-	lamu.RegistryAdmin.Register("p_uniquity_finance_accounts.JournalEntry", lamu.AdminPanel[JournalEntry]{
+	lago.RegistryAdmin.Register("p_uniquity_finance_accounts.JournalEntry", lago.AdminPanel[JournalEntry]{
 		SearchField: "Journal.Name",
 		ListFields:  []string{"Datetime", "Journal.Name", "SourceDoc.ID", "UpdatedAt"},
 		Preload:     []string{"Journal", "SourceDoc"},
 	})
-	lamu.RegistryAdmin.Register("p_uniquity_finance_accounts.JournalEntryItem", lamu.AdminPanel[JournalEntryItem]{
+	lago.RegistryAdmin.Register("p_uniquity_finance_accounts.JournalEntryItem", lago.AdminPanel[JournalEntryItem]{
 		SearchField: "Account.Name",
 		ListFields:  []string{"Datetime", "Amount", "Account.Name", "JournalEntry.ID", "UpdatedAt"},
 		Preload:     []string{"Account", "JournalEntry"},

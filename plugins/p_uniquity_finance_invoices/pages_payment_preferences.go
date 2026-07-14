@@ -1,10 +1,10 @@
 package p_uniquity_finance_invoices
 
 import (
-	"github.com/UniquityVentures/lamu/components"
-	"github.com/UniquityVentures/lamu/getters"
 	finance_accounts "github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_accounts"
 	finance_products "github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_products"
+	"github.com/lariv-in/lago/components"
+	"github.com/lariv-in/lago/getters"
 )
 
 func paymentPreferencesFormInputs() []components.PageInterface {

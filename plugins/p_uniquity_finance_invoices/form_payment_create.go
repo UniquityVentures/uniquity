@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/UniquityVentures/lamu/components"
-	"github.com/UniquityVentures/lamu/getters"
-	"github.com/UniquityVentures/lamu/views"
 	finance_taxes "github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_taxes"
+	"github.com/lariv-in/lago/components"
+	"github.com/lariv-in/lago/getters"
+	"github.com/lariv-in/lago/views"
 	"gorm.io/gorm"
 )
 

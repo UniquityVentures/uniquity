@@ -3,9 +3,9 @@ package p_uniquity_finance_taxes
 import (
 	"fmt"
 
-	"github.com/UniquityVentures/lamu/fields"
-	"github.com/UniquityVentures/lamu/lamu"
 	finance_accounts "github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_accounts"
+	"github.com/lariv-in/lago"
+	"github.com/lariv-in/lago/fields"
 	"gorm.io/gorm"
 )
 
@@ -41,7 +41,7 @@ func (t *Tax) BeforeUpdate(_ *gorm.DB) error {
 }
 
 func init() {
-	lamu.RegistryAdmin.Register("p_uniquity_finance_taxes.Tax", lamu.AdminPanel[Tax]{
+	lago.RegistryAdmin.Register("p_uniquity_finance_taxes.Tax", lago.AdminPanel[Tax]{
 		SearchField: "Name",
 		ListFields:  []string{"Name", "Percentage", "TaxType", "AccountID", "UpdatedAt"},
 		Preload:     []string{"Account"},

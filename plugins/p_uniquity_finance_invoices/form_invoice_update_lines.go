@@ -6,11 +6,11 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/UniquityVentures/lamu/fields"
-	"github.com/UniquityVentures/lamu/getters"
-	"github.com/UniquityVentures/lamu/views"
 	finance_products "github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_products"
 	finance_taxes "github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_taxes"
+	"github.com/lariv-in/lago/fields"
+	"github.com/lariv-in/lago/getters"
+	"github.com/lariv-in/lago/views"
 )
 
 // invoiceUpdateLinesPatcher validates [InvoiceLinesJSON] and sets [DraftInvoice.PendingLines] for [DraftInvoice.AfterUpdate].

@@ -8,9 +8,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/UniquityVentures/lamu/components"
-	"github.com/UniquityVentures/lamu/getters"
-	"github.com/UniquityVentures/lamu/registry"
+	"github.com/lariv-in/lago/components"
+	"github.com/lariv-in/lago/getters"
+	"github.com/lariv-in/lago/registry"
 	. "maragu.dev/gomponents"
 	. "maragu.dev/gomponents/html"
 )
@@ -213,9 +213,9 @@ invoiceGrandTotalDisplay() {
 
 func (e InputInvoiceLinesDraft) Build(ctx context.Context) Node {
 	var productsJSON []byte
-	var taxPctJSON = []byte("{}")
-	var taxKindJSON = []byte("{}")
-	var allTaxesJSON = []byte("[]")
+	taxPctJSON := []byte("{}")
+	taxKindJSON := []byte("{}")
+	allTaxesJSON := []byte("[]")
 	if e.Preview != nil {
 		if s, err := e.Preview(ctx); err != nil {
 			slog.Error("InputInvoiceLinesDraft Preview failed", "error", err, "key", e.Key)
@@ -344,8 +344,10 @@ $el.closest('form').addEventListener('submit', (ev) => {
 
 	wrapClass := fmt.Sprintf("my-1 w-full %s", e.Classes)
 	// Match [components.InputText] field chrome (label + control), but use <div> not <label> so the table is not a labeled control.
-	return Div(Class(wrapClass),
-		Div(Class("label text-sm font-bold flex flex-col items-start gap-1 w-full"),
+	return Div(
+		Class(wrapClass),
+		Div(
+			Class("label text-sm font-bold flex flex-col items-start gap-1 w-full"),
 			Text(e.Label),
 			Div(
 				Class("w-full"),
@@ -390,8 +392,10 @@ $el.closest('form').addEventListener('submit', (ev) => {
 		else items.push({ Key: value, Value: String(disp || value) });
 		break;
 	}`),
-				Div(Class("overflow-x-auto rounded-box border border-base-300 bg-base-100"),
-					Table(Class("table table-sm w-full"),
+				Div(
+					Class("overflow-x-auto rounded-box border border-base-300 bg-base-100"),
+					Table(
+						Class("table table-sm w-full"),
 						THead(Tr(
 							Th(Class("whitespace-nowrap min-w-[12rem]"), Text("Product")),
 							Th(Class("whitespace-nowrap w-32"), Text("Quantity")),
@@ -408,10 +412,14 @@ $el.closest('form').addEventListener('submit', (ev) => {
 								Attr("x-for", "(line, i) in lines"),
 								Attr(":key", "line.fk_slot"),
 								Tr(
-									Td(Class("align-middle min-w-[12rem] max-w-md"),
-										Div(Class("my-1 relative w-full"),
-											Div(Class("flex w-full items-stretch gap-1"),
-												Div(Class("input input-bordered flex-1 flex items-center cursor-pointer min-w-0"),
+									Td(
+										Class("align-middle min-w-[12rem] max-w-md"),
+										Div(
+											Class("my-1 relative w-full"),
+											Div(
+												Class("flex w-full items-stretch gap-1"),
+												Div(
+													Class("input input-bordered flex-1 flex items-center cursor-pointer min-w-0"),
 													Attr(":class", "line.product_label ? '' : 'opacity-50'"),
 													Attr("x-bind:hx-get", "productPickHref(line.fk_slot)"),
 													Attr("hx-target", components.HTMXTargetBodyModal),
@@ -430,7 +438,8 @@ $el.closest('form').addEventListener('submit', (ev) => {
 											),
 										),
 									),
-									Td(Class("align-middle"),
+									Td(
+										Class("align-middle"),
 										Input(
 											Type("text"),
 											Class("input input-bordered w-full"),
@@ -438,7 +447,8 @@ $el.closest('form').addEventListener('submit', (ev) => {
 											Attr("inputmode", "decimal"),
 										),
 									),
-									Td(Class("align-middle"),
+									Td(
+										Class("align-middle"),
 										Input(
 											Type("text"),
 											Class("input input-bordered w-full"),
@@ -446,9 +456,12 @@ $el.closest('form').addEventListener('submit', (ev) => {
 											Attr("inputmode", "decimal"),
 										),
 									),
-									Td(Class("align-middle min-w-[10rem] max-w-xs"),
-										Div(Class("my-1"),
-											Div(Class("input input-bordered min-h-10 w-full flex flex-wrap items-center gap-1 cursor-pointer py-1 px-2"),
+									Td(
+										Class("align-middle min-w-[10rem] max-w-xs"),
+										Div(
+											Class("my-1"),
+											Div(
+												Class("input input-bordered min-h-10 w-full flex flex-wrap items-center gap-1 cursor-pointer py-1 px-2"),
 												Attr(":class", "(line.line_taxes && line.line_taxes.length) ? '' : 'opacity-50'"),
 												Attr("x-bind:hx-get", "lineTaxPickHref(line.fk_slot)"),
 												Attr("hx-target", components.HTMXTargetBodyModal),
@@ -478,31 +491,36 @@ $el.closest('form').addEventListener('submit', (ev) => {
 											),
 										),
 									),
-									Td(Class("align-middle text-end tabular-nums whitespace-nowrap"),
+									Td(
+										Class("align-middle text-end tabular-nums whitespace-nowrap"),
 										Span(
 											Class("text-sm"),
 											Attr("x-text", "lineUntaxedDisplay(line)"),
 										),
 									),
-									Td(Class("align-middle text-end tabular-nums whitespace-nowrap"),
+									Td(
+										Class("align-middle text-end tabular-nums whitespace-nowrap"),
 										Span(
 											Class("text-sm"),
 											Attr("x-text", "lineLeviedTaxDisplay(line)"),
 										),
 									),
-									Td(Class("align-middle text-end tabular-nums whitespace-nowrap"),
+									Td(
+										Class("align-middle text-end tabular-nums whitespace-nowrap"),
 										Span(
 											Class("text-sm"),
 											Attr("x-text", "lineWithholdingDisplay(line)"),
 										),
 									),
-									Td(Class("align-middle text-end tabular-nums whitespace-nowrap"),
+									Td(
+										Class("align-middle text-end tabular-nums whitespace-nowrap"),
 										Span(
 											Class("text-sm"),
 											Attr("x-text", "lineTotal(line)"),
 										),
 									),
-									Td(Class("align-middle w-24"),
+									Td(
+										Class("align-middle w-24"),
 										Button(
 											Type("button"),
 											Class("btn btn-ghost btn-sm"),
@@ -521,8 +539,10 @@ $el.closest('form').addEventListener('submit', (ev) => {
 					Attr("@click", "lines.push({ product_id: 0, quantity: '1', rate: '', product_label: '', fk_slot: allocFkSlot(), line_taxes: [] }); $nextTick(() => { const r = $el.closest('[data-invoice-lines-root]'); if (r && window.htmx) window.htmx.process(r) })"),
 					Text("Add line"),
 				),
-				Div(Class("mt-3 w-full rounded-box border border-base-300 bg-base-100 overflow-hidden divide-y divide-base-300"),
-					Div(Class("grid grid-cols-[1fr_auto] gap-x-4 items-center px-4 py-3"),
+				Div(
+					Class("mt-3 w-full rounded-box border border-base-300 bg-base-100 overflow-hidden divide-y divide-base-300"),
+					Div(
+						Class("grid grid-cols-[1fr_auto] gap-x-4 items-center px-4 py-3"),
 						Div(Class("text-sm font-bold min-w-0 truncate"), Text("Lines subtotal")),
 						Div(
 							Class("text-sm tabular-nums text-end font-semibold shrink-0 min-w-[7rem]"),
@@ -531,7 +551,8 @@ $el.closest('form').addEventListener('submit', (ev) => {
 					),
 					Template(
 						Attr("x-show", "linesWithholdingSubtotalNumber() > 0"),
-						Div(Class("grid grid-cols-[1fr_auto] gap-x-4 items-center px-4 py-3"),
+						Div(
+							Class("grid grid-cols-[1fr_auto] gap-x-4 items-center px-4 py-3"),
 							Div(Class("text-sm font-bold min-w-0 truncate"), Text("Withholding (lines)")),
 							Div(
 								Class("text-sm tabular-nums text-end font-semibold shrink-0 min-w-[7rem]"),
@@ -542,7 +563,8 @@ $el.closest('form').addEventListener('submit', (ev) => {
 					Template(
 						Attr("x-for", "invTaxItem in (($store.m2mSelections && $store.m2mSelections.Taxes) ? $store.m2mSelections.Taxes : [])"),
 						Attr(":key", "invTaxItem.Key"),
-						Div(Class("grid grid-cols-[1fr_auto] gap-x-4 items-center px-4 py-3"),
+						Div(
+							Class("grid grid-cols-[1fr_auto] gap-x-4 items-center px-4 py-3"),
 							Div(Class("text-sm font-bold min-w-0 truncate"), Attr("x-text", "invoiceTaxLabel(invTaxItem)")),
 							Div(
 								Class("text-sm tabular-nums text-end font-semibold shrink-0 min-w-[7rem]"),
@@ -550,7 +572,8 @@ $el.closest('form').addEventListener('submit', (ev) => {
 							),
 						),
 					),
-					Div(Class("grid grid-cols-[1fr_auto] gap-x-4 items-center px-4 py-3 bg-base-200/60"),
+					Div(
+						Class("grid grid-cols-[1fr_auto] gap-x-4 items-center px-4 py-3 bg-base-200/60"),
 						Div(Class("text-sm font-bold min-w-0 truncate"), Text("Total")),
 						Div(
 							Class("text-sm tabular-nums text-end font-bold shrink-0 min-w-[7rem]"),

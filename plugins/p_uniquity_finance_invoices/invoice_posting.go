@@ -5,11 +5,11 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/UniquityVentures/lamu/fields"
 	finance_accounts "github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_accounts"
 	finance_creditnotes "github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_creditnotes"
 	finance_products "github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_products"
 	finance_taxes "github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_taxes"
+	"github.com/lariv-in/lago/fields"
 	"gorm.io/gorm"
 )
 
@@ -172,7 +172,8 @@ func (d *DraftInvoice) NewPosted(tx *gorm.DB, postedAt time.Time) (*PostedInvoic
 		p := line.Product
 		qty := line.Quantity
 		costBase := decMul(p.BaseCost, qty)
-		specs = append(specs,
+		specs = append(
+			specs,
 			itemSpec{accountID: finance_products.OptionalUintValue(productPrefs.CostOfSalesAcctID), amount: costBase},
 			itemSpec{accountID: finance_products.OptionalUintValue(productPrefs.InventoryAccountID), amount: decNeg(costBase)},
 		)
@@ -385,11 +386,11 @@ func (c *CancelledInvoice) NewDraft(tx *gorm.DB) (*DraftInvoice, error) {
 		return nil, err
 	}
 	draft := DraftInvoice{
-		Number:   nil,
-		Datetime: full.Datetime,
-		CustomerID:          full.CustomerID,
-		PaymentTermType:     full.PaymentTermType,
-		PaymentTermID:       full.PaymentTermID,
+		Number:          nil,
+		Datetime:        full.Datetime,
+		CustomerID:      full.CustomerID,
+		PaymentTermType: full.PaymentTermType,
+		PaymentTermID:   full.PaymentTermID,
 	}
 	if err := tx.Create(&draft).Error; err != nil {
 		return nil, err

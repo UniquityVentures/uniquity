@@ -7,16 +7,16 @@ import (
 	"strings"
 	"time"
 
-	"github.com/UniquityVentures/lamu/components"
-	"github.com/UniquityVentures/lamu/getters"
-	"github.com/UniquityVentures/lamu/lamu"
-	"github.com/UniquityVentures/lamu/registry"
+	"github.com/lariv-in/lago"
+	"github.com/lariv-in/lago/components"
+	"github.com/lariv-in/lago/getters"
+	"github.com/lariv-in/lago/registry"
 )
 
 // invoiceListFilterFormTargetGetter preserves ?tab= when applying filters on the invoice hub.
 func invoiceListFilterFormTargetGetter() getters.Getter[string] {
 	return func(ctx context.Context) (string, error) {
-		base, err := lamu.RoutePath("finance_invoices.DefaultRoute", nil)(ctx)
+		base, err := lago.RoutePath("finance_invoices.DefaultRoute", nil)(ctx)
 		if err != nil {
 			return "", err
 		}

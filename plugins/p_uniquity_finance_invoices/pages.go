@@ -10,13 +10,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/UniquityVentures/lamu/components"
-	"github.com/UniquityVentures/lamu/getters"
-	"github.com/UniquityVentures/lamu/lamu"
-	"github.com/UniquityVentures/lamu/registry"
 	finance_customer "github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_customer"
 	finance_products "github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_products"
 	finance_taxes "github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_taxes"
+	"github.com/lariv-in/lago"
+	"github.com/lariv-in/lago/components"
+	"github.com/lariv-in/lago/getters"
+	"github.com/lariv-in/lago/registry"
 	"maragu.dev/gomponents"
 )
 
@@ -37,7 +37,7 @@ type invoiceLineTaxMeta struct {
 
 func invoiceHubURLWithTabGetter(tab string) getters.Getter[string] {
 	return func(ctx context.Context) (string, error) {
-		base, err := lamu.RoutePath("finance_invoices.DefaultRoute", nil)(ctx)
+		base, err := lago.RoutePath("finance_invoices.DefaultRoute", nil)(ctx)
 		if err != nil {
 			return "", err
 		}
@@ -109,7 +109,7 @@ func patchFinanceAccountsMainMenuForInvoices(page components.PageInterface) comp
 			haveInvoices = true
 			cloned := *item
 			cloned.Title = getters.Static("Invoices")
-			cloned.Url = lamu.RoutePath("finance_invoices.DefaultRoute", nil)
+			cloned.Url = lago.RoutePath("finance_invoices.DefaultRoute", nil)
 			cloned.Icon = "document-text"
 			newChildren = append(newChildren, &cloned)
 			continue
@@ -120,7 +120,7 @@ func patchFinanceAccountsMainMenuForInvoices(page components.PageInterface) comp
 		newChildren = append(newChildren, &components.SidebarMenuItem{
 			Page:  components.Page{Key: financeAccountsMainMenuInvoicesLinkKey, Roles: []string{"superuser"}},
 			Title: getters.Static("Invoices"),
-			Url:   lamu.RoutePath("finance_invoices.DefaultRoute", nil),
+			Url:   lago.RoutePath("finance_invoices.DefaultRoute", nil),
 			Icon:  "document-text",
 		})
 	}
@@ -128,7 +128,7 @@ func patchFinanceAccountsMainMenuForInvoices(page components.PageInterface) comp
 		newChildren = append(newChildren, &components.SidebarMenuItem{
 			Page:  components.Page{Key: financeAccountsMainMenuInvoicePaymentTermsLinkKey, Roles: []string{"superuser"}},
 			Title: getters.Static("Payment terms"),
-			Url:   lamu.RoutePath("finance_invoices.PaymentTermListRoute", nil),
+			Url:   lago.RoutePath("finance_invoices.PaymentTermListRoute", nil),
 			Icon:  "calendar-days",
 		})
 	}
@@ -136,7 +136,7 @@ func patchFinanceAccountsMainMenuForInvoices(page components.PageInterface) comp
 		newChildren = append(newChildren, &components.SidebarMenuItem{
 			Page:  components.Page{Key: financeAccountsMainMenuPaymentsLinkKey, Roles: []string{"superuser"}},
 			Title: getters.Static("Payments"),
-			Url:   lamu.RoutePath("finance_invoices.PaymentListRoute", nil),
+			Url:   lago.RoutePath("finance_invoices.PaymentListRoute", nil),
 			Icon:  "banknotes",
 		})
 	}
@@ -158,7 +158,7 @@ func patchFinanceAccountsMainMenuForInvoices(page components.PageInterface) comp
 	return &cloned
 }
 
-func pluginPages() lamu.PluginFeatures[components.PageInterface] {
+func pluginPages() lago.PluginFeatures[components.PageInterface] {
 	e := pageEntriesDraftInvoicePages()
 	e = append(e, pageEntriesPostedInvoicePages()...)
 	e = append(e, pageEntriesCancelledInvoicePages()...)
@@ -168,7 +168,7 @@ func pluginPages() lamu.PluginFeatures[components.PageInterface] {
 	e = append(e, pageEntriesPostedInvoiceFkSelectPages()...)
 	e = append(e, pageEntriesPaymentPages()...)
 	e = append(e, pageEntriesSettlementPages()...)
-	return lamu.PluginFeatures[components.PageInterface]{
+	return lago.PluginFeatures[components.PageInterface]{
 		Entries: e,
 		Patches: []registry.Pair[string, func(components.PageInterface) components.PageInterface]{
 			{Key: "finance_accounts.MainMenu", Value: patchFinanceAccountsMainMenuForInvoices},
@@ -183,7 +183,7 @@ type optionalFieldDate struct {
 	Getter getters.Getter[time.Time]
 }
 
-func (e optionalFieldDate) GetKey() string  { return e.Key }
+func (e optionalFieldDate) GetKey() string     { return e.Key }
 func (e optionalFieldDate) GetRoles() []string { return e.Roles }
 
 func (e optionalFieldDate) Build(ctx context.Context) gomponents.Node {
@@ -308,10 +308,10 @@ func invoiceLineEditorPreviewGetter() getters.Getter[string] {
 			})
 		}
 		payload := struct {
-			Products     []invoiceLineProductOpt `json:"products"`
-			TaxPctByID   map[string]string       `json:"tax_pct_by_id"`
-			TaxKindByID  map[string]string       `json:"tax_kind_by_id"`
-			AllTaxes     []invoiceLineTaxMeta    `json:"all_taxes"`
+			Products    []invoiceLineProductOpt `json:"products"`
+			TaxPctByID  map[string]string       `json:"tax_pct_by_id"`
+			TaxKindByID map[string]string       `json:"tax_kind_by_id"`
+			AllTaxes    []invoiceLineTaxMeta    `json:"all_taxes"`
 		}{Products: opts, TaxPctByID: pctByID, TaxKindByID: kindByID, AllTaxes: allTaxes}
 		b, err := json.Marshal(payload)
 		if err != nil {
@@ -322,7 +322,7 @@ func invoiceLineEditorPreviewGetter() getters.Getter[string] {
 }
 
 func invoiceProductFkPickURLGetter() getters.Getter[string] {
-	return lamu.RoutePath("finance_products.ProductFkSelectRoute", nil)
+	return lago.RoutePath("finance_products.ProductFkSelectRoute", nil)
 }
 
 func invoiceLinesDraftJSONGetter() getters.Getter[string] {
@@ -577,7 +577,7 @@ func draftInvoiceCreateEditInputs() []components.PageInterface {
 					Label:       "Customer",
 					Name:        "CustomerID",
 					Required:    true,
-					Url:         lamu.RoutePath("finance_customers.CustomerFkSelectRoute", nil),
+					Url:         lago.RoutePath("finance_customers.CustomerFkSelectRoute", nil),
 					Display:     getters.Key[string]("$in.Name"),
 					Placeholder: "Select customer…",
 					Getter:      getters.Association[finance_customer.Customer, uint](getters.Key[uint]("$in.CustomerID")),
@@ -591,7 +591,7 @@ func draftInvoiceCreateEditInputs() []components.PageInterface {
 					Label:       "Payment term",
 					Name:        "PaymentTermID",
 					Required:    true,
-					Url:         lamu.RoutePath("finance_invoices.PaymentTermFkSelectRoute", nil),
+					Url:         lago.RoutePath("finance_invoices.PaymentTermFkSelectRoute", nil),
 					Display:     invoicePaymentTermFKDisplayGetter(),
 					Placeholder: "Select payment term…",
 					Getter:      getters.Association[PaymentTerm, uint](getters.Key[uint]("$in.PaymentTermID")),
@@ -606,7 +606,7 @@ func draftInvoiceCreateEditInputs() []components.PageInterface {
 					Name:        "Taxes",
 					Display:     getters.Key[string]("$in.Name"),
 					Getter:      getters.Key[[]finance_taxes.Tax]("$in.Taxes"),
-					Url:         lamu.RoutePath("finance_taxes.TaxMultiSelectRoute", nil),
+					Url:         lago.RoutePath("finance_taxes.TaxMultiSelectRoute", nil),
 					Placeholder: "Select taxes…",
 					Classes:     "w-full",
 				},
@@ -621,7 +621,7 @@ func draftInvoiceCreateEditInputs() []components.PageInterface {
 					Name:           "InvoiceLinesJSON",
 					Preview:        invoiceLineEditorPreviewGetter(),
 					ProductPickURL: invoiceProductFkPickURLGetter(),
-					TaxPickURL:     lamu.RoutePath("finance_taxes.TaxMultiSelectRoute", nil),
+					TaxPickURL:     lago.RoutePath("finance_taxes.TaxMultiSelectRoute", nil),
 					Defaults:       invoiceLinesDraftJSONGetter(),
 					Classes:        "w-full",
 				},
@@ -665,7 +665,7 @@ func invoiceListHubShell() components.PageInterface {
 		Data:           getters.Key[components.ObjectList[DraftInvoice]]("draft_invoices"),
 		EnabledColumns: components.GetterEnabledColumnsFromContext(invoiceDraftColsCtxKey),
 		Actions: []components.PageInterface{
-			&components.TableButtonFilter{Child: lamu.DynamicPage{Name: "finance_invoices.InvoiceFilter"}},
+			&components.TableButtonFilter{Child: lago.DynamicPage{Name: "finance_invoices.InvoiceFilter"}},
 			&components.ButtonToggleColumns{
 				Table: func(ctx context.Context) (components.TableWithColumns, error) {
 					return draftTable, nil
@@ -673,11 +673,11 @@ func invoiceListHubShell() components.PageInterface {
 				QueryKey: invoiceDraftColsParam,
 			},
 			&components.TableButtonCreate{
-				Link: lamu.RoutePath("finance_invoices.DraftInvoiceCreateRoute", nil),
+				Link: lago.RoutePath("finance_invoices.DraftInvoiceCreateRoute", nil),
 				Page: components.Page{Roles: []string{"superuser"}},
 			},
 		},
-		RowAttr: getters.RowAttrNavigate(lamu.RoutePath("finance_invoices.DraftInvoiceDetailRoute", map[string]getters.Getter[any]{
+		RowAttr: getters.RowAttrNavigate(lago.RoutePath("finance_invoices.DraftInvoiceDetailRoute", map[string]getters.Getter[any]{
 			"id": getters.Any(getters.Key[uint]("$row.ID")),
 		})),
 		Columns: []components.TableColumn{
@@ -691,7 +691,8 @@ func invoiceListHubShell() components.PageInterface {
 				&components.FieldText{Getter: getters.Key[string]("$row.Customer.Name")},
 			}},
 			{Label: "Payment term", Name: "PaymentTerm", Children: []components.PageInterface{
-				&components.FieldText{Getter: getters.Format("#%d — %s",
+				&components.FieldText{Getter: getters.Format(
+					"#%d — %s",
 					getters.Any(getters.Key[uint]("$row.PaymentTermID")),
 					getters.Any(invoiceListPaymentTermSummaryGetter()),
 				)},
@@ -711,7 +712,7 @@ func invoiceListHubShell() components.PageInterface {
 		Data:           getters.Key[components.ObjectList[PostedInvoice]]("posted_invoices"),
 		EnabledColumns: components.GetterEnabledColumnsFromContext(invoicePostedColsCtxKey),
 		Actions: []components.PageInterface{
-			&components.TableButtonFilter{Child: lamu.DynamicPage{Name: "finance_invoices.InvoiceFilter"}},
+			&components.TableButtonFilter{Child: lago.DynamicPage{Name: "finance_invoices.InvoiceFilter"}},
 			&components.ButtonToggleColumns{
 				Table: func(ctx context.Context) (components.TableWithColumns, error) {
 					return postedTable, nil
@@ -719,7 +720,7 @@ func invoiceListHubShell() components.PageInterface {
 				QueryKey: invoicePostedColsParam,
 			},
 		},
-		RowAttr: getters.RowAttrNavigate(lamu.RoutePath("finance_invoices.PostedInvoiceDetailRoute", map[string]getters.Getter[any]{
+		RowAttr: getters.RowAttrNavigate(lago.RoutePath("finance_invoices.PostedInvoiceDetailRoute", map[string]getters.Getter[any]{
 			"id": getters.Any(getters.Key[uint]("$row.ID")),
 		})),
 		Columns: []components.TableColumn{
@@ -750,7 +751,7 @@ func invoiceListHubShell() components.PageInterface {
 		Data:           getters.Key[components.ObjectList[CancelledInvoice]]("cancelled_invoices"),
 		EnabledColumns: components.GetterEnabledColumnsFromContext(invoiceCancelledColsCtxKey),
 		Actions: []components.PageInterface{
-			&components.TableButtonFilter{Child: lamu.DynamicPage{Name: "finance_invoices.InvoiceFilter"}},
+			&components.TableButtonFilter{Child: lago.DynamicPage{Name: "finance_invoices.InvoiceFilter"}},
 			&components.ButtonToggleColumns{
 				Table: func(ctx context.Context) (components.TableWithColumns, error) {
 					return cancelledTable, nil
@@ -758,7 +759,7 @@ func invoiceListHubShell() components.PageInterface {
 				QueryKey: invoiceCancelledColsParam,
 			},
 		},
-		RowAttr: getters.RowAttrNavigate(lamu.RoutePath("finance_invoices.CancelledInvoiceDetailRoute", map[string]getters.Getter[any]{
+		RowAttr: getters.RowAttrNavigate(lago.RoutePath("finance_invoices.CancelledInvoiceDetailRoute", map[string]getters.Getter[any]{
 			"id": getters.Any(getters.Key[uint]("$row.ID")),
 		})),
 		Columns: []components.TableColumn{
@@ -792,7 +793,7 @@ func invoiceListHubShell() components.PageInterface {
 
 	return &components.ShellScaffold{
 		Page:    components.Page{Key: "finance_invoices.InvoiceListHub.shell"},
-		Sidebar: []components.PageInterface{lamu.DynamicPage{Name: "finance_accounts.MainMenu"}},
+		Sidebar: []components.PageInterface{lago.DynamicPage{Name: "finance_accounts.MainMenu"}},
 		Children: []components.PageInterface{
 			&components.ContainerColumn{
 				Classes: "gap-2 mb-2 w-full",
@@ -832,7 +833,7 @@ func pageEntriesDraftInvoicePages() []registry.Pair[string, components.PageInter
 	return []registry.Pair[string, components.PageInterface]{
 		{Key: "finance_invoices.InvoiceListHub", Value: invoiceListHubShell()},
 		{Key: "finance_invoices.DraftInvoiceDetail", Value: &components.ShellScaffold{
-			Sidebar: []components.PageInterface{lamu.DynamicPage{Name: "finance_invoices.DraftInvoiceDetailMenu"}},
+			Sidebar: []components.PageInterface{lago.DynamicPage{Name: "finance_invoices.DraftInvoiceDetailMenu"}},
 			Children: []components.PageInterface{
 				&components.ContainerError{
 					Error: getters.Key[error]("$error._global"),
@@ -849,9 +850,9 @@ func pageEntriesDraftInvoicePages() []registry.Pair[string, components.PageInter
 												&components.ButtonModalForm{
 													Page:        components.Page{Roles: []string{"superuser"}},
 													Label:       "Post invoice",
-													Url:         lamu.RoutePath("finance_invoices.DraftInvoicePostRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("draft_invoice.ID"))}),
+													Url:         lago.RoutePath("finance_invoices.DraftInvoicePostRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("draft_invoice.ID"))}),
 													Name:        getters.Static("finance_invoices.DraftInvoicePostModalInner"),
-													FormPostURL: lamu.RoutePath("finance_invoices.DraftInvoicePostRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("draft_invoice.ID"))}),
+													FormPostURL: lago.RoutePath("finance_invoices.DraftInvoicePostRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("draft_invoice.ID"))}),
 													ModalUID:    "finance-draft-invoice-post-modal",
 													Classes:     "btn btn-primary",
 												},
@@ -904,14 +905,14 @@ func pageEntriesDraftInvoicePages() []registry.Pair[string, components.PageInter
 			Children: []components.PageInterface{
 				&components.SidebarMenuItem{
 					Title: getters.Static("Detail"),
-					Url: lamu.RoutePath("finance_invoices.DraftInvoiceDetailRoute", map[string]getters.Getter[any]{
+					Url: lago.RoutePath("finance_invoices.DraftInvoiceDetailRoute", map[string]getters.Getter[any]{
 						"id": getters.Any(getters.Key[uint]("draft_invoice.ID")),
 					}),
 				},
 				&components.SidebarMenuItem{
 					Page:  components.Page{Roles: []string{"superuser"}},
 					Title: getters.Static("Edit"),
-					Url: lamu.RoutePath("finance_invoices.DraftInvoiceUpdateRoute", map[string]getters.Getter[any]{
+					Url: lago.RoutePath("finance_invoices.DraftInvoiceUpdateRoute", map[string]getters.Getter[any]{
 						"id": getters.Any(getters.Key[uint]("draft_invoice.ID")),
 					}),
 				},
@@ -930,11 +931,11 @@ func pageEntriesDraftInvoicePages() []registry.Pair[string, components.PageInter
 		}},
 		{Key: "finance_invoices.DraftInvoiceCreateForm", Value: &components.ShellScaffold{
 			Page:    components.Page{Roles: []string{"superuser"}},
-			Sidebar: []components.PageInterface{lamu.DynamicPage{Name: "finance_accounts.MainMenu"}},
+			Sidebar: []components.PageInterface{lago.DynamicPage{Name: "finance_accounts.MainMenu"}},
 			Children: []components.PageInterface{
 				&components.FormListenBoostedPost{
 					Name:      createName,
-					ActionURL: lamu.RoutePath("finance_invoices.DraftInvoiceCreateRoute", nil),
+					ActionURL: lago.RoutePath("finance_invoices.DraftInvoiceCreateRoute", nil),
 					Children: []components.PageInterface{
 						&components.FormComponent[DraftInvoice]{
 							Attr:          getters.FormBubbling(createName),
@@ -951,11 +952,11 @@ func pageEntriesDraftInvoicePages() []registry.Pair[string, components.PageInter
 		}},
 		{Key: "finance_invoices.DraftInvoiceUpdateForm", Value: &components.ShellScaffold{
 			Page:    components.Page{Roles: []string{"superuser"}},
-			Sidebar: []components.PageInterface{lamu.DynamicPage{Name: "finance_invoices.DraftInvoiceDetailMenu"}},
+			Sidebar: []components.PageInterface{lago.DynamicPage{Name: "finance_invoices.DraftInvoiceDetailMenu"}},
 			Children: []components.PageInterface{
 				&components.FormListenBoostedPost{
 					Name: updateName,
-					ActionURL: lamu.RoutePath("finance_invoices.DraftInvoiceUpdateRoute", map[string]getters.Getter[any]{
+					ActionURL: lago.RoutePath("finance_invoices.DraftInvoiceUpdateRoute", map[string]getters.Getter[any]{
 						"id": getters.Any(getters.Key[uint]("draft_invoice.ID")),
 					}),
 					Children: []components.PageInterface{
@@ -978,8 +979,8 @@ func pageEntriesDraftInvoicePages() []registry.Pair[string, components.PageInter
 													Label:       "Delete",
 													Icon:        "trash",
 													Name:        deleteName,
-													Url:         lamu.RoutePath("finance_invoices.DraftInvoiceDeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("draft_invoice.ID"))}),
-													FormPostURL: lamu.RoutePath("finance_invoices.DraftInvoiceDeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("draft_invoice.ID"))}),
+													Url:         lago.RoutePath("finance_invoices.DraftInvoiceDeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("draft_invoice.ID"))}),
+													FormPostURL: lago.RoutePath("finance_invoices.DraftInvoiceDeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("draft_invoice.ID"))}),
 													ModalUID:    "finance-draft-invoice-delete-modal",
 													Classes:     "btn-error",
 												},
@@ -1039,7 +1040,7 @@ func draftNumberOrDash(ctxKey string) getters.Getter[string] {
 }
 
 func journalEntryLinkGetter(jeIDKey string) getters.Getter[string] {
-	return lamu.RoutePath("finance_accounts.JournalEntryDetailRoute", map[string]getters.Getter[any]{
+	return lago.RoutePath("finance_accounts.JournalEntryDetailRoute", map[string]getters.Getter[any]{
 		"id": getters.Any(getters.Key[uint](jeIDKey)),
 	})
 }
@@ -1050,26 +1051,26 @@ func invoicePdfDownloadButton(routeKey, recordIDKey string) components.PageInter
 		Label:   "Download PDF",
 		Icon:    "arrow-down-tray",
 		Classes: "btn-outline btn-secondary",
-		Link: lamu.RoutePath(routeKey, map[string]getters.Getter[any]{
+		Link: lago.RoutePath(routeKey, map[string]getters.Getter[any]{
 			"id": getters.Any(getters.Key[uint](recordIDKey)),
 		}),
 	}
 }
 
 func invoiceCustomerDetailLinkHrefGetter() getters.Getter[string] {
-	return lamu.RoutePath("finance_customers.CustomerDetailRoute", map[string]getters.Getter[any]{
+	return lago.RoutePath("finance_customers.CustomerDetailRoute", map[string]getters.Getter[any]{
 		"id": getters.Any(getters.Key[uint]("$in.CustomerID")),
 	})
 }
 
 func invoiceTaxDetailLinkHrefGetter() getters.Getter[string] {
-	return lamu.RoutePath("finance_taxes.TaxDetailRoute", map[string]getters.Getter[any]{
+	return lago.RoutePath("finance_taxes.TaxDetailRoute", map[string]getters.Getter[any]{
 		"id": getters.Any(getters.Key[uint]("$in.ID")),
 	})
 }
 
 func cancelledInvoiceCreditNoteDetailLinkHrefGetter() getters.Getter[string] {
-	return lamu.RoutePath("finance_credit_notes.CreditNoteDetailRoute", map[string]getters.Getter[any]{
+	return lago.RoutePath("finance_credit_notes.CreditNoteDetailRoute", map[string]getters.Getter[any]{
 		"id": getters.Any(getters.Key[uint]("$in.CreditNoteID")),
 	})
 }
@@ -1099,7 +1100,7 @@ func cancelledInvoiceCreditNoteLinkLabelGetter() getters.Getter[string] {
 func pageEntriesPostedInvoicePages() []registry.Pair[string, components.PageInterface] {
 	return []registry.Pair[string, components.PageInterface]{
 		{Key: "finance_invoices.PostedInvoiceDetail", Value: &components.ShellScaffold{
-			Sidebar: []components.PageInterface{lamu.DynamicPage{Name: "finance_invoices.PostedInvoiceDetailMenu"}},
+			Sidebar: []components.PageInterface{lago.DynamicPage{Name: "finance_invoices.PostedInvoiceDetailMenu"}},
 			Children: []components.PageInterface{
 				&components.ContainerError{
 					Error: getters.Key[error]("$error._global"),
@@ -1122,11 +1123,11 @@ func pageEntriesPostedInvoicePages() []registry.Pair[string, components.PageInte
 												&components.ButtonModalForm{
 													Page:  components.Page{Roles: []string{"superuser"}},
 													Label: "Cancel invoice",
-													Url: lamu.RoutePath("finance_invoices.PostedInvoiceCancelRoute", map[string]getters.Getter[any]{
+													Url: lago.RoutePath("finance_invoices.PostedInvoiceCancelRoute", map[string]getters.Getter[any]{
 														"id": getters.Any(getters.Key[uint]("posted_invoice.ID")),
 													}),
 													Name: getters.Static("finance_invoices.PostedInvoiceCancelModalInner"),
-													FormPostURL: lamu.RoutePath("finance_invoices.PostedInvoiceCancelRoute", map[string]getters.Getter[any]{
+													FormPostURL: lago.RoutePath("finance_invoices.PostedInvoiceCancelRoute", map[string]getters.Getter[any]{
 														"id": getters.Any(getters.Key[uint]("posted_invoice.ID")),
 													}),
 													ModalUID: "finance-posted-invoice-cancel-modal",
@@ -1190,7 +1191,7 @@ func pageEntriesPostedInvoicePages() []registry.Pair[string, components.PageInte
 			Children: []components.PageInterface{
 				&components.SidebarMenuItem{
 					Title: getters.Static("Detail"),
-					Url: lamu.RoutePath("finance_invoices.PostedInvoiceDetailRoute", map[string]getters.Getter[any]{
+					Url: lago.RoutePath("finance_invoices.PostedInvoiceDetailRoute", map[string]getters.Getter[any]{
 						"id": getters.Any(getters.Key[uint]("posted_invoice.ID")),
 					}),
 				},
@@ -1235,7 +1236,7 @@ func invoiceDetailPaymentTermSummaryGetterPosted() getters.Getter[string] {
 func pageEntriesCancelledInvoicePages() []registry.Pair[string, components.PageInterface] {
 	return []registry.Pair[string, components.PageInterface]{
 		{Key: "finance_invoices.CancelledInvoiceDetail", Value: &components.ShellScaffold{
-			Sidebar: []components.PageInterface{lamu.DynamicPage{Name: "finance_invoices.CancelledInvoiceDetailMenu"}},
+			Sidebar: []components.PageInterface{lago.DynamicPage{Name: "finance_invoices.CancelledInvoiceDetailMenu"}},
 			Children: []components.PageInterface{
 				&components.ContainerError{
 					Error: getters.Key[error]("$error._global"),
@@ -1252,11 +1253,11 @@ func pageEntriesCancelledInvoicePages() []registry.Pair[string, components.PageI
 												&components.ButtonModalForm{
 													Page:  components.Page{Roles: []string{"superuser"}},
 													Label: "New draft from this",
-													Url: lamu.RoutePath("finance_invoices.CancelledInvoiceNewDraftRoute", map[string]getters.Getter[any]{
+													Url: lago.RoutePath("finance_invoices.CancelledInvoiceNewDraftRoute", map[string]getters.Getter[any]{
 														"id": getters.Any(getters.Key[uint]("cancelled_invoice.ID")),
 													}),
 													Name: getters.Static("finance_invoices.CancelledInvoiceNewDraftModalInner"),
-													FormPostURL: lamu.RoutePath("finance_invoices.CancelledInvoiceNewDraftRoute", map[string]getters.Getter[any]{
+													FormPostURL: lago.RoutePath("finance_invoices.CancelledInvoiceNewDraftRoute", map[string]getters.Getter[any]{
 														"id": getters.Any(getters.Key[uint]("cancelled_invoice.ID")),
 													}),
 													ModalUID: "finance-cancelled-invoice-new-draft-modal",
@@ -1318,7 +1319,7 @@ func pageEntriesCancelledInvoicePages() []registry.Pair[string, components.PageI
 			Children: []components.PageInterface{
 				&components.SidebarMenuItem{
 					Title: getters.Static("Detail"),
-					Url: lamu.RoutePath("finance_invoices.CancelledInvoiceDetailRoute", map[string]getters.Getter[any]{
+					Url: lago.RoutePath("finance_invoices.CancelledInvoiceDetailRoute", map[string]getters.Getter[any]{
 						"id": getters.Any(getters.Key[uint]("cancelled_invoice.ID")),
 					}),
 				},

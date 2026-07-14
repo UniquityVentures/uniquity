@@ -1,9 +1,9 @@
 package p_uniquity_finance_invoices
 
 import (
-	"github.com/UniquityVentures/lamu/components"
-	"github.com/UniquityVentures/lamu/getters"
-	"github.com/UniquityVentures/lamu/registry"
+	"github.com/lariv-in/lago/components"
+	"github.com/lariv-in/lago/getters"
+	"github.com/lariv-in/lago/registry"
 )
 
 func pageEntriesPaymentTermFkSelectPages() []registry.Pair[string, components.PageInterface] {
@@ -15,7 +15,8 @@ func pageEntriesPaymentTermFkSelectPages() []registry.Pair[string, components.Pa
 					UID:   "finance-payment-term-fk-select-table",
 					Title: "Select payment term",
 					Data:  getters.Key[components.ObjectList[PaymentTerm]]("payment_terms"),
-					RowAttr: getters.RowAttrSelect("PaymentTermID",
+					RowAttr: getters.RowAttrSelect(
+						"PaymentTermID",
 						getters.Key[uint]("$row.ID"),
 						paymentTermRowSummaryGetter(),
 					),

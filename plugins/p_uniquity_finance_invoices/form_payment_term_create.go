@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/UniquityVentures/lamu/getters"
-	"github.com/UniquityVentures/lamu/views"
+	"github.com/lariv-in/lago/getters"
+	"github.com/lariv-in/lago/views"
 )
 
 // paymentTermCreateFormPatcher creates the backing due-date or relative row and sets Type + BackingID for [PaymentTerm].

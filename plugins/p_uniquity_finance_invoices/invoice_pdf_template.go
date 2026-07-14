@@ -16,9 +16,9 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/UniquityVentures/lamu/fields"
 	finance_taxes "github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_taxes"
 	"github.com/divan/num2words"
+	"github.com/lariv-in/lago/fields"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )

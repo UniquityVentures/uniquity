@@ -1,9 +1,9 @@
 package p_uniquity_finance_products
 
 import (
-	"github.com/UniquityVentures/lamu/fields"
-	"github.com/UniquityVentures/lamu/lamu"
 	finance_taxes "github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_taxes"
+	"github.com/lariv-in/lago"
+	"github.com/lariv-in/lago/fields"
 	"gorm.io/gorm"
 )
 
@@ -35,7 +35,7 @@ func (p *Product) BeforeUpdate(_ *gorm.DB) error {
 }
 
 func init() {
-	lamu.RegistryAdmin.Register("p_uniquity_finance_products.Product", lamu.AdminPanel[Product]{
+	lago.RegistryAdmin.Register("p_uniquity_finance_products.Product", lago.AdminPanel[Product]{
 		SearchField: "Name",
 		ListFields:  []string{"Type", "Reference", "Name", "BaseCost", "SalesPrice", "HSNCode", "UpdatedAt"},
 		Preload:     []string{"Taxes"},

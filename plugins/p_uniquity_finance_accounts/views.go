@@ -6,16 +6,15 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/UniquityVentures/lamu/components"
-	"github.com/UniquityVentures/lamu/fields"
-	"github.com/UniquityVentures/lamu/getters"
-	"github.com/UniquityVentures/lamu/lamu"
-	"github.com/UniquityVentures/lamu/plugins/p_users"
-	"github.com/UniquityVentures/lamu/registry"
-	"github.com/UniquityVentures/lamu/views"
+	"github.com/lariv-in/lago"
+	"github.com/lariv-in/lago/components"
+	"github.com/lariv-in/lago/fields"
+	"github.com/lariv-in/lago/getters"
+	"github.com/lariv-in/lago/plugins/p_users"
+	"github.com/lariv-in/lago/registry"
+	"github.com/lariv-in/lago/views"
 	"gorm.io/gorm"
 )
-
 
 // accountChildrenContextKey holds [components.ObjectList[Account]] for direct children on the detail page.
 const accountChildrenContextKey = "accountChildren"
@@ -281,12 +280,12 @@ func (journalEntryDetailItemsLayer) Next(_ views.View, next http.Handler) http.H
 	})
 }
 
-func pluginViews() lamu.PluginFeatures[*views.View] {
-	return lamu.PluginFeatures[*views.View]{
+func pluginViews() lago.PluginFeatures[*views.View] {
+	return lago.PluginFeatures[*views.View]{
 		Entries: []registry.Pair[string, *views.View]{
 			{
 				Key: "finance_accounts.AccountListView",
-				Value: lamu.GetPageView("finance_accounts.AccountTable").
+				Value: lago.GetPageView("finance_accounts.AccountTable").
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 					WithLayer("finance_accounts.superuser", p_users.SuperuserOnlyLayer{}).
 					WithLayer("finance_accounts.account_list", views.LayerList[Account]{
@@ -299,7 +298,7 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 			},
 			{
 				Key: "finance_accounts.AccountDetailView",
-				Value: lamu.GetPageView("finance_accounts.AccountDetail").
+				Value: lago.GetPageView("finance_accounts.AccountDetail").
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 					WithLayer("finance_accounts.superuser", p_users.SuperuserOnlyLayer{}).
 					WithLayer("finance_accounts.account_detail", views.LayerDetail[Account]{
@@ -314,18 +313,18 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 			},
 			{
 				Key: "finance_accounts.AccountCreateView",
-				Value: lamu.GetPageView("finance_accounts.AccountCreateForm").
+				Value: lago.GetPageView("finance_accounts.AccountCreateForm").
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 					WithLayer("finance_accounts.superuser", p_users.SuperuserOnlyLayer{}).
 					WithLayer("finance_accounts.account_create", views.LayerCreate[Account]{
-						SuccessURL: lamu.RoutePath("finance_accounts.AccountDetailRoute", map[string]getters.Getter[any]{
+						SuccessURL: lago.RoutePath("finance_accounts.AccountDetailRoute", map[string]getters.Getter[any]{
 							"id": getters.Any(getters.Key[uint]("$id")),
 						}),
 					}),
 			},
 			{
 				Key: "finance_accounts.AccountUpdateView",
-				Value: lamu.GetPageView("finance_accounts.AccountUpdateForm").
+				Value: lago.GetPageView("finance_accounts.AccountUpdateForm").
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 					WithLayer("finance_accounts.superuser", p_users.SuperuserOnlyLayer{}).
 					WithLayer("finance_accounts.account_detail", views.LayerDetail[Account]{
@@ -337,12 +336,12 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 					}).
 					WithLayer("finance_accounts.account_update", views.LayerUpdate[Account]{
 						Key:        getters.Static("account"),
-						SuccessURL: lamu.RoutePath("finance_accounts.DefaultRoute", nil),
+						SuccessURL: lago.RoutePath("finance_accounts.DefaultRoute", nil),
 					}),
 			},
 			{
 				Key: "finance_accounts.AccountDeleteView",
-				Value: lamu.GetPageView("finance_accounts.AccountDeleteForm").
+				Value: lago.GetPageView("finance_accounts.AccountDeleteForm").
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 					WithLayer("finance_accounts.superuser", p_users.SuperuserOnlyLayer{}).
 					WithLayer("finance_accounts.account_detail", views.LayerDetail[Account]{
@@ -354,12 +353,12 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 					}).
 					WithLayer("finance_accounts.account_delete", views.LayerDelete[Account]{
 						Key:        getters.Static("account"),
-						SuccessURL: lamu.RoutePath("finance_accounts.DefaultRoute", nil),
+						SuccessURL: lago.RoutePath("finance_accounts.DefaultRoute", nil),
 					}),
 			},
 			{
 				Key: "finance_accounts.AccountSelectView",
-				Value: lamu.GetPageView("finance_accounts.AccountSelectionTable").
+				Value: lago.GetPageView("finance_accounts.AccountSelectionTable").
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 					WithLayer("finance_accounts.superuser", p_users.SuperuserOnlyLayer{}).
 					WithLayer("finance_accounts.account_select_list", views.LayerList[Account]{
@@ -373,7 +372,7 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 			},
 			{
 				Key: "finance_accounts.CurrencyListView",
-				Value: lamu.GetPageView("finance_accounts.CurrencyTable").
+				Value: lago.GetPageView("finance_accounts.CurrencyTable").
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 					WithLayer("finance_accounts.superuser", p_users.SuperuserOnlyLayer{}).
 					WithLayer("finance_accounts.currency_list", views.LayerList[Currency]{
@@ -385,7 +384,7 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 			},
 			{
 				Key: "finance_accounts.CurrencyDetailView",
-				Value: lamu.GetPageView("finance_accounts.CurrencyDetail").
+				Value: lago.GetPageView("finance_accounts.CurrencyDetail").
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 					WithLayer("finance_accounts.superuser", p_users.SuperuserOnlyLayer{}).
 					WithLayer("finance_accounts.currency_detail", views.LayerDetail[Currency]{
@@ -395,18 +394,18 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 			},
 			{
 				Key: "finance_accounts.CurrencyCreateView",
-				Value: lamu.GetPageView("finance_accounts.CurrencyCreateForm").
+				Value: lago.GetPageView("finance_accounts.CurrencyCreateForm").
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 					WithLayer("finance_accounts.superuser", p_users.SuperuserOnlyLayer{}).
 					WithLayer("finance_accounts.currency_create", views.LayerCreate[Currency]{
-						SuccessURL: lamu.RoutePath("finance_accounts.CurrencyDetailRoute", map[string]getters.Getter[any]{
+						SuccessURL: lago.RoutePath("finance_accounts.CurrencyDetailRoute", map[string]getters.Getter[any]{
 							"id": getters.Any(getters.Key[uint]("$id")),
 						}),
 					}),
 			},
 			{
 				Key: "finance_accounts.CurrencyUpdateView",
-				Value: lamu.GetPageView("finance_accounts.CurrencyUpdateForm").
+				Value: lago.GetPageView("finance_accounts.CurrencyUpdateForm").
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 					WithLayer("finance_accounts.superuser", p_users.SuperuserOnlyLayer{}).
 					WithLayer("finance_accounts.currency_detail", views.LayerDetail[Currency]{
@@ -415,12 +414,12 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 					}).
 					WithLayer("finance_accounts.currency_update", views.LayerUpdate[Currency]{
 						Key:        getters.Static("currency"),
-						SuccessURL: lamu.RoutePath("finance_accounts.CurrencyListRoute", nil),
+						SuccessURL: lago.RoutePath("finance_accounts.CurrencyListRoute", nil),
 					}),
 			},
 			{
 				Key: "finance_accounts.CurrencyDeleteView",
-				Value: lamu.GetPageView("finance_accounts.CurrencyDeleteForm").
+				Value: lago.GetPageView("finance_accounts.CurrencyDeleteForm").
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 					WithLayer("finance_accounts.superuser", p_users.SuperuserOnlyLayer{}).
 					WithLayer("finance_accounts.currency_detail", views.LayerDetail[Currency]{
@@ -429,12 +428,12 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 					}).
 					WithLayer("finance_accounts.currency_delete", views.LayerDelete[Currency]{
 						Key:        getters.Static("currency"),
-						SuccessURL: lamu.RoutePath("finance_accounts.CurrencyListRoute", nil),
+						SuccessURL: lago.RoutePath("finance_accounts.CurrencyListRoute", nil),
 					}),
 			},
 			{
 				Key: "finance_accounts.CurrencySelectView",
-				Value: lamu.GetPageView("finance_accounts.CurrencySelectionTable").
+				Value: lago.GetPageView("finance_accounts.CurrencySelectionTable").
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 					WithLayer("finance_accounts.superuser", p_users.SuperuserOnlyLayer{}).
 					WithLayer("finance_accounts.currency_select_list", views.LayerList[Currency]{
@@ -446,8 +445,8 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 			},
 			{
 				Key: "finance_accounts.JournalListView",
-				Value: lamu.GetPageView("finance_accounts.JournalTable").
-				 WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
+				Value: lago.GetPageView("finance_accounts.JournalTable").
+					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 					WithLayer("finance_accounts.superuser", p_users.SuperuserOnlyLayer{}).
 					WithLayer("finance_accounts.journal_list", views.LayerList[Journal]{
 						Key: getters.Static("journals"),
@@ -458,7 +457,7 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 			},
 			{
 				Key: "finance_accounts.JournalSelectView",
-				Value: lamu.GetPageView("finance_accounts.JournalFkSelectionTable").
+				Value: lago.GetPageView("finance_accounts.JournalFkSelectionTable").
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 					WithLayer("finance_accounts.superuser", p_users.SuperuserOnlyLayer{}).
 					WithLayer("finance_accounts.journal_fk_list", views.LayerList[Journal]{
@@ -470,7 +469,7 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 			},
 			{
 				Key: "finance_accounts.JournalDetailView",
-				Value: lamu.GetPageView("finance_accounts.JournalDetail").
+				Value: lago.GetPageView("finance_accounts.JournalDetail").
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 					WithLayer("finance_accounts.superuser", p_users.SuperuserOnlyLayer{}).
 					WithLayer("finance_accounts.journal_detail", views.LayerDetail[Journal]{
@@ -484,11 +483,11 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 			},
 			{
 				Key: "finance_accounts.JournalCreateView",
-				Value: lamu.GetPageView("finance_accounts.JournalCreateForm").
+				Value: lago.GetPageView("finance_accounts.JournalCreateForm").
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 					WithLayer("finance_accounts.superuser", p_users.SuperuserOnlyLayer{}).
 					WithLayer("finance_accounts.journal_create", views.LayerCreate[Journal]{
-						SuccessURL: lamu.RoutePath("finance_accounts.JournalDetailRoute", map[string]getters.Getter[any]{
+						SuccessURL: lago.RoutePath("finance_accounts.JournalDetailRoute", map[string]getters.Getter[any]{
 							"id": getters.Any(getters.Key[uint]("$id")),
 						}),
 						FormPatchers: views.FormPatchers{
@@ -498,7 +497,7 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 			},
 			{
 				Key: "finance_accounts.JournalUpdateView",
-				Value: lamu.GetPageView("finance_accounts.JournalUpdateForm").
+				Value: lago.GetPageView("finance_accounts.JournalUpdateForm").
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 					WithLayer("finance_accounts.superuser", p_users.SuperuserOnlyLayer{}).
 					WithLayer("finance_accounts.journal_detail", views.LayerDetail[Journal]{
@@ -510,12 +509,12 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 					}).
 					WithLayer("finance_accounts.journal_update", views.LayerUpdate[Journal]{
 						Key:        getters.Static("journal"),
-						SuccessURL: lamu.RoutePath("finance_accounts.JournalListRoute", nil),
+						SuccessURL: lago.RoutePath("finance_accounts.JournalListRoute", nil),
 					}),
 			},
 			{
 				Key: "finance_accounts.JournalDeleteView",
-				Value: lamu.GetPageView("finance_accounts.JournalDeleteForm").
+				Value: lago.GetPageView("finance_accounts.JournalDeleteForm").
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 					WithLayer("finance_accounts.superuser", p_users.SuperuserOnlyLayer{}).
 					WithLayer("finance_accounts.journal_detail", views.LayerDetail[Journal]{
@@ -527,12 +526,12 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 					}).
 					WithLayer("finance_accounts.journal_delete", views.LayerDelete[Journal]{
 						Key:        getters.Static("journal"),
-						SuccessURL: lamu.RoutePath("finance_accounts.JournalListRoute", nil),
+						SuccessURL: lago.RoutePath("finance_accounts.JournalListRoute", nil),
 					}),
 			},
 			{
 				Key: "finance_accounts.SourceDocSelectView",
-				Value: lamu.GetPageView("finance_accounts.SourceDocSelectionTable").
+				Value: lago.GetPageView("finance_accounts.SourceDocSelectionTable").
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 					WithLayer("finance_accounts.superuser", p_users.SuperuserOnlyLayer{}).
 					WithLayer("finance_accounts.sourcedoc_select_list", views.LayerList[SourceDoc]{
@@ -541,7 +540,7 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 			},
 			{
 				Key: "finance_accounts.JournalEntryCreateView",
-				Value: lamu.GetPageView("finance_accounts.JournalEntryCreateForm").
+				Value: lago.GetPageView("finance_accounts.JournalEntryCreateForm").
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 					WithLayer("finance_accounts.superuser", p_users.SuperuserOnlyLayer{}).
 					WithLayer("finance_accounts.journal_for_entry_create", views.LayerDetail[Journal]{
@@ -552,7 +551,7 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 						},
 					}).
 					WithLayer("finance_accounts.journal_entry_create", views.LayerCreate[JournalEntry]{
-						SuccessURL: lamu.RoutePath("finance_accounts.JournalDetailRoute", map[string]getters.Getter[any]{
+						SuccessURL: lago.RoutePath("finance_accounts.JournalDetailRoute", map[string]getters.Getter[any]{
 							"id": getters.Any(getters.Key[uint]("journal.ID")),
 						}),
 						FormPatchers: views.FormPatchers{
@@ -562,7 +561,7 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 			},
 			{
 				Key: "finance_accounts.JournalEntryDetailView",
-				Value: lamu.GetPageView("finance_accounts.JournalEntryDetail").
+				Value: lago.GetPageView("finance_accounts.JournalEntryDetail").
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 					WithLayer("finance_accounts.superuser", p_users.SuperuserOnlyLayer{}).
 					WithLayer("finance_accounts.journal_entry_detail", views.LayerDetail[JournalEntry]{
@@ -576,11 +575,11 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 			},
 			{
 				Key: "finance_accounts.AccountingPreferencesView",
-				Value: lamu.GetPageView("finance_accounts.AccountingPreferencesForm").
+				Value: lago.GetPageView("finance_accounts.AccountingPreferencesForm").
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 					WithLayer("finance_accounts.superuser", p_users.SuperuserOnlyLayer{}).
 					WithLayer("finance_accounts.accounting_preferences", views.LayerSingleton[AccountingPreferences]{
-						SuccessURL: lamu.RoutePath("finance_accounts.AccountingPreferencesRoute", nil),
+						SuccessURL: lago.RoutePath("finance_accounts.AccountingPreferencesRoute", nil),
 					}),
 			},
 		},

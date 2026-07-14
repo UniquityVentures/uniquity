@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/UniquityVentures/lamu/components"
-	"github.com/UniquityVentures/lamu/fields"
-	"github.com/UniquityVentures/lamu/getters"
-	"github.com/UniquityVentures/lamu/lamu"
-	"github.com/UniquityVentures/lamu/registry"
 	finance_accounts "github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_accounts"
+	"github.com/lariv-in/lago"
+	"github.com/lariv-in/lago/components"
+	"github.com/lariv-in/lago/fields"
+	"github.com/lariv-in/lago/getters"
+	"github.com/lariv-in/lago/registry"
 )
 
 const financeAccountsMainMenuTaxesLinkKey = "finance_taxes.FinanceAccountsMainMenuLink"
@@ -29,7 +29,7 @@ func patchFinanceAccountsMainMenuForTaxes(page components.PageInterface) compone
 	newChildren = append(newChildren, &components.SidebarMenuItem{
 		Page:  components.Page{Key: financeAccountsMainMenuTaxesLinkKey, Roles: []string{"superuser"}},
 		Title: getters.Static("Taxes"),
-		Url:   lamu.RoutePath("finance_taxes.DefaultRoute", nil),
+		Url:   lago.RoutePath("finance_taxes.DefaultRoute", nil),
 		Icon:  "calculator",
 	})
 	cloned := *menu
@@ -37,11 +37,11 @@ func patchFinanceAccountsMainMenuForTaxes(page components.PageInterface) compone
 	return &cloned
 }
 
-func pluginPages() lamu.PluginFeatures[components.PageInterface] {
+func pluginPages() lago.PluginFeatures[components.PageInterface] {
 	e := pageEntriesTaxMenus()
 	e = append(e, pageEntriesTaxPages()...)
 	e = append(e, pageEntriesTaxMultiSelectPages()...)
-	return lamu.PluginFeatures[components.PageInterface]{
+	return lago.PluginFeatures[components.PageInterface]{
 		Entries: e,
 		Patches: []registry.Pair[string, func(components.PageInterface) components.PageInterface]{
 			{Key: "finance_accounts.MainMenu", Value: patchFinanceAccountsMainMenuForTaxes},
@@ -99,19 +99,19 @@ func pageEntriesTaxMenus() []registry.Pair[string, components.PageInterface] {
 			Title: getters.Format("%s", getters.Any(getters.Key[string]("tax.Name"))),
 			Back: &components.SidebarMenuItem{
 				Title: getters.Static("All taxes"),
-				Url:   lamu.RoutePath("finance_taxes.DefaultRoute", nil),
+				Url:   lago.RoutePath("finance_taxes.DefaultRoute", nil),
 			},
 			Children: []components.PageInterface{
 				&components.SidebarMenuItem{
 					Title: getters.Static("Detail"),
-					Url: lamu.RoutePath("finance_taxes.TaxDetailRoute", map[string]getters.Getter[any]{
+					Url: lago.RoutePath("finance_taxes.TaxDetailRoute", map[string]getters.Getter[any]{
 						"id": getters.Any(getters.Key[uint]("tax.ID")),
 					}),
 				},
 				&components.SidebarMenuItem{
 					Page:  components.Page{Roles: []string{"superuser"}},
 					Title: getters.Static("Edit"),
-					Url: lamu.RoutePath("finance_taxes.TaxUpdateRoute", map[string]getters.Getter[any]{
+					Url: lago.RoutePath("finance_taxes.TaxUpdateRoute", map[string]getters.Getter[any]{
 						"id": getters.Any(getters.Key[uint]("tax.ID")),
 					}),
 				},
@@ -156,7 +156,7 @@ func taxCreateFormInputs() []components.PageInterface {
 				&components.InputForeignKey[finance_accounts.Account]{
 					Label:       "Account",
 					Name:        "AccountID",
-					Url:         lamu.RoutePath("finance_accounts.AccountSelectRoute", nil),
+					Url:         lago.RoutePath("finance_accounts.AccountSelectRoute", nil),
 					Display:     getters.Format("%s (#%d)", getters.Any(getters.Key[string]("$in.Name")), getters.Any(getters.Key[uint]("$in.ID"))),
 					Placeholder: "Select…",
 					Required:    true,
@@ -204,7 +204,7 @@ func taxUpdateFormInputs() []components.PageInterface {
 				&components.InputForeignKey[finance_accounts.Account]{
 					Label:       "Account",
 					Name:        "AccountID",
-					Url:         lamu.RoutePath("finance_accounts.AccountSelectRoute", nil),
+					Url:         lago.RoutePath("finance_accounts.AccountSelectRoute", nil),
 					Display:     getters.Format("%s (#%d)", getters.Any(getters.Key[string]("$in.Name")), getters.Any(getters.Key[uint]("$in.ID"))),
 					Placeholder: "Select…",
 					Required:    true,
@@ -222,7 +222,7 @@ func pageEntriesTaxPages() []registry.Pair[string, components.PageInterface] {
 
 	return []registry.Pair[string, components.PageInterface]{
 		{Key: "finance_taxes.TaxTable", Value: &components.ShellScaffold{
-			Sidebar: []components.PageInterface{lamu.DynamicPage{Name: "finance_accounts.MainMenu"}},
+			Sidebar: []components.PageInterface{lago.DynamicPage{Name: "finance_accounts.MainMenu"}},
 			Children: []components.PageInterface{
 				&components.DataTable[Tax]{
 					UID:     "finance-tax-table",
@@ -230,11 +230,11 @@ func pageEntriesTaxPages() []registry.Pair[string, components.PageInterface] {
 					Data:    getters.Key[components.ObjectList[Tax]]("taxes"),
 					Actions: []components.PageInterface{
 						&components.TableButtonCreate{
-							Link: lamu.RoutePath("finance_taxes.TaxCreateRoute", nil),
+							Link: lago.RoutePath("finance_taxes.TaxCreateRoute", nil),
 							Page: components.Page{Roles: []string{"superuser"}},
 						},
 					},
-					RowAttr: getters.RowAttrNavigate(lamu.RoutePath("finance_taxes.TaxDetailRoute", map[string]getters.Getter[any]{
+					RowAttr: getters.RowAttrNavigate(lago.RoutePath("finance_taxes.TaxDetailRoute", map[string]getters.Getter[any]{
 						"id": getters.Any(getters.Key[uint]("$row.ID")),
 					})),
 					Columns: []components.TableColumn{
@@ -256,11 +256,11 @@ func pageEntriesTaxPages() []registry.Pair[string, components.PageInterface] {
 		}},
 		{Key: "finance_taxes.TaxCreateForm", Value: &components.ShellScaffold{
 			Page:    components.Page{Roles: []string{"superuser"}},
-			Sidebar: []components.PageInterface{lamu.DynamicPage{Name: "finance_accounts.MainMenu"}},
+			Sidebar: []components.PageInterface{lago.DynamicPage{Name: "finance_accounts.MainMenu"}},
 			Children: []components.PageInterface{
 				&components.FormListenBoostedPost{
 					Name:      createName,
-					ActionURL: lamu.RoutePath("finance_taxes.TaxCreateRoute", nil),
+					ActionURL: lago.RoutePath("finance_taxes.TaxCreateRoute", nil),
 					Children: []components.PageInterface{
 						&components.FormComponent[Tax]{
 							Attr:          getters.FormBubbling(createName),
@@ -277,11 +277,11 @@ func pageEntriesTaxPages() []registry.Pair[string, components.PageInterface] {
 		}},
 		{Key: "finance_taxes.TaxUpdateForm", Value: &components.ShellScaffold{
 			Page:    components.Page{Roles: []string{"superuser"}},
-			Sidebar: []components.PageInterface{lamu.DynamicPage{Name: "finance_taxes.TaxDetailMenu"}},
+			Sidebar: []components.PageInterface{lago.DynamicPage{Name: "finance_taxes.TaxDetailMenu"}},
 			Children: []components.PageInterface{
 				&components.FormListenBoostedPost{
 					Name: updateName,
-					ActionURL: lamu.RoutePath("finance_taxes.TaxUpdateRoute", map[string]getters.Getter[any]{
+					ActionURL: lago.RoutePath("finance_taxes.TaxUpdateRoute", map[string]getters.Getter[any]{
 						"id": getters.Any(getters.Key[uint]("tax.ID")),
 					}),
 					Children: []components.PageInterface{
@@ -304,8 +304,8 @@ func pageEntriesTaxPages() []registry.Pair[string, components.PageInterface] {
 													Label:       "Delete",
 													Icon:        "trash",
 													Name:        deleteName,
-													Url:         lamu.RoutePath("finance_taxes.TaxDeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("tax.ID"))}),
-													FormPostURL: lamu.RoutePath("finance_taxes.TaxDeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("tax.ID"))}),
+													Url:         lago.RoutePath("finance_taxes.TaxDeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("tax.ID"))}),
+													FormPostURL: lago.RoutePath("finance_taxes.TaxDeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("tax.ID"))}),
 													ModalUID:    "finance-tax-delete-modal",
 													Classes:     "btn-error",
 												},
@@ -331,7 +331,7 @@ func pageEntriesTaxPages() []registry.Pair[string, components.PageInterface] {
 			},
 		}},
 		{Key: "finance_taxes.TaxDetail", Value: &components.ShellScaffold{
-			Sidebar: []components.PageInterface{lamu.DynamicPage{Name: "finance_taxes.TaxDetailMenu"}},
+			Sidebar: []components.PageInterface{lago.DynamicPage{Name: "finance_taxes.TaxDetailMenu"}},
 			Children: []components.PageInterface{
 				&components.Detail[Tax]{
 					Getter: getters.Key[Tax]("tax"),

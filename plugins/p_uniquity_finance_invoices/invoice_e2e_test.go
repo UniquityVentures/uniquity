@@ -9,23 +9,23 @@ import (
 	"testing"
 	"time"
 
-	"github.com/UniquityVentures/lamu/fields"
-	"github.com/UniquityVentures/lamu/lamu"
-	"github.com/UniquityVentures/lamu/plugins/p_dashboard"
-	"github.com/UniquityVentures/lamu/plugins/p_filesystem"
-	"github.com/UniquityVentures/lamu/plugins/p_users"
-	"github.com/UniquityVentures/lamu/registry"
 	finance_employees "github.com/UniquityVentures/uniquity/plugins/p_uniquity_employees"
 	finance_accounts "github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_accounts"
-	finance_customer "github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_customer"
 	finance_creditnotes "github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_creditnotes"
+	finance_customer "github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_customer"
 	finance_fiscal_year "github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_fiscal_year"
-	finance_taxes "github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_taxes"
-	finance_products "github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_products"
 	finance_indian "github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_indian"
+	finance_products "github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_products"
+	finance_taxes "github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_taxes"
 	finance_video "github.com/UniquityVentures/uniquity/plugins/p_uniquity_video"
 	"github.com/go-rod/rod"
 	"github.com/go-rod/rod/lib/proto"
+	"github.com/lariv-in/lago"
+	"github.com/lariv-in/lago/fields"
+	"github.com/lariv-in/lago/plugins/p_dashboard"
+	"github.com/lariv-in/lago/plugins/p_filesystem"
+	"github.com/lariv-in/lago/plugins/p_users"
+	"github.com/lariv-in/lago/registry"
 	gorm_postgres "gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -58,13 +58,13 @@ func TestCreateInvoiceE2E(t *testing.T) {
 		DSN: dsn,
 	}
 
-	config := lamu.LamuConfig{
+	config := lago.LagoConfig{
 		Debug:          true,
-		DBType:         lamu.DBTypePostgres,
+		DBType:         lago.DBTypePostgres,
 		PostgresConfig: pgConfig,
 	}
 
-	plugins := []registry.Pair[string, lamu.Plugin]{
+	plugins := []registry.Pair[string, lago.Plugin]{
 		p_dashboard.GetPlugin(),
 		p_filesystem.GetPlugin(),
 		p_users.GetPlugin(),
@@ -80,9 +80,9 @@ func TestCreateInvoiceE2E(t *testing.T) {
 		finance_video.GetPlugin(),
 	}
 
-	lamu.BuildAllRegistries(append([]registry.Pair[string, lamu.Plugin]{lamu.CorePlugin(db, config)}, plugins...))
+	lago.BuildAllRegistries(append([]registry.Pair[string, lago.Plugin]{lago.CorePlugin(db, config)}, plugins...))
 
-	if err := lamu.InitDB(db, config); err != nil {
+	if err := lago.InitDB(db, config); err != nil {
 		t.Fatalf("failed to initialize db: %v", err)
 	}
 
@@ -151,8 +151,8 @@ func TestCreateInvoiceE2E(t *testing.T) {
 	addr := ln.Addr().String()
 
 	// Get router and wrap layers
-	layers := *lamu.RegistryLayer.AllStable()
-	var router http.Handler = lamu.GetRouter(config)
+	layers := *lago.RegistryLayer.AllStable()
+	var router http.Handler = lago.GetRouter(config)
 	for _, layer := range layers {
 		router = layer.Value.Next(router)
 	}

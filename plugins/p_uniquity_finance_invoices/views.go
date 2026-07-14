@@ -3,20 +3,19 @@ package p_uniquity_finance_invoices
 import (
 	"net/http"
 
-	"github.com/UniquityVentures/lamu/getters"
-	"github.com/UniquityVentures/lamu/lamu"
-	"github.com/UniquityVentures/lamu/plugins/p_users"
-	"github.com/UniquityVentures/lamu/registry"
-	"github.com/UniquityVentures/lamu/views"
+	"github.com/lariv-in/lago"
+	"github.com/lariv-in/lago/getters"
+	"github.com/lariv-in/lago/plugins/p_users"
+	"github.com/lariv-in/lago/registry"
+	"github.com/lariv-in/lago/views"
 )
 
-
-func pluginViews() lamu.PluginFeatures[*views.View] {
-	return lamu.PluginFeatures[*views.View]{
+func pluginViews() lago.PluginFeatures[*views.View] {
+	return lago.PluginFeatures[*views.View]{
 		Entries: []registry.Pair[string, *views.View]{
 			{
 				Key: "finance_invoices.DraftInvoiceListView",
-				Value: lamu.GetPageView("finance_invoices.InvoiceListHub").
+				Value: lago.GetPageView("finance_invoices.InvoiceListHub").
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 					WithLayer("finance_invoices.superuser", p_users.SuperuserOnlyLayer{}).
 					WithLayer("finance_invoices.draft_invoice_list", views.LayerList[DraftInvoice]{
@@ -73,7 +72,7 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 			},
 			{
 				Key: "finance_invoices.DraftInvoiceDetailView",
-				Value: lamu.GetPageView("finance_invoices.DraftInvoiceDetail").
+				Value: lago.GetPageView("finance_invoices.DraftInvoiceDetail").
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 					WithLayer("finance_invoices.superuser", p_users.SuperuserOnlyLayer{}).
 					WithLayer("finance_invoices.draft_invoice_detail", views.LayerDetail[DraftInvoice]{
@@ -86,7 +85,7 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 			},
 			{
 				Key: "finance_invoices.DraftInvoicePdfView",
-				Value: lamu.GetPageView("finance_invoices.DraftInvoiceDetail").
+				Value: lago.GetPageView("finance_invoices.DraftInvoiceDetail").
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 					WithLayer("finance_invoices.superuser", p_users.SuperuserOnlyLayer{}).
 					WithLayer("finance_invoices.draft_invoice_pdf_detail", views.LayerDetail[DraftInvoice]{
@@ -103,11 +102,11 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 			},
 			{
 				Key: "finance_invoices.DraftInvoiceCreateView",
-				Value: lamu.GetPageView("finance_invoices.DraftInvoiceCreateForm").
+				Value: lago.GetPageView("finance_invoices.DraftInvoiceCreateForm").
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 					WithLayer("finance_invoices.superuser", p_users.SuperuserOnlyLayer{}).
 					WithLayer("finance_invoices.draft_invoice_create", views.LayerCreate[DraftInvoice]{
-						SuccessURL: lamu.RoutePath("finance_invoices.DefaultRoute", nil),
+						SuccessURL: lago.RoutePath("finance_invoices.DefaultRoute", nil),
 						FormPatchers: views.FormPatchers{
 							registry.Pair[string, views.FormPatcher]{Key: "finance_invoices.draft_invoice_create_lines", Value: invoiceCreateLinesPatcher{}},
 						},
@@ -115,7 +114,7 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 			},
 			{
 				Key: "finance_invoices.DraftInvoiceUpdateView",
-				Value: lamu.GetPageView("finance_invoices.DraftInvoiceUpdateForm").
+				Value: lago.GetPageView("finance_invoices.DraftInvoiceUpdateForm").
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 					WithLayer("finance_invoices.superuser", p_users.SuperuserOnlyLayer{}).
 					WithLayer("finance_invoices.draft_invoice_detail", views.LayerDetail[DraftInvoice]{
@@ -127,7 +126,7 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 					}).
 					WithLayer("finance_invoices.draft_invoice_update", views.LayerUpdate[DraftInvoice]{
 						Key: getters.Static("draft_invoice"),
-						SuccessURL: lamu.RoutePath("finance_invoices.DraftInvoiceDetailRoute", map[string]getters.Getter[any]{
+						SuccessURL: lago.RoutePath("finance_invoices.DraftInvoiceDetailRoute", map[string]getters.Getter[any]{
 							"id": getters.Any(getters.Key[uint]("draft_invoice.ID")),
 						}),
 						FormPatchers: views.FormPatchers{
@@ -137,7 +136,7 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 			},
 			{
 				Key: "finance_invoices.DraftInvoiceDeleteView",
-				Value: lamu.GetPageView("finance_invoices.DraftInvoiceDeleteForm").
+				Value: lago.GetPageView("finance_invoices.DraftInvoiceDeleteForm").
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 					WithLayer("finance_invoices.superuser", p_users.SuperuserOnlyLayer{}).
 					WithLayer("finance_invoices.draft_invoice_detail", views.LayerDetail[DraftInvoice]{
@@ -146,12 +145,12 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 					}).
 					WithLayer("finance_invoices.draft_invoice_delete", views.LayerDelete[DraftInvoice]{
 						Key:        getters.Static("draft_invoice"),
-						SuccessURL: lamu.RoutePath("finance_invoices.DefaultRoute", nil),
+						SuccessURL: lago.RoutePath("finance_invoices.DefaultRoute", nil),
 					}),
 			},
 			{
 				Key: "finance_invoices.DraftInvoicePostView",
-				Value: lamu.GetPageView("finance_invoices.DraftInvoicePostForm").
+				Value: lago.GetPageView("finance_invoices.DraftInvoicePostForm").
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 					WithLayer("finance_invoices.superuser", p_users.SuperuserOnlyLayer{}).
 					WithLayer("finance_invoices.draft_invoice_detail", views.LayerDetail[DraftInvoice]{
@@ -174,7 +173,7 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 			},
 			{
 				Key: "finance_invoices.PostedInvoiceDetailView",
-				Value: lamu.GetPageView("finance_invoices.PostedInvoiceDetail").
+				Value: lago.GetPageView("finance_invoices.PostedInvoiceDetail").
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 					WithLayer("finance_invoices.superuser", p_users.SuperuserOnlyLayer{}).
 					WithLayer("finance_invoices.posted_invoice_detail", views.LayerDetail[PostedInvoice]{
@@ -187,7 +186,7 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 			},
 			{
 				Key: "finance_invoices.PostedInvoicePdfView",
-				Value: lamu.GetPageView("finance_invoices.PostedInvoiceDetail").
+				Value: lago.GetPageView("finance_invoices.PostedInvoiceDetail").
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 					WithLayer("finance_invoices.superuser", p_users.SuperuserOnlyLayer{}).
 					WithLayer("finance_invoices.posted_invoice_pdf_detail", views.LayerDetail[PostedInvoice]{
@@ -204,7 +203,7 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 			},
 			{
 				Key: "finance_invoices.PostedInvoiceCancelView",
-				Value: lamu.GetPageView("finance_invoices.PostedInvoiceCancelForm").
+				Value: lago.GetPageView("finance_invoices.PostedInvoiceCancelForm").
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 					WithLayer("finance_invoices.superuser", p_users.SuperuserOnlyLayer{}).
 					WithLayer("finance_invoices.posted_invoice_detail", views.LayerDetail[PostedInvoice]{
@@ -216,7 +215,7 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 
 			{
 				Key: "finance_invoices.CancelledInvoiceDetailView",
-				Value: lamu.GetPageView("finance_invoices.CancelledInvoiceDetail").
+				Value: lago.GetPageView("finance_invoices.CancelledInvoiceDetail").
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 					WithLayer("finance_invoices.superuser", p_users.SuperuserOnlyLayer{}).
 					WithLayer("finance_invoices.cancelled_invoice_detail", views.LayerDetail[CancelledInvoice]{
@@ -229,7 +228,7 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 			},
 			{
 				Key: "finance_invoices.CancelledInvoicePdfView",
-				Value: lamu.GetPageView("finance_invoices.CancelledInvoiceDetail").
+				Value: lago.GetPageView("finance_invoices.CancelledInvoiceDetail").
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 					WithLayer("finance_invoices.superuser", p_users.SuperuserOnlyLayer{}).
 					WithLayer("finance_invoices.cancelled_invoice_pdf_detail", views.LayerDetail[CancelledInvoice]{
@@ -246,7 +245,7 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 			},
 			{
 				Key: "finance_invoices.CancelledInvoiceNewDraftView",
-				Value: lamu.GetPageView("finance_invoices.CancelledInvoiceNewDraftForm").
+				Value: lago.GetPageView("finance_invoices.CancelledInvoiceNewDraftForm").
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 					WithLayer("finance_invoices.superuser", p_users.SuperuserOnlyLayer{}).
 					WithLayer("finance_invoices.cancelled_invoice_detail", views.LayerDetail[CancelledInvoice]{
@@ -261,7 +260,7 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 
 			{
 				Key: "finance_invoices.PaymentTermListView",
-				Value: lamu.GetPageView("finance_invoices.PaymentTermTable").
+				Value: lago.GetPageView("finance_invoices.PaymentTermTable").
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 					WithLayer("finance_invoices.superuser", p_users.SuperuserOnlyLayer{}).
 					WithLayer("finance_invoices.payment_term_list", views.LayerList[PaymentTerm]{
@@ -270,11 +269,11 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 			},
 			{
 				Key: "finance_invoices.PaymentTermCreateView",
-				Value: lamu.GetPageView("finance_invoices.PaymentTermCreateForm").
+				Value: lago.GetPageView("finance_invoices.PaymentTermCreateForm").
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 					WithLayer("finance_invoices.superuser", p_users.SuperuserOnlyLayer{}).
 					WithLayer("finance_invoices.payment_term_create", views.LayerCreate[PaymentTerm]{
-						SuccessURL: lamu.RoutePath("finance_invoices.PaymentTermDetailRoute", map[string]getters.Getter[any]{
+						SuccessURL: lago.RoutePath("finance_invoices.PaymentTermDetailRoute", map[string]getters.Getter[any]{
 							"id": getters.Any(getters.Key[uint]("$id")),
 						}),
 						FormPatchers: views.FormPatchers{
@@ -284,7 +283,7 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 			},
 			{
 				Key: "finance_invoices.PaymentTermDetailView",
-				Value: lamu.GetPageView("finance_invoices.PaymentTermDetail").
+				Value: lago.GetPageView("finance_invoices.PaymentTermDetail").
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 					WithLayer("finance_invoices.superuser", p_users.SuperuserOnlyLayer{}).
 					WithLayer("finance_invoices.payment_term_detail", views.LayerDetail[PaymentTerm]{
@@ -294,7 +293,7 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 			},
 			{
 				Key: "finance_invoices.PaymentTermDeleteView",
-				Value: lamu.GetPageView("finance_invoices.PaymentTermDeleteForm").
+				Value: lago.GetPageView("finance_invoices.PaymentTermDeleteForm").
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 					WithLayer("finance_invoices.superuser", p_users.SuperuserOnlyLayer{}).
 					WithLayer("finance_invoices.payment_term_detail", views.LayerDetail[PaymentTerm]{
@@ -303,12 +302,12 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 					}).
 					WithLayer("finance_invoices.payment_term_delete", views.LayerDelete[PaymentTerm]{
 						Key:        getters.Static("payment_term"),
-						SuccessURL: lamu.RoutePath("finance_invoices.PaymentTermListRoute", nil),
+						SuccessURL: lago.RoutePath("finance_invoices.PaymentTermListRoute", nil),
 					}),
 			},
 			{
 				Key: "finance_invoices.PaymentTermFkSelectView",
-				Value: lamu.GetPageView("finance_invoices.PaymentTermFkSelectionTable").
+				Value: lago.GetPageView("finance_invoices.PaymentTermFkSelectionTable").
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 					WithLayer("finance_invoices.superuser", p_users.SuperuserOnlyLayer{}).
 					WithLayer("finance_invoices.payment_term_fk_list", views.LayerList[PaymentTerm]{
@@ -318,7 +317,7 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 
 			{
 				Key: "finance_invoices.PostedInvoiceFkSelectView",
-				Value: lamu.GetPageView("finance_invoices.PostedInvoiceFkSelectionTable").
+				Value: lago.GetPageView("finance_invoices.PostedInvoiceFkSelectionTable").
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 					WithLayer("finance_invoices.superuser", p_users.SuperuserOnlyLayer{}).
 					WithLayer("finance_invoices.posted_invoice_fk_list", views.LayerList[PostedInvoice]{
@@ -331,7 +330,7 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 			},
 			{
 				Key: "finance_invoices.PaymentListView",
-				Value: lamu.GetPageView("finance_invoices.PaymentTable").
+				Value: lago.GetPageView("finance_invoices.PaymentTable").
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 					WithLayer("finance_invoices.superuser", p_users.SuperuserOnlyLayer{}).
 					WithLayer("finance_invoices.payment_list", views.LayerList[Payment]{
@@ -343,7 +342,7 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 			},
 			{
 				Key: "finance_invoices.PaymentCreateView",
-				Value: lamu.GetPageView("finance_invoices.PaymentCreateForm").
+				Value: lago.GetPageView("finance_invoices.PaymentCreateForm").
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 					WithLayer("finance_invoices.superuser", p_users.SuperuserOnlyLayer{}).
 					WithLayer("finance_invoices.payment_create_query_defaults", paymentCreateQueryDefaultsLayer{}).
@@ -351,14 +350,14 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 						FormPatchers: views.FormPatchers{
 							registry.Pair[string, views.FormPatcher]{Key: "finance_invoices.payment_create_taxes", Value: paymentCreateFormPatcher{}},
 						},
-						SuccessURL: lamu.RoutePath("finance_invoices.PaymentDetailRoute", map[string]getters.Getter[any]{
+						SuccessURL: lago.RoutePath("finance_invoices.PaymentDetailRoute", map[string]getters.Getter[any]{
 							"id": getters.Any(getters.Key[uint]("$id")),
 						}),
 					}),
 			},
 			{
 				Key: "finance_invoices.PaymentDetailView",
-				Value: lamu.GetPageView("finance_invoices.PaymentDetail").
+				Value: lago.GetPageView("finance_invoices.PaymentDetail").
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 					WithLayer("finance_invoices.superuser", p_users.SuperuserOnlyLayer{}).
 					WithLayer("finance_invoices.payment_detail", views.LayerDetail[Payment]{
@@ -376,7 +375,7 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 			},
 			{
 				Key: "finance_invoices.PaidInvoiceDetailView",
-				Value: lamu.GetPageView("finance_invoices.PaidInvoiceDetail").
+				Value: lago.GetPageView("finance_invoices.PaidInvoiceDetail").
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 					WithLayer("finance_invoices.superuser", p_users.SuperuserOnlyLayer{}).
 					WithLayer("finance_invoices.paid_invoice_detail", views.LayerDetail[PaidInvoice]{
@@ -389,7 +388,7 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 			},
 			{
 				Key: "finance_invoices.PaidInvoicePdfView",
-				Value: lamu.GetPageView("finance_invoices.PaidInvoiceDetail").
+				Value: lago.GetPageView("finance_invoices.PaidInvoiceDetail").
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 					WithLayer("finance_invoices.superuser", p_users.SuperuserOnlyLayer{}).
 					WithLayer("finance_invoices.paid_invoice_pdf_detail", views.LayerDetail[PaidInvoice]{
@@ -410,7 +409,7 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 			},
 			{
 				Key: "finance_invoices.PartiallyPaidInvoiceDetailView",
-				Value: lamu.GetPageView("finance_invoices.PartiallyPaidInvoiceDetail").
+				Value: lago.GetPageView("finance_invoices.PartiallyPaidInvoiceDetail").
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 					WithLayer("finance_invoices.superuser", p_users.SuperuserOnlyLayer{}).
 					WithLayer("finance_invoices.partially_paid_invoice_detail", views.LayerDetail[PartiallyPaidInvoice]{
@@ -423,7 +422,7 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 			},
 			{
 				Key: "finance_invoices.PartiallyPaidInvoicePdfView",
-				Value: lamu.GetPageView("finance_invoices.PartiallyPaidInvoiceDetail").
+				Value: lago.GetPageView("finance_invoices.PartiallyPaidInvoiceDetail").
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 					WithLayer("finance_invoices.superuser", p_users.SuperuserOnlyLayer{}).
 					WithLayer("finance_invoices.partially_paid_invoice_pdf_detail", views.LayerDetail[PartiallyPaidInvoice]{
@@ -446,7 +445,7 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 }
 
 func invoiceHubRedirectView(tab string) *views.View {
-	return lamu.RedirectView(invoiceHubURLWithTabGetter(tab)).
+	return lago.RedirectView(invoiceHubURLWithTabGetter(tab)).
 		WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 		WithLayer("finance_invoices.superuser", p_users.SuperuserOnlyLayer{})
 }

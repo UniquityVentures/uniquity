@@ -8,10 +8,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/UniquityVentures/lamu/components"
-	"github.com/UniquityVentures/lamu/getters"
-	"github.com/UniquityVentures/lamu/lamu"
-	"github.com/UniquityVentures/lamu/views"
+	"github.com/lariv-in/lago"
+	"github.com/lariv-in/lago/components"
+	"github.com/lariv-in/lago/getters"
+	"github.com/lariv-in/lago/views"
 	"gorm.io/gorm"
 	"maragu.dev/gomponents"
 )
@@ -100,7 +100,7 @@ func accountSelectBuildParentUpURL(ctx context.Context) (string, error) {
 	if err := db.Select("parent_id").First(&folder, currentParentID).Error; err != nil {
 		return "", err
 	}
-	base, err := lamu.RoutePath("finance_accounts.AccountSelectRoute", nil)(ctx)
+	base, err := lago.RoutePath("finance_accounts.AccountSelectRoute", nil)(ctx)
 	if err != nil {
 		return "", err
 	}
@@ -212,7 +212,7 @@ func accountTableBalanceTypeCell(rowPrefix string) []components.PageInterface {
 }
 
 func accountChildrenTableRowAttr() getters.Getter[gomponents.Node] {
-	detailAttr := getters.RowAttrNavigate(lamu.RoutePath("finance_accounts.AccountDetailRoute", map[string]getters.Getter[any]{
+	detailAttr := getters.RowAttrNavigate(lago.RoutePath("finance_accounts.AccountDetailRoute", map[string]getters.Getter[any]{
 		"id": getters.Any(getters.Key[uint]("$row.ID")),
 	}))
 	return func(ctx context.Context) (gomponents.Node, error) {
@@ -229,10 +229,10 @@ func accountChildrenTableRowAttr() getters.Getter[gomponents.Node] {
 		}
 		if acc.ParentID != nil && *acc.ParentID != 0 {
 			pid := *acc.ParentID
-			return getters.RowAttrNavigate(lamu.RoutePath("finance_accounts.AccountDetailRoute", map[string]getters.Getter[any]{
+			return getters.RowAttrNavigate(lago.RoutePath("finance_accounts.AccountDetailRoute", map[string]getters.Getter[any]{
 				"id": func(context.Context) (any, error) { return pid, nil },
 			}))(ctx)
 		}
-		return getters.RowAttrNavigate(lamu.RoutePath("finance_accounts.DefaultRoute", nil))(ctx)
+		return getters.RowAttrNavigate(lago.RoutePath("finance_accounts.DefaultRoute", nil))(ctx)
 	}
 }

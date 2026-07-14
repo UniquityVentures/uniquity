@@ -4,15 +4,14 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/UniquityVentures/lamu/getters"
-	"github.com/UniquityVentures/lamu/lamu"
-	"github.com/UniquityVentures/lamu/plugins/p_users"
-	"github.com/UniquityVentures/lamu/registry"
-	"github.com/UniquityVentures/lamu/views"
 	finance_accounts "github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_accounts"
+	"github.com/lariv-in/lago"
+	"github.com/lariv-in/lago/getters"
+	"github.com/lariv-in/lago/plugins/p_users"
+	"github.com/lariv-in/lago/registry"
+	"github.com/lariv-in/lago/views"
 	"gorm.io/gorm"
 )
-
 
 type creditNoteCreateFormDefaults struct{}
 
@@ -32,12 +31,12 @@ func (journalEntryFkListPreload) Patch(_ views.View, _ *http.Request, query gorm
 		Order("journal_entries.id DESC")
 }
 
-func pluginViews() lamu.PluginFeatures[*views.View] {
-	return lamu.PluginFeatures[*views.View]{
+func pluginViews() lago.PluginFeatures[*views.View] {
+	return lago.PluginFeatures[*views.View]{
 		Entries: []registry.Pair[string, *views.View]{
 			{
 				Key: "finance_credit_notes.CreditNoteListView",
-				Value: lamu.GetPageView("finance_credit_notes.CreditNoteTable").
+				Value: lago.GetPageView("finance_credit_notes.CreditNoteTable").
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 					WithLayer("finance_credit_notes.superuser", p_users.SuperuserOnlyLayer{}).
 					WithLayer("finance_credit_notes.credit_note_list", views.LayerList[CreditNote]{
@@ -46,11 +45,11 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 			},
 			{
 				Key: "finance_credit_notes.CreditNoteCreateView",
-				Value: lamu.GetPageView("finance_credit_notes.CreditNoteCreateForm").
+				Value: lago.GetPageView("finance_credit_notes.CreditNoteCreateForm").
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 					WithLayer("finance_credit_notes.superuser", p_users.SuperuserOnlyLayer{}).
 					WithLayer("finance_credit_notes.credit_note_create", views.LayerCreate[CreditNote]{
-						SuccessURL: lamu.RoutePath("finance_credit_notes.DefaultRoute", nil),
+						SuccessURL: lago.RoutePath("finance_credit_notes.DefaultRoute", nil),
 						FormPatchers: views.FormPatchers{
 							{Key: "finance_credit_notes.credit_note_create_defaults", Value: creditNoteCreateFormDefaults{}},
 						},
@@ -58,7 +57,7 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 			},
 			{
 				Key: "finance_credit_notes.CreditNoteDetailView",
-				Value: lamu.GetPageView("finance_credit_notes.CreditNoteDetail").
+				Value: lago.GetPageView("finance_credit_notes.CreditNoteDetail").
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 					WithLayer("finance_credit_notes.superuser", p_users.SuperuserOnlyLayer{}).
 					WithLayer("finance_credit_notes.credit_note_detail", views.LayerDetail[CreditNote]{
@@ -71,7 +70,7 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 			},
 			{
 				Key: "finance_credit_notes.JournalEntryFkSelectView",
-				Value: lamu.GetPageView("finance_credit_notes.JournalEntryFkSelectionTable").
+				Value: lago.GetPageView("finance_credit_notes.JournalEntryFkSelectionTable").
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 					WithLayer("finance_credit_notes.superuser", p_users.SuperuserOnlyLayer{}).
 					WithLayer("finance_credit_notes.journal_entry_fk_list", views.LayerList[finance_accounts.JournalEntry]{

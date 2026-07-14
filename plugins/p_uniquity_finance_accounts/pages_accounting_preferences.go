@@ -1,10 +1,10 @@
 package p_uniquity_finance_accounts
 
 import (
-	"github.com/UniquityVentures/lamu/components"
-	"github.com/UniquityVentures/lamu/getters"
-	"github.com/UniquityVentures/lamu/lamu"
-	"github.com/UniquityVentures/lamu/registry"
+	"github.com/lariv-in/lago"
+	"github.com/lariv-in/lago/components"
+	"github.com/lariv-in/lago/getters"
+	"github.com/lariv-in/lago/registry"
 )
 
 func pageAccountingPreferencesPages() []registry.Pair[string, components.PageInterface] {
@@ -12,11 +12,11 @@ func pageAccountingPreferencesPages() []registry.Pair[string, components.PageInt
 	return []registry.Pair[string, components.PageInterface]{
 		{Key: "finance_accounts.AccountingPreferencesForm", Value: &components.ShellScaffold{
 			Page:    components.Page{Roles: []string{"superuser"}},
-			Sidebar: []components.PageInterface{lamu.DynamicPage{Name: "finance_accounts.MainMenu"}},
+			Sidebar: []components.PageInterface{lago.DynamicPage{Name: "finance_accounts.MainMenu"}},
 			Children: []components.PageInterface{
 				&components.FormListenBoostedPost{
 					Name:      formName,
-					ActionURL: lamu.RoutePath("finance_accounts.AccountingPreferencesRoute", nil),
+					ActionURL: lago.RoutePath("finance_accounts.AccountingPreferencesRoute", nil),
 					Children: []components.PageInterface{
 						&components.FormComponent[AccountingPreferences]{
 							Attr:          getters.FormBubbling(formName),

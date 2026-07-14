@@ -3,7 +3,7 @@ package p_uniquity_finance_accounts
 import (
 	"log/slog"
 
-	"github.com/UniquityVentures/lamu/lamu"
+	"github.com/lariv-in/lago"
 	"gorm.io/gorm"
 )
 
@@ -28,7 +28,7 @@ func LoadAccountingPreferences(db *gorm.DB) AccountingPreferences {
 }
 
 func init() {
-	lamu.RegistryAdmin.Register("p_uniquity_finance_accounts.AccountingPreferences", lamu.AdminPanel[AccountingPreferences]{
+	lago.RegistryAdmin.Register("p_uniquity_finance_accounts.AccountingPreferences", lago.AdminPanel[AccountingPreferences]{
 		SearchField: "",
 	})
 }

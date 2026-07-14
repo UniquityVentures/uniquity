@@ -3,8 +3,8 @@ package p_uniquity_finance_invoices
 import (
 	"testing"
 
-	"github.com/UniquityVentures/lamu/getters"
 	finance_taxes "github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_taxes"
+	"github.com/lariv-in/lago/getters"
 	"gorm.io/gorm"
 )
 

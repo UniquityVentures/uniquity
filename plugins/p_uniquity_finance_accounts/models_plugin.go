@@ -1,12 +1,12 @@
 package p_uniquity_finance_accounts
 
 import (
-	"github.com/UniquityVentures/lamu/lamu"
-	"github.com/UniquityVentures/lamu/registry"
+	"github.com/lariv-in/lago"
+	"github.com/lariv-in/lago/registry"
 )
 
-func pluginModels() lamu.PluginFeatures[any] {
-	return lamu.PluginFeatures[any]{
+func pluginModels() lago.PluginFeatures[any] {
+	return lago.PluginFeatures[any]{
 		Entries: []registry.Pair[string, any]{
 			{Key: "p_uniquity_finance_accounts.Account", Value: Account{}},
 			{Key: "p_uniquity_finance_accounts.Currency", Value: Currency{}},

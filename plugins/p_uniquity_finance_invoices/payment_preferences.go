@@ -5,14 +5,16 @@ import (
 	"fmt"
 	"log/slog"
 
-	"github.com/UniquityVentures/lamu/lamu"
 	finance_accounts "github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_accounts"
 	finance_products "github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_products"
+	"github.com/lariv-in/lago"
 	"gorm.io/gorm"
 )
 
-const paymentPreferencesSingletonID uint = 1
-const paymentPreferencesTable = "payment_preferences"
+const (
+	paymentPreferencesSingletonID uint = 1
+	paymentPreferencesTable            = "payment_preferences"
+)
 
 // Payment preference form field names shared with the accounting preferences page patch.
 const PaymentPrefAccountIDField = "PaymentAccountID"
@@ -70,7 +72,7 @@ func ValidatePaymentPreferencesForCreate(tx *gorm.DB, prefs *PaymentPreferences)
 }
 
 func init() {
-	lamu.RegistryAdmin.Register("p_uniquity_finance_invoices.PaymentPreferences", lamu.AdminPanel[PaymentPreferences]{
+	lago.RegistryAdmin.Register("p_uniquity_finance_invoices.PaymentPreferences", lago.AdminPanel[PaymentPreferences]{
 		SearchField: "",
 	})
 }

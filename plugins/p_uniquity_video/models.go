@@ -1,9 +1,9 @@
 package p_uniquity_video
 
 import (
-	"github.com/UniquityVentures/lamu/lamu"
-	"github.com/UniquityVentures/lamu/plugins/p_filesystem"
 	uniqempl "github.com/UniquityVentures/uniquity/plugins/p_uniquity_employees"
+	"github.com/lariv-in/lago"
+	"github.com/lariv-in/lago/plugins/p_filesystem"
 	"gorm.io/gorm"
 )
 
@@ -40,19 +40,19 @@ type PublishedVideo struct {
 }
 
 func init() {
-	lamu.RegistryAdmin.Register("p_uniquity_video_raw", lamu.AdminPanel[RawFootage]{
+	lago.RegistryAdmin.Register("p_uniquity_video_raw", lago.AdminPanel[RawFootage]{
 		SearchField: "Title",
 		ListFields:  []string{"Title", "AssignedTo.User.Name", "UpdatedAt"},
 		Preload:     []string{"Files", "AssignedTo", "AssignedTo.User"},
 	})
 
-	lamu.RegistryAdmin.Register("p_uniquity_video_edited", lamu.AdminPanel[EditedVideo]{
+	lago.RegistryAdmin.Register("p_uniquity_video_edited", lago.AdminPanel[EditedVideo]{
 		SearchField: "RawFootage.Title",
 		ListFields:  []string{"RawFootage.Title", "EditedVNode.Name", "UpdatedAt"},
 		Preload:     []string{"RawFootage", "EditedVNode"},
 	})
 
-	lamu.RegistryAdmin.Register("p_uniquity_video_published", lamu.AdminPanel[PublishedVideo]{
+	lago.RegistryAdmin.Register("p_uniquity_video_published", lago.AdminPanel[PublishedVideo]{
 		SearchField: "YouTubeVideoID",
 		ListFields:  []string{"YouTubeVideoID", "EditedVideo.RawFootage.Title", "UpdatedAt"},
 		Preload:     []string{"EditedVideo", "EditedVideo.RawFootage"},

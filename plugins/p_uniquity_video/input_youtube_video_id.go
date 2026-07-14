@@ -7,8 +7,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/UniquityVentures/lamu/components"
-	"github.com/UniquityVentures/lamu/getters"
+	"github.com/lariv-in/lago/components"
+	"github.com/lariv-in/lago/getters"
 	. "maragu.dev/gomponents"
 )
 

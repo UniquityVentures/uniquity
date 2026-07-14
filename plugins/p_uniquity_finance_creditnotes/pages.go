@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/UniquityVentures/lamu/components"
-	"github.com/UniquityVentures/lamu/getters"
-	"github.com/UniquityVentures/lamu/lamu"
-	"github.com/UniquityVentures/lamu/registry"
 	finance_accounts "github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_accounts"
+	"github.com/lariv-in/lago"
+	"github.com/lariv-in/lago/components"
+	"github.com/lariv-in/lago/getters"
+	"github.com/lariv-in/lago/registry"
 )
 
 const financeAccountsMainMenuCreditNotesLinkKey = "finance_credit_notes.FinanceAccountsMainMenuLink"
@@ -28,7 +28,7 @@ func patchFinanceAccountsMainMenuForCreditNotes(page components.PageInterface) c
 	newChildren = append(newChildren, &components.SidebarMenuItem{
 		Page:  components.Page{Key: financeAccountsMainMenuCreditNotesLinkKey, Roles: []string{"superuser"}},
 		Title: getters.Static("Credit notes"),
-		Url:   lamu.RoutePath("finance_credit_notes.DefaultRoute", nil),
+		Url:   lago.RoutePath("finance_credit_notes.DefaultRoute", nil),
 		Icon:  "arrow-uturn-left",
 	})
 	cloned := *menu
@@ -36,10 +36,10 @@ func patchFinanceAccountsMainMenuForCreditNotes(page components.PageInterface) c
 	return &cloned
 }
 
-func pluginPages() lamu.PluginFeatures[components.PageInterface] {
+func pluginPages() lago.PluginFeatures[components.PageInterface] {
 	e := pageEntriesCreditNotePages()
 	e = append(e, pageEntriesJournalEntryFkSelectPages()...)
-	return lamu.PluginFeatures[components.PageInterface]{
+	return lago.PluginFeatures[components.PageInterface]{
 		Entries: e,
 		Patches: []registry.Pair[string, func(components.PageInterface) components.PageInterface]{
 			{Key: "finance_accounts.MainMenu", Value: patchFinanceAccountsMainMenuForCreditNotes},
@@ -109,7 +109,7 @@ func creditNoteCreateFormInputs() []components.PageInterface {
 					Label:       "Journal entry to reverse",
 					Name:        "JournalEntryID",
 					Required:    true,
-					Url:         lamu.RoutePath("finance_credit_notes.JournalEntryFkSelectRoute", nil),
+					Url:         lago.RoutePath("finance_credit_notes.JournalEntryFkSelectRoute", nil),
 					Display:     journalEntryFkDisplayGetter(),
 					Placeholder: "Select journal entry…",
 					Getter:      getters.Association[finance_accounts.JournalEntry, uint](getters.Key[uint]("$in.JournalEntryID")),
@@ -124,18 +124,18 @@ func pageEntriesCreditNotePages() []registry.Pair[string, components.PageInterfa
 
 	return []registry.Pair[string, components.PageInterface]{
 		{Key: "finance_credit_notes.CreditNoteTable", Value: &components.ShellScaffold{
-			Sidebar: []components.PageInterface{lamu.DynamicPage{Name: "finance_accounts.MainMenu"}},
+			Sidebar: []components.PageInterface{lago.DynamicPage{Name: "finance_accounts.MainMenu"}},
 			Children: []components.PageInterface{
 				&components.DataTable[CreditNote]{
 					UID:     "finance-credit-notes-table",
 					Classes: "w-full",
 					Data:    getters.Key[components.ObjectList[CreditNote]]("credit_notes"),
-					RowAttr: getters.RowAttrNavigate(lamu.RoutePath("finance_credit_notes.CreditNoteDetailRoute", map[string]getters.Getter[any]{
+					RowAttr: getters.RowAttrNavigate(lago.RoutePath("finance_credit_notes.CreditNoteDetailRoute", map[string]getters.Getter[any]{
 						"id": getters.Any(getters.Key[uint]("$row.ID")),
 					})),
 					Actions: []components.PageInterface{
 						&components.TableButtonCreate{
-							Link: lamu.RoutePath("finance_credit_notes.CreditNoteCreateRoute", nil),
+							Link: lago.RoutePath("finance_credit_notes.CreditNoteCreateRoute", nil),
 							Page: components.Page{Roles: []string{"superuser"}},
 						},
 					},
@@ -157,7 +157,7 @@ func pageEntriesCreditNotePages() []registry.Pair[string, components.PageInterfa
 			},
 		}},
 		{Key: "finance_credit_notes.CreditNoteDetail", Value: &components.ShellScaffold{
-			Sidebar: []components.PageInterface{lamu.DynamicPage{Name: "finance_credit_notes.CreditNoteDetailMenu"}},
+			Sidebar: []components.PageInterface{lago.DynamicPage{Name: "finance_credit_notes.CreditNoteDetailMenu"}},
 			Children: []components.PageInterface{
 				&components.ContainerError{
 					Error: getters.Key[error]("$error._global"),
@@ -176,7 +176,7 @@ func pageEntriesCreditNotePages() []registry.Pair[string, components.PageInterfa
 										}},
 										&components.LabelInline{Title: "Original journal entry", Children: []components.PageInterface{
 											&components.FieldLink{
-												Href: lamu.RoutePath("finance_accounts.JournalEntryDetailRoute", map[string]getters.Getter[any]{
+												Href: lago.RoutePath("finance_accounts.JournalEntryDetailRoute", map[string]getters.Getter[any]{
 													"id": getters.Any(getters.Key[uint]("$in.JournalEntryID")),
 												}),
 												Label:   getters.Format("Entry #%d", getters.Any(getters.Key[uint]("$in.JournalEntryID"))),
@@ -185,7 +185,7 @@ func pageEntriesCreditNotePages() []registry.Pair[string, components.PageInterfa
 										}},
 										&components.LabelInline{Title: "Reversal journal entry", Children: []components.PageInterface{
 											&components.FieldLink{
-												Href: lamu.RoutePath("finance_accounts.JournalEntryDetailRoute", map[string]getters.Getter[any]{
+												Href: lago.RoutePath("finance_accounts.JournalEntryDetailRoute", map[string]getters.Getter[any]{
 													"id": getters.Any(getters.Key[uint]("$in.ReversedJournalEntryID")),
 												}),
 												Label:   getters.Format("Entry #%d", getters.Any(getters.Key[uint]("$in.ReversedJournalEntryID"))),
@@ -204,12 +204,12 @@ func pageEntriesCreditNotePages() []registry.Pair[string, components.PageInterfa
 			Title: getters.Format("Credit note #%d", getters.Any(getters.Key[uint]("credit_note.ID"))),
 			Back: &components.SidebarMenuItem{
 				Title: getters.Static("Credit notes"),
-				Url:   lamu.RoutePath("finance_credit_notes.DefaultRoute", nil),
+				Url:   lago.RoutePath("finance_credit_notes.DefaultRoute", nil),
 			},
 			Children: []components.PageInterface{
 				&components.SidebarMenuItem{
 					Title: getters.Static("Detail"),
-					Url: lamu.RoutePath("finance_credit_notes.CreditNoteDetailRoute", map[string]getters.Getter[any]{
+					Url: lago.RoutePath("finance_credit_notes.CreditNoteDetailRoute", map[string]getters.Getter[any]{
 						"id": getters.Any(getters.Key[uint]("credit_note.ID")),
 					}),
 				},
@@ -217,11 +217,11 @@ func pageEntriesCreditNotePages() []registry.Pair[string, components.PageInterfa
 		}},
 		{Key: "finance_credit_notes.CreditNoteCreateForm", Value: &components.ShellScaffold{
 			Page:    components.Page{Roles: []string{"superuser"}},
-			Sidebar: []components.PageInterface{lamu.DynamicPage{Name: "finance_accounts.MainMenu"}},
+			Sidebar: []components.PageInterface{lago.DynamicPage{Name: "finance_accounts.MainMenu"}},
 			Children: []components.PageInterface{
 				&components.FormListenBoostedPost{
 					Name:      createName,
-					ActionURL: lamu.RoutePath("finance_credit_notes.CreditNoteCreateRoute", nil),
+					ActionURL: lago.RoutePath("finance_credit_notes.CreditNoteCreateRoute", nil),
 					Children: []components.PageInterface{
 						&components.FormComponent[CreditNote]{
 							Attr:          getters.FormBubbling(createName),
@@ -248,7 +248,8 @@ func pageEntriesJournalEntryFkSelectPages() []registry.Pair[string, components.P
 					UID:   "finance-journal-entry-fk-select-table",
 					Title: "Select journal entry",
 					Data:  getters.Key[components.ObjectList[finance_accounts.JournalEntry]]("journal_entries"),
-					RowAttr: getters.RowAttrSelect("JournalEntryID",
+					RowAttr: getters.RowAttrSelect(
+						"JournalEntryID",
 						getters.Key[uint]("$row.ID"),
 						journalEntryFkRowLabel(),
 					),

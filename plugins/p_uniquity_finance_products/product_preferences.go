@@ -3,8 +3,8 @@ package p_uniquity_finance_products
 import (
 	"log/slog"
 
-	"github.com/UniquityVentures/lamu/lamu"
 	finance_accounts "github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_accounts"
+	"github.com/lariv-in/lago"
 	"gorm.io/gorm"
 )
 
@@ -34,7 +34,7 @@ func LoadProductPreferences(db *gorm.DB) ProductPreferences {
 }
 
 func init() {
-	lamu.RegistryAdmin.Register("p_uniquity_finance_products.ProductPreferences", lamu.AdminPanel[ProductPreferences]{
+	lago.RegistryAdmin.Register("p_uniquity_finance_products.ProductPreferences", lago.AdminPanel[ProductPreferences]{
 		SearchField: "",
 	})
 }

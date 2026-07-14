@@ -4,9 +4,9 @@ import (
 	"context"
 	"strconv"
 
-	"github.com/UniquityVentures/lamu/getters"
-	"github.com/UniquityVentures/lamu/lamu"
 	finance_accounts "github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_accounts"
+	"github.com/lariv-in/lago"
+	"github.com/lariv-in/lago/getters"
 )
 
 type paymentSourceDocType struct{}
@@ -14,7 +14,7 @@ type paymentSourceDocType struct{}
 func (paymentSourceDocType) GetSourceDocType() string { return PaymentSourceDocType }
 
 func (paymentSourceDocType) GetterDetailUrl(idKey string) getters.Getter[string] {
-	return lamu.RoutePath("finance_invoices.PaymentDetailRoute", map[string]getters.Getter[any]{
+	return lago.RoutePath("finance_invoices.PaymentDetailRoute", map[string]getters.Getter[any]{
 		"id": getters.Any(getters.Key[uint](idKey)),
 	})
 }

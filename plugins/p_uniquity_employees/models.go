@@ -4,9 +4,9 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/UniquityVentures/lamu/fields"
-	"github.com/UniquityVentures/lamu/lamu"
-	"github.com/UniquityVentures/lamu/plugins/p_users"
+	"github.com/lariv-in/lago"
+	"github.com/lariv-in/lago/fields"
+	"github.com/lariv-in/lago/plugins/p_users"
 	"gorm.io/gorm"
 )
 
@@ -48,13 +48,13 @@ func (*PointsTransaction) BeforeUpdate(_ *gorm.DB) error {
 }
 
 func init() {
-	lamu.RegistryAdmin.Register("p_uniquity_employees_staff", lamu.AdminPanel[Employee]{
+	lago.RegistryAdmin.Register("p_uniquity_employees_staff", lago.AdminPanel[Employee]{
 		SearchField: "User.Name",
 		ListFields:  []string{"User.Name", "User.Email", "UpdatedAt"},
 		Preload:     []string{"User"},
 	})
 
-	lamu.RegistryAdmin.Register("p_uniquity_employees_points", lamu.AdminPanel[PointsTransaction]{
+	lago.RegistryAdmin.Register("p_uniquity_employees_points", lago.AdminPanel[PointsTransaction]{
 		SearchField: "FromUser.Name",
 		ListFields: []string{
 			"Points",

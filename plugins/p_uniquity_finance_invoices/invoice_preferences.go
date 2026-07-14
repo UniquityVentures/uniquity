@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"log/slog"
 
-	"github.com/UniquityVentures/lamu/lamu"
 	finance_accounts "github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_accounts"
 	finance_products "github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_products"
+	"github.com/lariv-in/lago"
 	"gorm.io/gorm"
 )
 
@@ -72,7 +72,7 @@ func ValidateInvoicePreferencesForPosting(tx *gorm.DB, prefs *InvoicePreferences
 }
 
 func init() {
-	lamu.RegistryAdmin.Register("p_uniquity_finance_invoices.InvoicePreferences", lamu.AdminPanel[InvoicePreferences]{
+	lago.RegistryAdmin.Register("p_uniquity_finance_invoices.InvoicePreferences", lago.AdminPanel[InvoicePreferences]{
 		SearchField: "",
 	})
 }

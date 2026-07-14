@@ -4,31 +4,31 @@ import (
 	"log"
 	"net/url"
 
-	"github.com/UniquityVentures/lamu/lamu"
-	"github.com/UniquityVentures/lamu/registry"
+	"github.com/lariv-in/lago"
+	"github.com/lariv-in/lago/registry"
 )
 
 const AppUrl = "/finance/"
 
-// GetPlugin returns registry contributions for [lamu.BuildAllRegistries].
-func GetPlugin() registry.Pair[string, lamu.Plugin] {
+// GetPlugin returns registry contributions for [lago.BuildAllRegistries].
+func GetPlugin() registry.Pair[string, lago.Plugin] {
 	u, err := url.Parse(AppUrl)
 	if err != nil {
 		log.Panic(err)
 	}
-	return registry.Pair[string, lamu.Plugin]{
+	return registry.Pair[string, lago.Plugin]{
 		Key: "p_uniquity_finance_accounts",
-		Value: lamu.Plugin{
-			Type:        lamu.PluginTypeApp,
+		Value: lago.Plugin{
+			Type:        lago.PluginTypeApp,
 			Icon:        "building-library",
 			URL:         u,
 			VerboseName: "Finance",
 			Roles:       []string{"superuser"},
-			Views:       lamu.PluginStages(pluginViews),
-			Pages:       lamu.PluginStages(pluginPages),
-			Routes:      lamu.PluginStages(pluginRoutes),
-			Models:      lamu.PluginStages(pluginModels),
-			Migrations:  lamu.PluginStages(pluginMigrations),
+			Views:       lago.PluginStages(pluginViews),
+			Pages:       lago.PluginStages(pluginPages),
+			Routes:      lago.PluginStages(pluginRoutes),
+			Models:      lago.PluginStages(pluginModels),
+			Migrations:  lago.PluginStages(pluginMigrations),
 		},
 	}
 }

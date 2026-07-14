@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/UniquityVentures/lamu/getters"
-	"github.com/UniquityVentures/lamu/lamu"
-	"github.com/UniquityVentures/lamu/views"
+	"github.com/lariv-in/lago"
+	"github.com/lariv-in/lago/getters"
+	"github.com/lariv-in/lago/views"
 	"gorm.io/gorm"
 )
 
@@ -51,7 +51,7 @@ func (layerPostDraftInvoice) Next(_ views.View, next http.Handler) http.Handler 
 			next.ServeHTTP(w, r.WithContext(ctx))
 			return
 		}
-		dest, err := lamu.RoutePath("finance_invoices.PostedInvoiceDetailRoute", map[string]getters.Getter[any]{
+		dest, err := lago.RoutePath("finance_invoices.PostedInvoiceDetailRoute", map[string]getters.Getter[any]{
 			"id": getters.Any(getters.Static(posted.ID)),
 		})(ctx)
 		if err != nil {
@@ -103,7 +103,7 @@ func (layerCancelPostedInvoice) Next(_ views.View, next http.Handler) http.Handl
 			next.ServeHTTP(w, r.WithContext(ctx))
 			return
 		}
-		dest, err := lamu.RoutePath("finance_invoices.CancelledInvoiceDetailRoute", map[string]getters.Getter[any]{
+		dest, err := lago.RoutePath("finance_invoices.CancelledInvoiceDetailRoute", map[string]getters.Getter[any]{
 			"id": getters.Any(getters.Static(cancelled.ID)),
 		})(ctx)
 		if err != nil {
@@ -151,7 +151,7 @@ func (layerNewDraftFromCancelled) Next(_ views.View, next http.Handler) http.Han
 			next.ServeHTTP(w, r.WithContext(ctx))
 			return
 		}
-		dest, err := lamu.RoutePath("finance_invoices.DraftInvoiceDetailRoute", map[string]getters.Getter[any]{
+		dest, err := lago.RoutePath("finance_invoices.DraftInvoiceDetailRoute", map[string]getters.Getter[any]{
 			"id": getters.Any(getters.Static(draft.ID)),
 		})(ctx)
 		if err != nil {

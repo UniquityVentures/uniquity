@@ -6,10 +6,10 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/UniquityVentures/lamu/getters"
-	"github.com/UniquityVentures/lamu/lamu"
-	"github.com/UniquityVentures/lamu/views"
 	finance_products "github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_products"
+	"github.com/lariv-in/lago"
+	"github.com/lariv-in/lago/getters"
+	"github.com/lariv-in/lago/views"
 	"gorm.io/gorm"
 )
 
@@ -93,7 +93,8 @@ func (m accountingPreferencesInvoicePrefsLayer) handlePost(view views.View, w ht
 	accountingProductValues, invoiceValues, paymentValues := splitPreferenceFormValues(values)
 	invoiceRegular, _ := views.SplitAssociationValues(invoiceValues)
 	paymentRegular, _ := views.SplitAssociationValues(paymentValues)
-	finance_products.NormalizeOptionalUintFKValues(invoiceRegular,
+	finance_products.NormalizeOptionalUintFKValues(
+		invoiceRegular,
 		InvoicePrefAccountReceivableIDField,
 		InvoicePrefAccountRevenueIDField,
 		InvoicePrefAccountTaxPayableIDField,
@@ -124,7 +125,7 @@ func (m accountingPreferencesInvoicePrefsLayer) handlePost(view views.View, w ht
 		return
 	}
 
-	successURL, err := lamu.RoutePath("finance_accounts.AccountingPreferencesRoute", nil)(ctx)
+	successURL, err := lago.RoutePath("finance_accounts.AccountingPreferencesRoute", nil)(ctx)
 	if err != nil {
 		fieldErrors["_form"] = err
 		ctx = views.ContextWithErrorsAndValues(ctx, values, fieldErrors)

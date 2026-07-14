@@ -5,8 +5,8 @@ import (
 	"math/big"
 	"strings"
 
-	"github.com/UniquityVentures/lamu/fields"
 	finance_taxes "github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_taxes"
+	"github.com/lariv-in/lago/fields"
 )
 
 func effectiveTaxKind(t finance_taxes.Tax) finance_taxes.TaxKind {

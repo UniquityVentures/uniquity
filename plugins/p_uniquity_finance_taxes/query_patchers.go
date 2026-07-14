@@ -1,8 +1,8 @@
 package p_uniquity_finance_taxes
 
 import (
-	"github.com/UniquityVentures/lamu/registry"
-	"github.com/UniquityVentures/lamu/views"
+	"github.com/lariv-in/lago/registry"
+	"github.com/lariv-in/lago/views"
 )
 
 // taxPreloadAccount loads the GL account for tax forms and list/detail views.

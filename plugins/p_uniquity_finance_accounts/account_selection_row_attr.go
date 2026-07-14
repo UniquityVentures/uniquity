@@ -7,8 +7,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/UniquityVentures/lamu/getters"
-	"github.com/UniquityVentures/lamu/lamu"
+	"github.com/lariv-in/lago"
+	"github.com/lariv-in/lago/getters"
 	"maragu.dev/gomponents"
 	ghtml "maragu.dev/gomponents/html"
 )
@@ -68,7 +68,7 @@ func accountSelectionTableRowAttr(
 }
 
 func accountSelectBuildDrillURL(ctx context.Context, parentID uint) (string, error) {
-	base, err := lamu.RoutePath("finance_accounts.AccountSelectRoute", nil)(ctx)
+	base, err := lago.RoutePath("finance_accounts.AccountSelectRoute", nil)(ctx)
 	if err != nil {
 		return "", err
 	}

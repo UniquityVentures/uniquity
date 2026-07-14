@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/UniquityVentures/lamu/components"
-	"github.com/UniquityVentures/lamu/getters"
-	"github.com/UniquityVentures/lamu/lamu"
-	"github.com/UniquityVentures/lamu/registry"
+	"github.com/lariv-in/lago"
+	"github.com/lariv-in/lago/components"
+	"github.com/lariv-in/lago/getters"
+	"github.com/lariv-in/lago/registry"
 )
 
 // filterGETString reads one filter field from context $get for display.
@@ -44,7 +44,7 @@ func pageFilterPages() []registry.Pair[string, components.PageInterface] {
 
 	return []registry.Pair[string, components.PageInterface]{
 		{Key: "finance_accounts.AccountFilter", Value: &components.FormComponent[Account]{
-			Attr: getters.FormBoostedGet(lamu.RoutePath("finance_accounts.DefaultRoute", nil)),
+			Attr: getters.FormBoostedGet(lago.RoutePath("finance_accounts.DefaultRoute", nil)),
 			ChildrenInput: []components.PageInterface{
 				&components.InputText{Name: "Name", Label: "Name", Getter: getters.Key[string]("$get.Name")},
 				&components.InputText{Name: "Code", Label: "Code", Getter: filterGETString("Code")},
@@ -60,7 +60,7 @@ func pageFilterPages() []registry.Pair[string, components.PageInterface] {
 			ChildrenAction: filterButtons,
 		}},
 		{Key: "finance_accounts.AccountSelectionFilter", Value: &components.FormComponent[Account]{
-			Attr: getters.FormBoostedGet(lamu.RoutePath("finance_accounts.AccountSelectRoute", nil)),
+			Attr: getters.FormBoostedGet(lago.RoutePath("finance_accounts.AccountSelectRoute", nil)),
 			ChildrenInput: []components.PageInterface{
 				&components.InputText{Hidden: true, Name: "target_input", Getter: getters.Key[string]("$get.target_input")},
 				&components.InputText{Hidden: true, Name: balanceTypeScopeQueryParam, Getter: filterGETString(balanceTypeScopeQueryParam)},
@@ -78,7 +78,7 @@ func pageFilterPages() []registry.Pair[string, components.PageInterface] {
 			ChildrenAction: filterButtons,
 		}},
 		{Key: "finance_accounts.CurrencyFilter", Value: &components.FormComponent[Currency]{
-			Attr: getters.FormBoostedGet(lamu.RoutePath("finance_accounts.CurrencyListRoute", nil)),
+			Attr: getters.FormBoostedGet(lago.RoutePath("finance_accounts.CurrencyListRoute", nil)),
 			ChildrenInput: []components.PageInterface{
 				&components.InputText{Name: "Code", Label: "Numeric code", Getter: filterGETString("Code")},
 				&components.InputText{Name: "Name", Label: "Name", Getter: getters.Key[string]("$get.Name")},
@@ -88,7 +88,7 @@ func pageFilterPages() []registry.Pair[string, components.PageInterface] {
 			ChildrenAction: filterButtons,
 		}},
 		{Key: "finance_accounts.CurrencySelectionFilter", Value: &components.FormComponent[Currency]{
-			Attr: getters.FormBoostedGet(lamu.RoutePath("finance_accounts.CurrencySelectRoute", nil)),
+			Attr: getters.FormBoostedGet(lago.RoutePath("finance_accounts.CurrencySelectRoute", nil)),
 			ChildrenInput: []components.PageInterface{
 				&components.InputText{Name: "Code", Label: "Numeric code", Getter: filterGETString("Code")},
 				&components.InputText{Name: "Name", Label: "Name", Getter: getters.Key[string]("$get.Name")},
@@ -97,7 +97,7 @@ func pageFilterPages() []registry.Pair[string, components.PageInterface] {
 			ChildrenAction: filterButtons,
 		}},
 		{Key: "finance_accounts.JournalFilter", Value: &components.FormComponent[Journal]{
-			Attr: getters.FormBoostedGet(lamu.RoutePath("finance_accounts.JournalListRoute", nil)),
+			Attr: getters.FormBoostedGet(lago.RoutePath("finance_accounts.JournalListRoute", nil)),
 			ChildrenInput: []components.PageInterface{
 				&components.InputText{Name: "Name", Label: "Name", Getter: getters.Key[string]("$get.Name")},
 				&components.InputCheckbox{Name: "IsActive", Label: "Active", Getter: getters.Key[bool]("$get.IsActive")},

@@ -1,16 +1,16 @@
 package p_uniquity_finance_products
 
 import (
-	"github.com/UniquityVentures/lamu/components"
-	"github.com/UniquityVentures/lamu/getters"
-	"github.com/UniquityVentures/lamu/lamu"
-	"github.com/UniquityVentures/lamu/registry"
+	"github.com/lariv-in/lago"
+	"github.com/lariv-in/lago/components"
+	"github.com/lariv-in/lago/getters"
+	"github.com/lariv-in/lago/registry"
 )
 
 func pageEntriesProductFkSelectPages() []registry.Pair[string, components.PageInterface] {
 	return []registry.Pair[string, components.PageInterface]{
 		{Key: "finance_products.ProductFkSelectionFilter", Value: &components.FormComponent[Product]{
-			Attr: getters.FormBoostedGet(lamu.RoutePath("finance_products.ProductFkSelectRoute", nil)),
+			Attr: getters.FormBoostedGet(lago.RoutePath("finance_products.ProductFkSelectRoute", nil)),
 			ChildrenInput: []components.PageInterface{
 				&components.InputText{Hidden: true, Name: "target_input", Getter: getters.Key[string]("$get.target_input")},
 				&components.InputText{Label: "Name", Name: "Name", Getter: getters.Key[string]("$get.Name")},
@@ -35,7 +35,7 @@ func pageEntriesProductFkSelectPages() []registry.Pair[string, components.PageIn
 						getters.Key[string]("$row.Name"),
 					),
 					Actions: []components.PageInterface{
-						&components.TableButtonFilter{Child: lamu.DynamicPage{Name: "finance_products.ProductFkSelectionFilter"}},
+						&components.TableButtonFilter{Child: lago.DynamicPage{Name: "finance_products.ProductFkSelectionFilter"}},
 					},
 					Columns: []components.TableColumn{
 						{Label: "Reference", Name: "Reference", Children: []components.PageInterface{

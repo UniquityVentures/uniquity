@@ -4,8 +4,8 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/UniquityVentures/lamu/components"
-	"github.com/UniquityVentures/lamu/getters"
+	"github.com/lariv-in/lago/components"
+	"github.com/lariv-in/lago/getters"
 	. "maragu.dev/gomponents"
 	. "maragu.dev/gomponents/html"
 )
@@ -59,7 +59,8 @@ func (e NewDraftFromCancelledConfirmation) Build(ctx context.Context) Node {
 		msg = "A new editable draft invoice will be copied from this cancelled invoice. The cancelled record is unchanged."
 	}
 
-	return Div(Class("container mx-auto "+e.Classes),
+	return Div(
+		Class("container mx-auto "+e.Classes),
 		H2(Class("text-xl font-bold"), Text(title)),
 		P(Class("text-sm text-gray-500 my-2"), Text(msg)),
 		newDraftFromCancelledGlobalError(ctx),

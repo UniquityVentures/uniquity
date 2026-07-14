@@ -4,8 +4,8 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/UniquityVentures/lamu/getters"
-	"github.com/UniquityVentures/lamu/views"
+	"github.com/lariv-in/lago/getters"
+	"github.com/lariv-in/lago/views"
 )
 
 type accountingPreferencesProductPrefsLayer struct {

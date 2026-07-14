@@ -4,16 +4,16 @@ import (
 	"bytes"
 	"os"
 	"strings"
-	"text/template"
 	"testing"
+	"text/template"
 	"time"
 
-	"github.com/UniquityVentures/lamu/fields"
-	"github.com/UniquityVentures/lamu/getters"
 	finance_customer "github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_customer"
 	finance_products "github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_products"
 	finance_taxes "github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_taxes"
 	"github.com/francescoalemanno/gotypst"
+	"github.com/lariv-in/lago/fields"
+	"github.com/lariv-in/lago/getters"
 	"gorm.io/gorm"
 )
 

@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/UniquityVentures/lamu/getters"
-	"github.com/UniquityVentures/lamu/views"
+	"github.com/lariv-in/lago/getters"
+	"github.com/lariv-in/lago/views"
 )
 
 // paymentCreateQueryDefaultsLayer merges ?PostedInvoiceID= into $in on GET so selecting a

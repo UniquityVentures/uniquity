@@ -4,10 +4,10 @@ import (
 	"context"
 	"strings"
 
-	"github.com/UniquityVentures/lamu/components"
-	"github.com/UniquityVentures/lamu/getters"
-	"github.com/UniquityVentures/lamu/views"
 	finance_accounts "github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_accounts"
+	"github.com/lariv-in/lago/components"
+	"github.com/lariv-in/lago/getters"
+	"github.com/lariv-in/lago/views"
 	"gorm.io/gorm"
 )
 
@@ -92,7 +92,8 @@ func SaveAccountingAndProductPreferencesTx(tx *gorm.DB, values map[string]any) e
 	accountingRegular, accountingAssoc := views.SplitAssociationValues(accountingValues)
 	productRegular, _ := views.SplitAssociationValues(productValues)
 
-	NormalizeOptionalUintFKValues(productRegular,
+	NormalizeOptionalUintFKValues(
+		productRegular,
 		ProductPrefInventoryAccountIDField,
 		ProductPrefCostOfSalesAcctIDField,
 	)

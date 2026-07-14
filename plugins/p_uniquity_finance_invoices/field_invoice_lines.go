@@ -6,10 +6,10 @@ import (
 	"log/slog"
 	"strings"
 
-	"github.com/UniquityVentures/lamu/components"
-	"github.com/UniquityVentures/lamu/fields"
-	"github.com/UniquityVentures/lamu/getters"
 	finance_taxes "github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_taxes"
+	"github.com/lariv-in/lago/components"
+	"github.com/lariv-in/lago/fields"
+	"github.com/lariv-in/lago/getters"
 	. "maragu.dev/gomponents"
 	. "maragu.dev/gomponents/html"
 )
@@ -158,14 +158,14 @@ func invoiceLinesSummaryFromCancelledLines(lines []CancelledInvoiceLine, headerT
 
 // InvoiceLineDisplay is one read-only row for [FieldInvoiceLines].
 type InvoiceLineDisplay struct {
-	Product            string
-	Quantity           string
-	Rate               string
-	LineTaxes          string
-	UntaxedAmount      string
-	LeviedTaxAmount    string
-	WithholdingAmount  string
-	LineTotal          string
+	Product           string
+	Quantity          string
+	Rate              string
+	LineTaxes         string
+	UntaxedAmount     string
+	LeviedTaxAmount   string
+	WithholdingAmount string
+	LineTotal         string
 }
 
 func invoiceLineTaxesLabel(taxes []finance_taxes.Tax) string {
@@ -238,9 +238,12 @@ func (e FieldInvoiceLines) Build(ctx context.Context) Node {
 			))
 		}
 	}
-	return Div(Class(wrap),
-		Div(Class("overflow-x-auto rounded-box border border-base-300 bg-base-100"),
-			Table(Class("table table-sm w-full"),
+	return Div(
+		Class(wrap),
+		Div(
+			Class("overflow-x-auto rounded-box border border-base-300 bg-base-100"),
+			Table(
+				Class("table table-sm w-full"),
 				THead(Tr(
 					Th(Class("whitespace-nowrap min-w-[12rem]"), Text("Product")),
 					Th(Class("whitespace-nowrap w-32 text-end"), Text("Quantity")),
@@ -283,28 +286,33 @@ func (e FieldInvoiceLinesSummary) Build(ctx context.Context) Node {
 		outerClass += " " + c
 	}
 	rowNodes := []Node{
-		Div(Class("grid grid-cols-[1fr_auto] gap-x-4 items-center px-4 py-3"),
+		Div(
+			Class("grid grid-cols-[1fr_auto] gap-x-4 items-center px-4 py-3"),
 			Div(Class("text-sm font-bold min-w-0 truncate"), Text("Lines subtotal")),
 			Div(Class("text-sm tabular-nums text-end font-semibold shrink-0 min-w-[7rem]"), Text(s.LinesSubtotal)),
 		),
 	}
 	for _, row := range s.TaxRows {
-		rowNodes = append(rowNodes, Div(Class("grid grid-cols-[1fr_auto] gap-x-4 items-center px-4 py-3"),
+		rowNodes = append(rowNodes, Div(
+			Class("grid grid-cols-[1fr_auto] gap-x-4 items-center px-4 py-3"),
 			Div(Class("text-sm font-bold min-w-0 truncate"), Text(row.Label)),
 			Div(Class("text-sm tabular-nums text-end font-semibold shrink-0 min-w-[7rem]"), Text(row.Amount)),
 		))
 	}
 	for _, row := range s.WithholdingRows {
-		rowNodes = append(rowNodes, Div(Class("grid grid-cols-[1fr_auto] gap-x-4 items-center px-4 py-3"),
+		rowNodes = append(rowNodes, Div(
+			Class("grid grid-cols-[1fr_auto] gap-x-4 items-center px-4 py-3"),
 			Div(Class("text-sm font-bold min-w-0 truncate"), Text(row.Label)),
 			Div(Class("text-sm tabular-nums text-end font-semibold shrink-0 min-w-[7rem]"), Text(row.Amount)),
 		))
 	}
-	rowNodes = append(rowNodes, Div(Class("grid grid-cols-[1fr_auto] gap-x-4 items-center px-4 py-3 bg-base-200/60"),
+	rowNodes = append(rowNodes, Div(
+		Class("grid grid-cols-[1fr_auto] gap-x-4 items-center px-4 py-3 bg-base-200/60"),
 		Div(Class("text-sm font-bold min-w-0 truncate"), Text("Total")),
 		Div(Class("text-sm tabular-nums text-end font-bold shrink-0 min-w-[7rem]"), Text(s.GrandTotal)),
 	))
-	return Div(Class(outerClass),
+	return Div(
+		Class(outerClass),
 		Div(append([]Node{Class("rounded-box border border-base-300 bg-base-100 overflow-hidden divide-y divide-base-300")}, rowNodes...)...),
 	)
 }

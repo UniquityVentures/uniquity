@@ -5,9 +5,9 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/UniquityVentures/lamu/fields"
-	"github.com/UniquityVentures/lamu/lamu"
 	finance_accounts "github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_accounts"
+	"github.com/lariv-in/lago"
+	"github.com/lariv-in/lago/fields"
 	"gorm.io/gorm"
 )
 
@@ -104,7 +104,7 @@ func negateDecimalSix(a fields.DecimalSix) fields.DecimalSix {
 }
 
 func init() {
-	lamu.RegistryAdmin.Register("p_uniquity_finance_creditnotes.CreditNote", lamu.AdminPanel[CreditNote]{
+	lago.RegistryAdmin.Register("p_uniquity_finance_creditnotes.CreditNote", lago.AdminPanel[CreditNote]{
 		SearchField: "Reason",
 		ListFields: []string{
 			"Datetime", "Reason", "JournalEntryID", "ReversedJournalEntryID", "UpdatedAt",

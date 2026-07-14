@@ -1,10 +1,10 @@
 package p_uniquity_finance_customer
 
 import (
-	"github.com/UniquityVentures/lamu/components"
-	"github.com/UniquityVentures/lamu/getters"
-	"github.com/UniquityVentures/lamu/lamu"
-	"github.com/UniquityVentures/lamu/registry"
+	"github.com/lariv-in/lago"
+	"github.com/lariv-in/lago/components"
+	"github.com/lariv-in/lago/getters"
+	"github.com/lariv-in/lago/registry"
 )
 
 const financeAccountsMainMenuCustomersLinkKey = "finance_customers.FinanceAccountsMainMenuLink"
@@ -23,7 +23,7 @@ func patchFinanceAccountsMainMenuForCustomers(page components.PageInterface) com
 	newChildren = append(newChildren, &components.SidebarMenuItem{
 		Page:  components.Page{Key: financeAccountsMainMenuCustomersLinkKey, Roles: []string{"superuser"}},
 		Title: getters.Static("Customers"),
-		Url:   lamu.RoutePath("finance_customers.DefaultRoute", nil),
+		Url:   lago.RoutePath("finance_customers.DefaultRoute", nil),
 		Icon:  "building-storefront",
 	})
 	cloned := *menu
@@ -31,11 +31,11 @@ func patchFinanceAccountsMainMenuForCustomers(page components.PageInterface) com
 	return &cloned
 }
 
-func pluginPages() lamu.PluginFeatures[components.PageInterface] {
+func pluginPages() lago.PluginFeatures[components.PageInterface] {
 	e := pageEntriesCustomerMenus()
 	e = append(e, pageEntriesCustomerPages()...)
 	e = append(e, pageEntriesCustomerFkSelectPages()...)
-	return lamu.PluginFeatures[components.PageInterface]{
+	return lago.PluginFeatures[components.PageInterface]{
 		Entries: e,
 		Patches: []registry.Pair[string, func(components.PageInterface) components.PageInterface]{
 			{Key: "finance_accounts.MainMenu", Value: patchFinanceAccountsMainMenuForCustomers},
@@ -49,19 +49,19 @@ func pageEntriesCustomerMenus() []registry.Pair[string, components.PageInterface
 			Title: getters.Format("%s", getters.Any(getters.Key[string]("customer.Name"))),
 			Back: &components.SidebarMenuItem{
 				Title: getters.Static("All customers"),
-				Url:   lamu.RoutePath("finance_customers.DefaultRoute", nil),
+				Url:   lago.RoutePath("finance_customers.DefaultRoute", nil),
 			},
 			Children: []components.PageInterface{
 				&components.SidebarMenuItem{
 					Title: getters.Static("Detail"),
-					Url: lamu.RoutePath("finance_customers.CustomerDetailRoute", map[string]getters.Getter[any]{
+					Url: lago.RoutePath("finance_customers.CustomerDetailRoute", map[string]getters.Getter[any]{
 						"id": getters.Any(getters.Key[uint]("customer.ID")),
 					}),
 				},
 				&components.SidebarMenuItem{
 					Page:  components.Page{Roles: []string{"superuser"}},
 					Title: getters.Static("Edit"),
-					Url: lamu.RoutePath("finance_customers.CustomerUpdateRoute", map[string]getters.Getter[any]{
+					Url: lago.RoutePath("finance_customers.CustomerUpdateRoute", map[string]getters.Getter[any]{
 						"id": getters.Any(getters.Key[uint]("customer.ID")),
 					}),
 				},
@@ -171,7 +171,7 @@ func pageEntriesCustomerPages() []registry.Pair[string, components.PageInterface
 
 	return []registry.Pair[string, components.PageInterface]{
 		{Key: "finance_customers.CustomerTable", Value: &components.ShellScaffold{
-			Sidebar: []components.PageInterface{lamu.DynamicPage{Name: "finance_accounts.MainMenu"}},
+			Sidebar: []components.PageInterface{lago.DynamicPage{Name: "finance_accounts.MainMenu"}},
 			Children: []components.PageInterface{
 				&components.DataTable[Customer]{
 					UID:     "finance-customer-table",
@@ -179,11 +179,11 @@ func pageEntriesCustomerPages() []registry.Pair[string, components.PageInterface
 					Data:    getters.Key[components.ObjectList[Customer]]("customers"),
 					Actions: []components.PageInterface{
 						&components.TableButtonCreate{
-							Link: lamu.RoutePath("finance_customers.CustomerCreateRoute", nil),
+							Link: lago.RoutePath("finance_customers.CustomerCreateRoute", nil),
 							Page: components.Page{Roles: []string{"superuser"}},
 						},
 					},
-					RowAttr: getters.RowAttrNavigate(lamu.RoutePath("finance_customers.CustomerDetailRoute", map[string]getters.Getter[any]{
+					RowAttr: getters.RowAttrNavigate(lago.RoutePath("finance_customers.CustomerDetailRoute", map[string]getters.Getter[any]{
 						"id": getters.Any(getters.Key[uint]("$row.ID")),
 					})),
 					Columns: []components.TableColumn{
@@ -205,11 +205,11 @@ func pageEntriesCustomerPages() []registry.Pair[string, components.PageInterface
 		}},
 		{Key: "finance_customers.CustomerCreateForm", Value: &components.ShellScaffold{
 			Page:    components.Page{Roles: []string{"superuser"}},
-			Sidebar: []components.PageInterface{lamu.DynamicPage{Name: "finance_accounts.MainMenu"}},
+			Sidebar: []components.PageInterface{lago.DynamicPage{Name: "finance_accounts.MainMenu"}},
 			Children: []components.PageInterface{
 				&components.FormListenBoostedPost{
 					Name:      createName,
-					ActionURL: lamu.RoutePath("finance_customers.CustomerCreateRoute", nil),
+					ActionURL: lago.RoutePath("finance_customers.CustomerCreateRoute", nil),
 					Children: []components.PageInterface{
 						&components.FormComponent[Customer]{
 							Attr:          getters.FormBubbling(createName),
@@ -226,11 +226,11 @@ func pageEntriesCustomerPages() []registry.Pair[string, components.PageInterface
 		}},
 		{Key: "finance_customers.CustomerUpdateForm", Value: &components.ShellScaffold{
 			Page:    components.Page{Roles: []string{"superuser"}},
-			Sidebar: []components.PageInterface{lamu.DynamicPage{Name: "finance_customers.CustomerDetailMenu"}},
+			Sidebar: []components.PageInterface{lago.DynamicPage{Name: "finance_customers.CustomerDetailMenu"}},
 			Children: []components.PageInterface{
 				&components.FormListenBoostedPost{
 					Name: updateName,
-					ActionURL: lamu.RoutePath("finance_customers.CustomerUpdateRoute", map[string]getters.Getter[any]{
+					ActionURL: lago.RoutePath("finance_customers.CustomerUpdateRoute", map[string]getters.Getter[any]{
 						"id": getters.Any(getters.Key[uint]("customer.ID")),
 					}),
 					Children: []components.PageInterface{
@@ -253,8 +253,8 @@ func pageEntriesCustomerPages() []registry.Pair[string, components.PageInterface
 													Label:       "Delete",
 													Icon:        "trash",
 													Name:        deleteName,
-													Url:         lamu.RoutePath("finance_customers.CustomerDeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("customer.ID"))}),
-													FormPostURL: lamu.RoutePath("finance_customers.CustomerDeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("customer.ID"))}),
+													Url:         lago.RoutePath("finance_customers.CustomerDeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("customer.ID"))}),
+													FormPostURL: lago.RoutePath("finance_customers.CustomerDeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("customer.ID"))}),
 													ModalUID:    "finance-customer-delete-modal",
 													Classes:     "btn-error",
 												},
@@ -280,7 +280,7 @@ func pageEntriesCustomerPages() []registry.Pair[string, components.PageInterface
 			},
 		}},
 		{Key: "finance_customers.CustomerDetail", Value: &components.ShellScaffold{
-			Sidebar: []components.PageInterface{lamu.DynamicPage{Name: "finance_customers.CustomerDetailMenu"}},
+			Sidebar: []components.PageInterface{lago.DynamicPage{Name: "finance_customers.CustomerDetailMenu"}},
 			Children: []components.PageInterface{
 				&components.Detail[Customer]{
 					Getter: getters.Key[Customer]("customer"),

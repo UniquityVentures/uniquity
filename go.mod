@@ -3,10 +3,10 @@ module github.com/UniquityVentures/uniquity
 go 1.26.1
 
 require (
-	github.com/UniquityVentures/lamu v0.6.18
 	github.com/divan/num2words v1.0.3
 	github.com/francescoalemanno/gotypst v0.2.0
 	github.com/go-rod/rod v0.116.2
+	github.com/lariv-in/lago v0.6.3
 	golang.org/x/text v0.38.0
 	google.golang.org/api v0.286.0
 	gorm.io/driver/postgres v1.6.0

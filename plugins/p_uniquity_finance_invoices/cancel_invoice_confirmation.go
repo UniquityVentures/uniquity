@@ -4,8 +4,8 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/UniquityVentures/lamu/components"
-	"github.com/UniquityVentures/lamu/getters"
+	"github.com/lariv-in/lago/components"
+	"github.com/lariv-in/lago/getters"
 	. "maragu.dev/gomponents"
 	. "maragu.dev/gomponents/html"
 )
@@ -51,10 +51,12 @@ func (e CancelInvoiceConfirmation) Build(ctx context.Context) Node {
 		msg = "Cancelling creates a credit note that reverses the journal entry. The invoice is recorded as cancelled; you cannot restore the posted-only state."
 	}
 
-	return Div(Class("container mx-auto "+e.Classes),
+	return Div(
+		Class("container mx-auto "+e.Classes),
 		H2(Class("text-xl font-bold"), Text(title)),
 		P(Class("text-sm text-gray-500 my-2"), Text("Creates a credit note reversing the journal entry.")),
-		Div(Class("alert alert-warning text-sm my-3 leading-relaxed flex flex-col gap-2 items-stretch"),
+		Div(
+			Class("alert alert-warning text-sm my-3 leading-relaxed flex flex-col gap-2 items-stretch"),
 			P(Class("font-semibold"), Text("This action cannot be reverted.")),
 			P(Class("m-0"), Text(msg)),
 		),

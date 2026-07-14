@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/UniquityVentures/lamu/components"
-	"github.com/UniquityVentures/lamu/getters"
-	"github.com/UniquityVentures/lamu/registry"
+	"github.com/lariv-in/lago/components"
+	"github.com/lariv-in/lago/getters"
+	"github.com/lariv-in/lago/registry"
 )
 
 func pageEntriesPostedInvoiceFkSelectPages() []registry.Pair[string, components.PageInterface] {
@@ -19,7 +19,8 @@ func pageEntriesPostedInvoiceFkSelectPages() []registry.Pair[string, components.
 					UID:   "finance-posted-invoice-fk-select-table",
 					Title: "Select posted invoice",
 					Data:  getters.Key[components.ObjectList[PostedInvoice]]("posted_invoices"),
-					RowAttr: getters.RowAttrSelect("PostedInvoiceID",
+					RowAttr: getters.RowAttrSelect(
+						"PostedInvoiceID",
 						getters.Key[uint]("$row.ID"),
 						postedInvoiceFkRowSummaryGetter(),
 					),

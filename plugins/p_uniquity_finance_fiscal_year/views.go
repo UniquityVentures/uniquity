@@ -1,20 +1,19 @@
 package p_uniquity_finance_fiscal_year
 
 import (
-	"github.com/UniquityVentures/lamu/getters"
-	"github.com/UniquityVentures/lamu/lamu"
-	"github.com/UniquityVentures/lamu/plugins/p_users"
-	"github.com/UniquityVentures/lamu/registry"
-	"github.com/UniquityVentures/lamu/views"
+	"github.com/lariv-in/lago"
+	"github.com/lariv-in/lago/getters"
+	"github.com/lariv-in/lago/plugins/p_users"
+	"github.com/lariv-in/lago/registry"
+	"github.com/lariv-in/lago/views"
 )
 
-
-func pluginViews() lamu.PluginFeatures[*views.View] {
-	return lamu.PluginFeatures[*views.View]{
+func pluginViews() lago.PluginFeatures[*views.View] {
+	return lago.PluginFeatures[*views.View]{
 		Entries: []registry.Pair[string, *views.View]{
 			{
 				Key: "finance_fiscal_years.FiscalYearListView",
-				Value: lamu.GetPageView("finance_fiscal_years.FiscalYearTable").
+				Value: lago.GetPageView("finance_fiscal_years.FiscalYearTable").
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 					WithLayer("finance_fiscal_years.superuser", p_users.SuperuserOnlyLayer{}).
 					WithLayer("finance_fiscal_years.fiscal_year_list", views.LayerList[FiscalYear]{
@@ -23,7 +22,7 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 			},
 			{
 				Key: "finance_fiscal_years.FiscalYearDetailView",
-				Value: lamu.GetPageView("finance_fiscal_years.FiscalYearDetail").
+				Value: lago.GetPageView("finance_fiscal_years.FiscalYearDetail").
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 					WithLayer("finance_fiscal_years.superuser", p_users.SuperuserOnlyLayer{}).
 					WithLayer("finance_fiscal_years.fiscal_year_detail", views.LayerDetail[FiscalYear]{
@@ -33,18 +32,18 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 			},
 			{
 				Key: "finance_fiscal_years.FiscalYearCreateView",
-				Value: lamu.GetPageView("finance_fiscal_years.FiscalYearCreateForm").
+				Value: lago.GetPageView("finance_fiscal_years.FiscalYearCreateForm").
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 					WithLayer("finance_fiscal_years.superuser", p_users.SuperuserOnlyLayer{}).
 					WithLayer("finance_fiscal_years.fiscal_year_create", views.LayerCreate[FiscalYear]{
-						SuccessURL: lamu.RoutePath("finance_fiscal_years.FiscalYearDetailRoute", map[string]getters.Getter[any]{
+						SuccessURL: lago.RoutePath("finance_fiscal_years.FiscalYearDetailRoute", map[string]getters.Getter[any]{
 							"id": getters.Any(getters.Key[uint]("$id")),
 						}),
 					}),
 			},
 			{
 				Key: "finance_fiscal_years.FiscalYearUpdateView",
-				Value: lamu.GetPageView("finance_fiscal_years.FiscalYearUpdateForm").
+				Value: lago.GetPageView("finance_fiscal_years.FiscalYearUpdateForm").
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 					WithLayer("finance_fiscal_years.superuser", p_users.SuperuserOnlyLayer{}).
 					WithLayer("finance_fiscal_years.fiscal_year_detail", views.LayerDetail[FiscalYear]{
@@ -53,12 +52,12 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 					}).
 					WithLayer("finance_fiscal_years.fiscal_year_update", views.LayerUpdate[FiscalYear]{
 						Key:        getters.Static("fiscal_year"),
-						SuccessURL: lamu.RoutePath("finance_fiscal_years.DefaultRoute", nil),
+						SuccessURL: lago.RoutePath("finance_fiscal_years.DefaultRoute", nil),
 					}),
 			},
 			{
 				Key: "finance_fiscal_years.FiscalYearDeleteView",
-				Value: lamu.GetPageView("finance_fiscal_years.FiscalYearDeleteForm").
+				Value: lago.GetPageView("finance_fiscal_years.FiscalYearDeleteForm").
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 					WithLayer("finance_fiscal_years.superuser", p_users.SuperuserOnlyLayer{}).
 					WithLayer("finance_fiscal_years.fiscal_year_detail", views.LayerDetail[FiscalYear]{
@@ -67,12 +66,12 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 					}).
 					WithLayer("finance_fiscal_years.fiscal_year_delete", views.LayerDelete[FiscalYear]{
 						Key:        getters.Static("fiscal_year"),
-						SuccessURL: lamu.RoutePath("finance_fiscal_years.DefaultRoute", nil),
+						SuccessURL: lago.RoutePath("finance_fiscal_years.DefaultRoute", nil),
 					}),
 			},
 			{
 				Key: "finance_fiscal_years.FiscalYearSelectView",
-				Value: lamu.GetPageView("finance_fiscal_years.FiscalYearSelectionTable").
+				Value: lago.GetPageView("finance_fiscal_years.FiscalYearSelectionTable").
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 					WithLayer("finance_fiscal_years.superuser", p_users.SuperuserOnlyLayer{}).
 					WithLayer("finance_fiscal_years.fiscal_year_select", views.LayerList[FiscalYear]{

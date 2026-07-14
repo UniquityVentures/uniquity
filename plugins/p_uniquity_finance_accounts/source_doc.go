@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/UniquityVentures/lamu/getters"
-	"github.com/UniquityVentures/lamu/registry"
+	"github.com/lariv-in/lago/getters"
+	"github.com/lariv-in/lago/registry"
 	"gorm.io/gorm"
 )
 

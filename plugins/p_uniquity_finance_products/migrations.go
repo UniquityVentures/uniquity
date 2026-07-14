@@ -3,16 +3,16 @@ package p_uniquity_finance_products
 import (
 	"embed"
 
-	"github.com/UniquityVentures/lamu/lamu"
-	"github.com/UniquityVentures/lamu/registry"
+	"github.com/lariv-in/lago"
+	"github.com/lariv-in/lago/registry"
 )
 
 //go:embed migrations
 var migrationsFS embed.FS
 
-func pluginMigrations() lamu.PluginFeatures[lamu.UsefulFilesystem] {
-	return lamu.PluginFeatures[lamu.UsefulFilesystem]{
-		Entries: []registry.Pair[string, lamu.UsefulFilesystem]{
+func pluginMigrations() lago.PluginFeatures[lago.UsefulFilesystem] {
+	return lago.PluginFeatures[lago.UsefulFilesystem]{
+		Entries: []registry.Pair[string, lago.UsefulFilesystem]{
 			{Key: "p_uniquity_finance_products.migrations", Value: migrationsFS},
 		},
 	}

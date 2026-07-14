@@ -1,20 +1,20 @@
 package p_uniquity_finance_products
 
 import (
-	"github.com/UniquityVentures/lamu/lamu"
-	"github.com/UniquityVentures/lamu/registry"
+	"github.com/lariv-in/lago"
+	"github.com/lariv-in/lago/registry"
 )
 
-func pluginRoutes() lamu.PluginFeatures[lamu.Route] {
+func pluginRoutes() lago.PluginFeatures[lago.Route] {
 	p := AppUrl + "p/"
-	return lamu.PluginFeatures[lamu.Route]{
-		Entries: []registry.Pair[string, lamu.Route]{
-			{Key: "finance_products.DefaultRoute", Value: lamu.Route{Path: AppUrl, Handler: lamu.NewDynamicView("finance_products.ProductListView")}},
-			{Key: "finance_products.ProductCreateRoute", Value: lamu.Route{Path: AppUrl + "create/", Handler: lamu.NewDynamicView("finance_products.ProductCreateView")}},
-			{Key: "finance_products.ProductDetailRoute", Value: lamu.Route{Path: p + "{id}/", Handler: lamu.NewDynamicView("finance_products.ProductDetailView")}},
-			{Key: "finance_products.ProductUpdateRoute", Value: lamu.Route{Path: p + "{id}/edit/", Handler: lamu.NewDynamicView("finance_products.ProductUpdateView")}},
-			{Key: "finance_products.ProductDeleteRoute", Value: lamu.Route{Path: p + "{id}/delete/", Handler: lamu.NewDynamicView("finance_products.ProductDeleteView")}},
-			{Key: "finance_products.ProductFkSelectRoute", Value: lamu.Route{Path: AppUrl + "pick-product/", Handler: lamu.NewDynamicView("finance_products.ProductFkSelectView")}},
+	return lago.PluginFeatures[lago.Route]{
+		Entries: []registry.Pair[string, lago.Route]{
+			{Key: "finance_products.DefaultRoute", Value: lago.Route{Path: AppUrl, Handler: lago.NewDynamicView("finance_products.ProductListView")}},
+			{Key: "finance_products.ProductCreateRoute", Value: lago.Route{Path: AppUrl + "create/", Handler: lago.NewDynamicView("finance_products.ProductCreateView")}},
+			{Key: "finance_products.ProductDetailRoute", Value: lago.Route{Path: p + "{id}/", Handler: lago.NewDynamicView("finance_products.ProductDetailView")}},
+			{Key: "finance_products.ProductUpdateRoute", Value: lago.Route{Path: p + "{id}/edit/", Handler: lago.NewDynamicView("finance_products.ProductUpdateView")}},
+			{Key: "finance_products.ProductDeleteRoute", Value: lago.Route{Path: p + "{id}/delete/", Handler: lago.NewDynamicView("finance_products.ProductDeleteView")}},
+			{Key: "finance_products.ProductFkSelectRoute", Value: lago.Route{Path: AppUrl + "pick-product/", Handler: lago.NewDynamicView("finance_products.ProductFkSelectView")}},
 		},
 	}
 }

@@ -6,10 +6,10 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/UniquityVentures/lamu/fields"
 	finance_accounts "github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_accounts"
 	finance_products "github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_products"
 	finance_taxes "github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_taxes"
+	"github.com/lariv-in/lago/fields"
 	"gorm.io/gorm"
 )
 

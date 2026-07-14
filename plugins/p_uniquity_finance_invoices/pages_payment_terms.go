@@ -6,10 +6,10 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/UniquityVentures/lamu/components"
-	"github.com/UniquityVentures/lamu/getters"
-	"github.com/UniquityVentures/lamu/lamu"
-	"github.com/UniquityVentures/lamu/registry"
+	"github.com/lariv-in/lago"
+	"github.com/lariv-in/lago/components"
+	"github.com/lariv-in/lago/getters"
+	"github.com/lariv-in/lago/registry"
 	. "maragu.dev/gomponents"
 )
 
@@ -49,7 +49,7 @@ func paymentTermGetQuery(ctx context.Context) (map[string]any, bool) {
 }
 
 func paymentTermCreateLinkWithQuery(typeParam string) getters.Getter[string] {
-	base := lamu.RoutePath("finance_invoices.PaymentTermCreateRoute", nil)
+	base := lago.RoutePath("finance_invoices.PaymentTermCreateRoute", nil)
 	return func(ctx context.Context) (string, error) {
 		b, err := base(ctx)
 		if err != nil {
@@ -181,7 +181,7 @@ func pageEntriesPaymentTermPages() []registry.Pair[string, components.PageInterf
 
 	return []registry.Pair[string, components.PageInterface]{
 		{Key: "finance_invoices.PaymentTermTable", Value: &components.ShellScaffold{
-			Sidebar: []components.PageInterface{lamu.DynamicPage{Name: "finance_accounts.MainMenu"}},
+			Sidebar: []components.PageInterface{lago.DynamicPage{Name: "finance_accounts.MainMenu"}},
 			Children: []components.PageInterface{
 				&components.DataTable[PaymentTerm]{
 					UID:     "finance-payment-term-table",
@@ -203,7 +203,7 @@ func pageEntriesPaymentTermPages() []registry.Pair[string, components.PageInterf
 							IconClasses: "mr-1",
 						},
 					},
-					RowAttr: getters.RowAttrNavigate(lamu.RoutePath("finance_invoices.PaymentTermDetailRoute", map[string]getters.Getter[any]{
+					RowAttr: getters.RowAttrNavigate(lago.RoutePath("finance_invoices.PaymentTermDetailRoute", map[string]getters.Getter[any]{
 						"id": getters.Any(getters.Key[uint]("$row.ID")),
 					})),
 					Columns: []components.TableColumn{
@@ -222,11 +222,11 @@ func pageEntriesPaymentTermPages() []registry.Pair[string, components.PageInterf
 		}},
 		{Key: "finance_invoices.PaymentTermCreateForm", Value: &components.ShellScaffold{
 			Page:    components.Page{Roles: []string{"superuser"}},
-			Sidebar: []components.PageInterface{lamu.DynamicPage{Name: "finance_accounts.MainMenu"}},
+			Sidebar: []components.PageInterface{lago.DynamicPage{Name: "finance_accounts.MainMenu"}},
 			Children: []components.PageInterface{
 				&components.FormListenBoostedPost{
 					Name:      ptCreateName,
-					ActionURL: lamu.RoutePath("finance_invoices.PaymentTermCreateRoute", nil),
+					ActionURL: lago.RoutePath("finance_invoices.PaymentTermCreateRoute", nil),
 					Children: []components.PageInterface{
 						&components.FormComponent[PaymentTerm]{
 							Attr:          getters.FormBubbling(ptCreateName),
@@ -242,7 +242,7 @@ func pageEntriesPaymentTermPages() []registry.Pair[string, components.PageInterf
 			},
 		}},
 		{Key: "finance_invoices.PaymentTermDetail", Value: &components.ShellScaffold{
-			Sidebar: []components.PageInterface{lamu.DynamicPage{Name: "finance_invoices.PaymentTermDetailMenu"}},
+			Sidebar: []components.PageInterface{lago.DynamicPage{Name: "finance_invoices.PaymentTermDetailMenu"}},
 			Children: []components.PageInterface{
 				&components.Detail[PaymentTerm]{
 					Getter: getters.Key[PaymentTerm]("payment_term"),
@@ -277,19 +277,19 @@ func pageEntriesPaymentTermPages() []registry.Pair[string, components.PageInterf
 			Title: getters.Format("Payment term #%d", getters.Any(getters.Key[uint]("payment_term.ID"))),
 			Back: &components.SidebarMenuItem{
 				Title: getters.Static("All payment terms"),
-				Url:   lamu.RoutePath("finance_invoices.PaymentTermListRoute", nil),
+				Url:   lago.RoutePath("finance_invoices.PaymentTermListRoute", nil),
 			},
 			Children: []components.PageInterface{
 				&components.SidebarMenuItem{
 					Title: getters.Static("Detail"),
-					Url: lamu.RoutePath("finance_invoices.PaymentTermDetailRoute", map[string]getters.Getter[any]{
+					Url: lago.RoutePath("finance_invoices.PaymentTermDetailRoute", map[string]getters.Getter[any]{
 						"id": getters.Any(getters.Key[uint]("payment_term.ID")),
 					}),
 				},
 				&components.SidebarMenuItem{
 					Page:  components.Page{Roles: []string{"superuser"}},
 					Title: getters.Static("Delete"),
-					Url: lamu.RoutePath("finance_invoices.PaymentTermDeleteRoute", map[string]getters.Getter[any]{
+					Url: lago.RoutePath("finance_invoices.PaymentTermDeleteRoute", map[string]getters.Getter[any]{
 						"id": getters.Any(getters.Key[uint]("payment_term.ID")),
 					}),
 				},

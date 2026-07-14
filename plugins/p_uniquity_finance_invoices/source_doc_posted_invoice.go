@@ -4,9 +4,9 @@ import (
 	"context"
 	"strconv"
 
-	"github.com/UniquityVentures/lamu/getters"
-	"github.com/UniquityVentures/lamu/lamu"
 	finance_accounts "github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_accounts"
+	"github.com/lariv-in/lago"
+	"github.com/lariv-in/lago/getters"
 )
 
 // PostedInvoiceSourceDocType is stored on [finance_accounts.SourceDoc.Type] for posted invoices.
@@ -17,7 +17,7 @@ type postedInvoiceSourceDocType struct{}
 func (postedInvoiceSourceDocType) GetSourceDocType() string { return PostedInvoiceSourceDocType }
 
 func (postedInvoiceSourceDocType) GetterDetailUrl(idKey string) getters.Getter[string] {
-	return lamu.RoutePath("finance_invoices.PostedInvoiceDetailRoute", map[string]getters.Getter[any]{
+	return lago.RoutePath("finance_invoices.PostedInvoiceDetailRoute", map[string]getters.Getter[any]{
 		"id": getters.Any(getters.Key[uint](idKey)),
 	})
 }

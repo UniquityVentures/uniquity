@@ -1,7 +1,7 @@
 package p_uniquity_finance_customer
 
 import (
-	"github.com/UniquityVentures/lamu/lamu"
+	"github.com/lariv-in/lago"
 	"gorm.io/gorm"
 )
 
@@ -19,7 +19,7 @@ type Customer struct {
 }
 
 func init() {
-	lamu.RegistryAdmin.Register("p_uniquity_finance_customer.Customer", lamu.AdminPanel[Customer]{
+	lago.RegistryAdmin.Register("p_uniquity_finance_customer.Customer", lago.AdminPanel[Customer]{
 		SearchField: "Name",
 		ListFields:  []string{"Name", "Email", "Phone", "GSTIN", "PAN", "UpdatedAt"},
 	})

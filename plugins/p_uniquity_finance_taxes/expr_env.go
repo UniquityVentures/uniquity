@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/UniquityVentures/lamu/plugins/p_llm_assistant"
+	"github.com/lariv-in/lago/plugins/p_llm_assistant"
 	"gorm.io/gorm"
 )
 

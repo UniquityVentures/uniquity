@@ -1,23 +1,22 @@
 package p_uniquity_finance_products
 
 import (
-	"github.com/UniquityVentures/lamu/getters"
-	"github.com/UniquityVentures/lamu/lamu"
-	"github.com/UniquityVentures/lamu/plugins/p_users"
-	"github.com/UniquityVentures/lamu/registry"
-	"github.com/UniquityVentures/lamu/views"
+	"github.com/lariv-in/lago"
+	"github.com/lariv-in/lago/getters"
+	"github.com/lariv-in/lago/plugins/p_users"
+	"github.com/lariv-in/lago/registry"
+	"github.com/lariv-in/lago/views"
 )
 
-
-func pluginViews() lamu.PluginFeatures[*views.View] {
+func pluginViews() lago.PluginFeatures[*views.View] {
 	qp := views.QueryPatchers[Product]{
 		registry.Pair[string, views.QueryPatcher[Product]]{Key: "finance_products.preload_taxes", Value: productPreloadTaxes},
 	}
-	return lamu.PluginFeatures[*views.View]{
+	return lago.PluginFeatures[*views.View]{
 		Entries: []registry.Pair[string, *views.View]{
 			{
 				Key: "finance_products.ProductListView",
-				Value: lamu.GetPageView("finance_products.ProductTable").
+				Value: lago.GetPageView("finance_products.ProductTable").
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 					WithLayer("finance_products.superuser", p_users.SuperuserOnlyLayer{}).
 					WithLayer("finance_products.product_list", views.LayerList[Product]{
@@ -27,7 +26,7 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 			},
 			{
 				Key: "finance_products.ProductDetailView",
-				Value: lamu.GetPageView("finance_products.ProductDetail").
+				Value: lago.GetPageView("finance_products.ProductDetail").
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 					WithLayer("finance_products.superuser", p_users.SuperuserOnlyLayer{}).
 					WithLayer("finance_products.product_detail", views.LayerDetail[Product]{
@@ -38,18 +37,18 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 			},
 			{
 				Key: "finance_products.ProductCreateView",
-				Value: lamu.GetPageView("finance_products.ProductCreateForm").
+				Value: lago.GetPageView("finance_products.ProductCreateForm").
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 					WithLayer("finance_products.superuser", p_users.SuperuserOnlyLayer{}).
 					WithLayer("finance_products.product_create", views.LayerCreate[Product]{
-						SuccessURL: lamu.RoutePath("finance_products.ProductDetailRoute", map[string]getters.Getter[any]{
+						SuccessURL: lago.RoutePath("finance_products.ProductDetailRoute", map[string]getters.Getter[any]{
 							"id": getters.Any(getters.Key[uint]("$id")),
 						}),
 					}),
 			},
 			{
 				Key: "finance_products.ProductUpdateView",
-				Value: lamu.GetPageView("finance_products.ProductUpdateForm").
+				Value: lago.GetPageView("finance_products.ProductUpdateForm").
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 					WithLayer("finance_products.superuser", p_users.SuperuserOnlyLayer{}).
 					WithLayer("finance_products.product_detail", views.LayerDetail[Product]{
@@ -59,12 +58,12 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 					}).
 					WithLayer("finance_products.product_update", views.LayerUpdate[Product]{
 						Key:        getters.Static("product"),
-						SuccessURL: lamu.RoutePath("finance_products.DefaultRoute", nil),
+						SuccessURL: lago.RoutePath("finance_products.DefaultRoute", nil),
 					}),
 			},
 			{
 				Key: "finance_products.ProductDeleteView",
-				Value: lamu.GetPageView("finance_products.ProductDeleteForm").
+				Value: lago.GetPageView("finance_products.ProductDeleteForm").
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 					WithLayer("finance_products.superuser", p_users.SuperuserOnlyLayer{}).
 					WithLayer("finance_products.product_detail", views.LayerDetail[Product]{
@@ -74,12 +73,12 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 					}).
 					WithLayer("finance_products.product_delete", views.LayerDelete[Product]{
 						Key:        getters.Static("product"),
-						SuccessURL: lamu.RoutePath("finance_products.DefaultRoute", nil),
+						SuccessURL: lago.RoutePath("finance_products.DefaultRoute", nil),
 					}),
 			},
 			{
 				Key: "finance_products.ProductFkSelectView",
-				Value: lamu.GetPageView("finance_products.ProductFkSelectionTable").
+				Value: lago.GetPageView("finance_products.ProductFkSelectionTable").
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 					WithLayer("finance_products.superuser", p_users.SuperuserOnlyLayer{}).
 					WithLayer("finance_products.product_fk_list", views.LayerList[Product]{

@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/UniquityVentures/lamu/components"
-	"github.com/UniquityVentures/lamu/getters"
-	"github.com/UniquityVentures/lamu/lamu"
-	"github.com/UniquityVentures/lamu/registry"
+	"github.com/lariv-in/lago"
+	"github.com/lariv-in/lago/components"
+	"github.com/lariv-in/lago/getters"
+	"github.com/lariv-in/lago/registry"
 	"gorm.io/gorm"
 )
 
@@ -90,13 +90,13 @@ func accountDetailParentHref() getters.Getter[string] {
 			return "", nil
 		}
 		pid := *p
-		return lamu.RoutePath("finance_accounts.AccountDetailRoute", map[string]getters.Getter[any]{
+		return lago.RoutePath("finance_accounts.AccountDetailRoute", map[string]getters.Getter[any]{
 			"id": func(context.Context) (any, error) { return pid, nil },
 		})(ctx)
 	}
 }
 
-func pluginPages() lamu.PluginFeatures[components.PageInterface] {
+func pluginPages() lago.PluginFeatures[components.PageInterface] {
 	var entries []registry.Pair[string, components.PageInterface]
 	entries = append(entries, pageMenus()...)
 	entries = append(entries, pageFilterPages()...)
@@ -107,7 +107,7 @@ func pluginPages() lamu.PluginFeatures[components.PageInterface] {
 	entries = append(entries, pageJournalEntryCreatePages()...)
 	entries = append(entries, pageJournalEntryDetailPages()...)
 	entries = append(entries, pageAccountingPreferencesPages()...)
-	return lamu.PluginFeatures[components.PageInterface]{Entries: entries}
+	return lago.PluginFeatures[components.PageInterface]{Entries: entries}
 }
 
 func pageMenus() []registry.Pair[string, components.PageInterface] {
@@ -116,31 +116,31 @@ func pageMenus() []registry.Pair[string, components.PageInterface] {
 			Title: getters.Static("Finance accounts"),
 			Back: &components.SidebarMenuItem{
 				Title: getters.Static("Back to Home"),
-				Url:   lamu.RoutePath("dashboard.AppsPage", nil),
+				Url:   lago.RoutePath("dashboard.AppsPage", nil),
 			},
 			Children: []components.PageInterface{
 				&components.SidebarMenuItem{
 					Page:  components.Page{Roles: []string{"superuser"}},
 					Title: getters.Static("Accounts"),
-					Url:   lamu.RoutePath("finance_accounts.DefaultRoute", nil),
+					Url:   lago.RoutePath("finance_accounts.DefaultRoute", nil),
 					Icon:  "building-library",
 				},
 				&components.SidebarMenuItem{
 					Page:  components.Page{Roles: []string{"superuser"}},
 					Title: getters.Static("Currencies"),
-					Url:   lamu.RoutePath("finance_accounts.CurrencyListRoute", nil),
+					Url:   lago.RoutePath("finance_accounts.CurrencyListRoute", nil),
 					Icon:  "currency-dollar",
 				},
 				&components.SidebarMenuItem{
 					Page:  components.Page{Roles: []string{"superuser"}},
 					Title: getters.Static("Journals"),
-					Url:   lamu.RoutePath("finance_accounts.JournalListRoute", nil),
+					Url:   lago.RoutePath("finance_accounts.JournalListRoute", nil),
 					Icon:  "book-open",
 				},
 				&components.SidebarMenuItem{
 					Page:  components.Page{Roles: []string{"superuser"}},
 					Title: getters.Static("Accounting preferences"),
-					Url:   lamu.RoutePath("finance_accounts.AccountingPreferencesRoute", nil),
+					Url:   lago.RoutePath("finance_accounts.AccountingPreferencesRoute", nil),
 					Icon:  "adjustments-horizontal",
 				},
 			},
@@ -149,19 +149,19 @@ func pageMenus() []registry.Pair[string, components.PageInterface] {
 			Title: getters.Format("Account #%d", getters.Any(getters.Key[uint]("account.ID"))),
 			Back: &components.SidebarMenuItem{
 				Title: getters.Static("All accounts"),
-				Url:   lamu.RoutePath("finance_accounts.DefaultRoute", nil),
+				Url:   lago.RoutePath("finance_accounts.DefaultRoute", nil),
 			},
 			Children: []components.PageInterface{
 				&components.SidebarMenuItem{
 					Title: getters.Static("Detail"),
-					Url: lamu.RoutePath("finance_accounts.AccountDetailRoute", map[string]getters.Getter[any]{
+					Url: lago.RoutePath("finance_accounts.AccountDetailRoute", map[string]getters.Getter[any]{
 						"id": getters.Any(getters.Key[uint]("account.ID")),
 					}),
 				},
 				&components.SidebarMenuItem{
 					Page:  components.Page{Roles: []string{"superuser"}},
 					Title: getters.Static("Edit"),
-					Url: lamu.RoutePath("finance_accounts.AccountUpdateRoute", map[string]getters.Getter[any]{
+					Url: lago.RoutePath("finance_accounts.AccountUpdateRoute", map[string]getters.Getter[any]{
 						"id": getters.Any(getters.Key[uint]("account.ID")),
 					}),
 				},
@@ -171,19 +171,19 @@ func pageMenus() []registry.Pair[string, components.PageInterface] {
 			Title: getters.Format("Currency #%d", getters.Any(getters.Key[uint]("currency.ID"))),
 			Back: &components.SidebarMenuItem{
 				Title: getters.Static("All currencies"),
-				Url:   lamu.RoutePath("finance_accounts.CurrencyListRoute", nil),
+				Url:   lago.RoutePath("finance_accounts.CurrencyListRoute", nil),
 			},
 			Children: []components.PageInterface{
 				&components.SidebarMenuItem{
 					Title: getters.Static("Detail"),
-					Url: lamu.RoutePath("finance_accounts.CurrencyDetailRoute", map[string]getters.Getter[any]{
+					Url: lago.RoutePath("finance_accounts.CurrencyDetailRoute", map[string]getters.Getter[any]{
 						"id": getters.Any(getters.Key[uint]("currency.ID")),
 					}),
 				},
 				&components.SidebarMenuItem{
 					Page:  components.Page{Roles: []string{"superuser"}},
 					Title: getters.Static("Edit"),
-					Url: lamu.RoutePath("finance_accounts.CurrencyUpdateRoute", map[string]getters.Getter[any]{
+					Url: lago.RoutePath("finance_accounts.CurrencyUpdateRoute", map[string]getters.Getter[any]{
 						"id": getters.Any(getters.Key[uint]("currency.ID")),
 					}),
 				},
@@ -193,19 +193,19 @@ func pageMenus() []registry.Pair[string, components.PageInterface] {
 			Title: getters.Format("Journal #%d", getters.Any(getters.Key[uint]("journal.ID"))),
 			Back: &components.SidebarMenuItem{
 				Title: getters.Static("All journals"),
-				Url:   lamu.RoutePath("finance_accounts.JournalListRoute", nil),
+				Url:   lago.RoutePath("finance_accounts.JournalListRoute", nil),
 			},
 			Children: []components.PageInterface{
 				&components.SidebarMenuItem{
 					Title: getters.Static("Detail"),
-					Url: lamu.RoutePath("finance_accounts.JournalDetailRoute", map[string]getters.Getter[any]{
+					Url: lago.RoutePath("finance_accounts.JournalDetailRoute", map[string]getters.Getter[any]{
 						"id": getters.Any(getters.Key[uint]("journal.ID")),
 					}),
 				},
 				&components.SidebarMenuItem{
 					Page:  components.Page{Roles: []string{"superuser"}},
 					Title: getters.Static("Edit"),
-					Url: lamu.RoutePath("finance_accounts.JournalUpdateRoute", map[string]getters.Getter[any]{
+					Url: lago.RoutePath("finance_accounts.JournalUpdateRoute", map[string]getters.Getter[any]{
 						"id": getters.Any(getters.Key[uint]("journal.ID")),
 					}),
 				},
@@ -215,14 +215,14 @@ func pageMenus() []registry.Pair[string, components.PageInterface] {
 			Title: getters.Format("Journal entry #%d", getters.Any(getters.Key[uint]("journalEntry.ID"))),
 			Back: &components.SidebarMenuItem{
 				Title: getters.Static("Back to journal"),
-				Url: lamu.RoutePath("finance_accounts.JournalDetailRoute", map[string]getters.Getter[any]{
+				Url: lago.RoutePath("finance_accounts.JournalDetailRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("journalEntry.JournalID")),
 				}),
 			},
 			Children: []components.PageInterface{
 				&components.SidebarMenuItem{
 					Title: getters.Static("Detail"),
-					Url: lamu.RoutePath("finance_accounts.JournalEntryDetailRoute", map[string]getters.Getter[any]{
+					Url: lago.RoutePath("finance_accounts.JournalEntryDetailRoute", map[string]getters.Getter[any]{
 						"id": getters.Any(getters.Key[uint]("journalEntry.ID")),
 					}),
 				},
@@ -263,7 +263,7 @@ func pageAccountCRUD() []registry.Pair[string, components.PageInterface] {
 	parentPicker := &components.InputForeignKey[Account]{
 		Name:        "ParentID",
 		Label:       "Parent account",
-		Url:         lamu.RoutePath("finance_accounts.AccountSelectRoute", nil),
+		Url:         lago.RoutePath("finance_accounts.AccountSelectRoute", nil),
 		Display:     getters.Format("%d — %s", getters.Any(getters.Key[uint]("$in.ID")), getters.Any(getters.Key[string]("$in.Name"))),
 		Placeholder: "Optional parent…",
 		Required:    false,
@@ -272,7 +272,7 @@ func pageAccountCRUD() []registry.Pair[string, components.PageInterface] {
 
 	return []registry.Pair[string, components.PageInterface]{
 		{Key: "finance_accounts.AccountTable", Value: &components.ShellScaffold{
-			Sidebar: []components.PageInterface{lamu.DynamicPage{Name: "finance_accounts.MainMenu"}},
+			Sidebar: []components.PageInterface{lago.DynamicPage{Name: "finance_accounts.MainMenu"}},
 			Children: []components.PageInterface{
 				&components.DataTable[Account]{
 					UID:     "finance-accounts-table",
@@ -280,13 +280,13 @@ func pageAccountCRUD() []registry.Pair[string, components.PageInterface] {
 					Classes: "w-full",
 					Data:    getters.Key[components.ObjectList[Account]]("accounts"),
 					Actions: []components.PageInterface{
-						&components.TableButtonFilter{Child: lamu.DynamicPage{Name: "finance_accounts.AccountFilter"}},
+						&components.TableButtonFilter{Child: lago.DynamicPage{Name: "finance_accounts.AccountFilter"}},
 						&components.TableButtonCreate{
-							Link: lamu.RoutePath("finance_accounts.AccountCreateRoute", nil),
+							Link: lago.RoutePath("finance_accounts.AccountCreateRoute", nil),
 							Page: components.Page{Roles: []string{"superuser"}},
 						},
 					},
-					RowAttr: getters.RowAttrNavigate(lamu.RoutePath("finance_accounts.AccountDetailRoute", map[string]getters.Getter[any]{
+					RowAttr: getters.RowAttrNavigate(lago.RoutePath("finance_accounts.AccountDetailRoute", map[string]getters.Getter[any]{
 						"id": getters.Any(getters.Key[uint]("$row.ID")),
 					})),
 					Columns: []components.TableColumn{
@@ -299,11 +299,11 @@ func pageAccountCRUD() []registry.Pair[string, components.PageInterface] {
 		}},
 		{Key: "finance_accounts.AccountCreateForm", Value: &components.ShellScaffold{
 			Page:    components.Page{Roles: []string{"superuser"}},
-			Sidebar: []components.PageInterface{lamu.DynamicPage{Name: "finance_accounts.MainMenu"}},
+			Sidebar: []components.PageInterface{lago.DynamicPage{Name: "finance_accounts.MainMenu"}},
 			Children: []components.PageInterface{
 				&components.FormListenBoostedPost{
 					Name:      createName,
-					ActionURL: lamu.RoutePath("finance_accounts.AccountCreateRoute", nil),
+					ActionURL: lago.RoutePath("finance_accounts.AccountCreateRoute", nil),
 					Children: []components.PageInterface{
 						&components.FormComponent[Account]{
 							Attr:     getters.FormBubbling(createName),
@@ -326,11 +326,11 @@ func pageAccountCRUD() []registry.Pair[string, components.PageInterface] {
 		}},
 		{Key: "finance_accounts.AccountUpdateForm", Value: &components.ShellScaffold{
 			Page:    components.Page{Roles: []string{"superuser"}},
-			Sidebar: []components.PageInterface{lamu.DynamicPage{Name: "finance_accounts.AccountDetailMenu"}},
+			Sidebar: []components.PageInterface{lago.DynamicPage{Name: "finance_accounts.AccountDetailMenu"}},
 			Children: []components.PageInterface{
 				&components.FormListenBoostedPost{
 					Name: updateName,
-					ActionURL: lamu.RoutePath("finance_accounts.AccountUpdateRoute", map[string]getters.Getter[any]{
+					ActionURL: lago.RoutePath("finance_accounts.AccountUpdateRoute", map[string]getters.Getter[any]{
 						"id": getters.Any(getters.Key[uint]("account.ID")),
 					}),
 					Children: []components.PageInterface{
@@ -359,10 +359,10 @@ func pageAccountCRUD() []registry.Pair[string, components.PageInterface] {
 													Label: "Delete",
 													Icon:  "trash",
 													Name:  deleteName,
-													Url: lamu.RoutePath("finance_accounts.AccountDeleteRoute", map[string]getters.Getter[any]{
+													Url: lago.RoutePath("finance_accounts.AccountDeleteRoute", map[string]getters.Getter[any]{
 														"id": getters.Any(getters.Key[uint]("account.ID")),
 													}),
-													FormPostURL: lamu.RoutePath("finance_accounts.AccountDeleteRoute", map[string]getters.Getter[any]{
+													FormPostURL: lago.RoutePath("finance_accounts.AccountDeleteRoute", map[string]getters.Getter[any]{
 														"id": getters.Any(getters.Key[uint]("account.ID")),
 													}),
 													ModalUID: "finance-account-delete-modal",
@@ -390,7 +390,7 @@ func pageAccountCRUD() []registry.Pair[string, components.PageInterface] {
 			},
 		}},
 		{Key: "finance_accounts.AccountDetail", Value: &components.ShellScaffold{
-			Sidebar: []components.PageInterface{lamu.DynamicPage{Name: "finance_accounts.AccountDetailMenu"}},
+			Sidebar: []components.PageInterface{lago.DynamicPage{Name: "finance_accounts.AccountDetailMenu"}},
 			Children: []components.PageInterface{
 				&components.Detail[Account]{
 					Getter: getters.Key[Account]("account"),
@@ -464,12 +464,13 @@ func pageAccountCRUD() []registry.Pair[string, components.PageInterface] {
 					Title: "Select account",
 					Data:  getters.Key[components.ObjectList[Account]]("accounts"),
 					Actions: []components.PageInterface{
-						&components.TableButtonFilter{Child: lamu.DynamicPage{Name: "finance_accounts.AccountSelectionFilter"}},
+						&components.TableButtonFilter{Child: lago.DynamicPage{Name: "finance_accounts.AccountSelectionFilter"}},
 					},
 					RowAttr: accountSelectionTableRowAttr(
 						getters.IfOrElse(getters.Key[string]("$get.target_input"), getters.Static("ParentID")),
 						getters.Key[uint]("$row.ID"),
-						getters.Format("%s (#%d)",
+						getters.Format(
+							"%s (#%d)",
 							getters.Any(getters.Key[string]("$row.Name")),
 							getters.Any(getters.Key[uint]("$row.ID")),
 						),

@@ -8,13 +8,12 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/UniquityVentures/lamu/getters"
-	"github.com/UniquityVentures/lamu/views"
 	finance_accounts "github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_accounts"
 	"github.com/francescoalemanno/gotypst"
+	"github.com/lariv-in/lago/getters"
+	"github.com/lariv-in/lago/views"
 	"gorm.io/gorm"
 )
-
 
 var postedInvoicePdfPreload = []string{"Customer", "PaymentTerm", "Taxes", "Lines", "Lines.Product", "Lines.Taxes"}
 

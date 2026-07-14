@@ -4,11 +4,11 @@ import (
 	"context"
 	"time"
 
-	"github.com/UniquityVentures/lamu/components"
-	"github.com/UniquityVentures/lamu/fields"
-	"github.com/UniquityVentures/lamu/getters"
-	"github.com/UniquityVentures/lamu/lamu"
-	"github.com/UniquityVentures/lamu/registry"
+	"github.com/lariv-in/lago"
+	"github.com/lariv-in/lago/components"
+	"github.com/lariv-in/lago/fields"
+	"github.com/lariv-in/lago/getters"
+	"github.com/lariv-in/lago/registry"
 )
 
 var journalTypeChoiceList = []registry.Pair[JournalType, string]{
@@ -26,14 +26,15 @@ func journalCurrencyDetailHref() getters.Getter[string] {
 		if cid == 0 {
 			return "", nil
 		}
-		return lamu.RoutePath("finance_accounts.CurrencyDetailRoute", map[string]getters.Getter[any]{
+		return lago.RoutePath("finance_accounts.CurrencyDetailRoute", map[string]getters.Getter[any]{
 			"id": func(context.Context) (any, error) { return cid, nil },
 		})(ctx)
 	}
 }
 
 func journalCurrencySummary(rowPrefix string) getters.Getter[string] {
-	return getters.Format("%s — %s (%d)",
+	return getters.Format(
+		"%s — %s (%d)",
 		getters.Any(getters.Key[string](rowPrefix+".Currency.Symbol")),
 		getters.Any(getters.Key[string](rowPrefix+".Currency.Name")),
 		getters.Any(getters.Key[int](rowPrefix+".Currency.Code")),
@@ -54,7 +55,8 @@ func journalEntryDatetimeText(rowPrefix string) getters.Getter[string] {
 }
 
 func journalEntrySourceDocSummary(rowPrefix string) getters.Getter[string] {
-	return getters.Format("%s · id %d",
+	return getters.Format(
+		"%s · id %d",
 		getters.Any(getters.Key[string](rowPrefix+".SourceDoc.Type")),
 		getters.Any(getters.Key[uint](rowPrefix+".SourceDocID")),
 	)
@@ -79,7 +81,7 @@ func journalEntryCreateHref() getters.Getter[string] {
 		if err != nil {
 			return "", err
 		}
-		return lamu.RoutePath("finance_accounts.JournalEntryCreateRoute", map[string]getters.Getter[any]{
+		return lago.RoutePath("finance_accounts.JournalEntryCreateRoute", map[string]getters.Getter[any]{
 			"journal_id": func(context.Context) (any, error) { return jid, nil },
 		})(ctx)
 	}
@@ -91,14 +93,15 @@ func journalEntryParentJournalHref() getters.Getter[string] {
 		if err != nil {
 			return "", err
 		}
-		return lamu.RoutePath("finance_accounts.JournalDetailRoute", map[string]getters.Getter[any]{
+		return lago.RoutePath("finance_accounts.JournalDetailRoute", map[string]getters.Getter[any]{
 			"id": func(context.Context) (any, error) { return jid, nil },
 		})(ctx)
 	}
 }
 
 func journalEntryParentJournalLabel() getters.Getter[string] {
-	return getters.Format("%s (#%d)",
+	return getters.Format(
+		"%s (#%d)",
 		getters.Any(getters.Key[string]("$in.Journal.Name")),
 		getters.Any(getters.Key[uint]("$in.Journal.ID")),
 	)
@@ -133,7 +136,7 @@ func pageJournalCRUD() []registry.Pair[string, components.PageInterface] {
 	currencyPicker := &components.InputForeignKey[Currency]{
 		Name:        "CurrencyID",
 		Label:       "Currency",
-		Url:         lamu.RoutePath("finance_accounts.CurrencySelectRoute", nil),
+		Url:         lago.RoutePath("finance_accounts.CurrencySelectRoute", nil),
 		Display:     getters.Format("%s — %s (%d)", getters.Any(getters.Key[string]("$in.Symbol")), getters.Any(getters.Key[string]("$in.Name")), getters.Any(getters.Key[int]("$in.Code"))),
 		Placeholder: "Select currency…",
 		Required:    true,
@@ -149,7 +152,7 @@ func pageJournalCRUD() []registry.Pair[string, components.PageInterface] {
 
 	return []registry.Pair[string, components.PageInterface]{
 		{Key: "finance_accounts.JournalTable", Value: &components.ShellScaffold{
-			Sidebar: []components.PageInterface{lamu.DynamicPage{Name: "finance_accounts.MainMenu"}},
+			Sidebar: []components.PageInterface{lago.DynamicPage{Name: "finance_accounts.MainMenu"}},
 			Children: []components.PageInterface{
 				&components.DataTable[Journal]{
 					UID:     "finance-journals-table",
@@ -157,13 +160,13 @@ func pageJournalCRUD() []registry.Pair[string, components.PageInterface] {
 					Classes: "w-full",
 					Data:    getters.Key[components.ObjectList[Journal]]("journals"),
 					Actions: []components.PageInterface{
-						&components.TableButtonFilter{Child: lamu.DynamicPage{Name: "finance_accounts.JournalFilter"}},
+						&components.TableButtonFilter{Child: lago.DynamicPage{Name: "finance_accounts.JournalFilter"}},
 						&components.TableButtonCreate{
-							Link: lamu.RoutePath("finance_accounts.JournalCreateRoute", nil),
+							Link: lago.RoutePath("finance_accounts.JournalCreateRoute", nil),
 							Page: components.Page{Roles: []string{"superuser"}},
 						},
 					},
-					RowAttr: getters.RowAttrNavigate(lamu.RoutePath("finance_accounts.JournalDetailRoute", map[string]getters.Getter[any]{
+					RowAttr: getters.RowAttrNavigate(lago.RoutePath("finance_accounts.JournalDetailRoute", map[string]getters.Getter[any]{
 						"id": getters.Any(getters.Key[uint]("$row.ID")),
 					})),
 					Columns: []components.TableColumn{
@@ -185,11 +188,11 @@ func pageJournalCRUD() []registry.Pair[string, components.PageInterface] {
 		}},
 		{Key: "finance_accounts.JournalCreateForm", Value: &components.ShellScaffold{
 			Page:    components.Page{Roles: []string{"superuser"}},
-			Sidebar: []components.PageInterface{lamu.DynamicPage{Name: "finance_accounts.MainMenu"}},
+			Sidebar: []components.PageInterface{lago.DynamicPage{Name: "finance_accounts.MainMenu"}},
 			Children: []components.PageInterface{
 				&components.FormListenBoostedPost{
 					Name:      createName,
-					ActionURL: lamu.RoutePath("finance_accounts.JournalCreateRoute", nil),
+					ActionURL: lago.RoutePath("finance_accounts.JournalCreateRoute", nil),
 					Children: []components.PageInterface{
 						&components.FormComponent[Journal]{
 							Attr:     getters.FormBubbling(createName),
@@ -211,11 +214,11 @@ func pageJournalCRUD() []registry.Pair[string, components.PageInterface] {
 		}},
 		{Key: "finance_accounts.JournalUpdateForm", Value: &components.ShellScaffold{
 			Page:    components.Page{Roles: []string{"superuser"}},
-			Sidebar: []components.PageInterface{lamu.DynamicPage{Name: "finance_accounts.JournalDetailMenu"}},
+			Sidebar: []components.PageInterface{lago.DynamicPage{Name: "finance_accounts.JournalDetailMenu"}},
 			Children: []components.PageInterface{
 				&components.FormListenBoostedPost{
 					Name: updateName,
-					ActionURL: lamu.RoutePath("finance_accounts.JournalUpdateRoute", map[string]getters.Getter[any]{
+					ActionURL: lago.RoutePath("finance_accounts.JournalUpdateRoute", map[string]getters.Getter[any]{
 						"id": getters.Any(getters.Key[uint]("journal.ID")),
 					}),
 					Children: []components.PageInterface{
@@ -243,10 +246,10 @@ func pageJournalCRUD() []registry.Pair[string, components.PageInterface] {
 													Label: "Delete",
 													Icon:  "trash",
 													Name:  deleteName,
-													Url: lamu.RoutePath("finance_accounts.JournalDeleteRoute", map[string]getters.Getter[any]{
+													Url: lago.RoutePath("finance_accounts.JournalDeleteRoute", map[string]getters.Getter[any]{
 														"id": getters.Any(getters.Key[uint]("journal.ID")),
 													}),
-													FormPostURL: lamu.RoutePath("finance_accounts.JournalDeleteRoute", map[string]getters.Getter[any]{
+													FormPostURL: lago.RoutePath("finance_accounts.JournalDeleteRoute", map[string]getters.Getter[any]{
 														"id": getters.Any(getters.Key[uint]("journal.ID")),
 													}),
 													ModalUID: "finance-journal-delete-modal",
@@ -274,7 +277,7 @@ func pageJournalCRUD() []registry.Pair[string, components.PageInterface] {
 			},
 		}},
 		{Key: "finance_accounts.JournalDetail", Value: &components.ShellScaffold{
-			Sidebar: []components.PageInterface{lamu.DynamicPage{Name: "finance_accounts.JournalDetailMenu"}},
+			Sidebar: []components.PageInterface{lago.DynamicPage{Name: "finance_accounts.JournalDetailMenu"}},
 			Children: []components.PageInterface{
 				&components.Detail[Journal]{
 					Getter: getters.Key[Journal]("journal"),
@@ -329,7 +332,7 @@ func pageJournalCRUD() []registry.Pair[string, components.PageInterface] {
 					Subtitle: "Entries posted to this journal",
 					Classes:  "w-full",
 					Data:     getters.Key[components.ObjectList[JournalEntry]](journalDetailEntriesContextKey),
-					RowAttr: getters.RowAttrNavigate(lamu.RoutePath("finance_accounts.JournalEntryDetailRoute", map[string]getters.Getter[any]{
+					RowAttr: getters.RowAttrNavigate(lago.RoutePath("finance_accounts.JournalEntryDetailRoute", map[string]getters.Getter[any]{
 						"id": getters.Any(getters.Key[uint]("$row.ID")),
 					})),
 					Actions: []components.PageInterface{
@@ -358,7 +361,7 @@ func pageJournalEntryCreatePages() []registry.Pair[string, components.PageInterf
 	sourceDocPicker := &components.InputForeignKey[SourceDoc]{
 		Name:        "SourceDocID",
 		Label:       "Source document",
-		Url:         lamu.RoutePath("finance_accounts.SourceDocSelectRoute", nil),
+		Url:         lago.RoutePath("finance_accounts.SourceDocSelectRoute", nil),
 		Display:     getters.Format("%s · ref %d · #%d", getters.Any(getters.Key[string]("$in.Type")), getters.Any(getters.Key[uint]("$in.SourceDocID")), getters.Any(getters.Key[uint]("$in.ID"))),
 		Placeholder: "Select source document…",
 		Required:    true,
@@ -367,11 +370,11 @@ func pageJournalEntryCreatePages() []registry.Pair[string, components.PageInterf
 	return []registry.Pair[string, components.PageInterface]{
 		{Key: "finance_accounts.JournalEntryCreateForm", Value: &components.ShellScaffold{
 			Page:    components.Page{Roles: []string{"superuser"}},
-			Sidebar: []components.PageInterface{lamu.DynamicPage{Name: "finance_accounts.JournalDetailMenu"}},
+			Sidebar: []components.PageInterface{lago.DynamicPage{Name: "finance_accounts.JournalDetailMenu"}},
 			Children: []components.PageInterface{
 				&components.FormListenBoostedPost{
 					Name: entryCreateName,
-					ActionURL: lamu.RoutePath("finance_accounts.JournalEntryCreateRoute", map[string]getters.Getter[any]{
+					ActionURL: lago.RoutePath("finance_accounts.JournalEntryCreateRoute", map[string]getters.Getter[any]{
 						"journal_id": getters.Any(getters.Key[uint]("journal.ID")),
 					}),
 					Children: []components.PageInterface{
@@ -403,7 +406,8 @@ func pageJournalEntryCreatePages() []registry.Pair[string, components.PageInterf
 					UID:   "finance-sourcedoc-selection-table",
 					Title: "Select source document",
 					Data:  getters.Key[components.ObjectList[SourceDoc]]("source_docs"),
-					RowAttr: getters.RowAttrSelect("SourceDocID", getters.Key[uint]("$row.ID"), getters.Format("%s · ref %d · #%d",
+					RowAttr: getters.RowAttrSelect("SourceDocID", getters.Key[uint]("$row.ID"), getters.Format(
+						"%s · ref %d · #%d",
 						getters.Any(getters.Key[string]("$row.Type")),
 						getters.Any(getters.Key[uint]("$row.SourceDocID")),
 						getters.Any(getters.Key[uint]("$row.ID")),
@@ -428,7 +432,7 @@ func pageJournalEntryCreatePages() []registry.Pair[string, components.PageInterf
 func pageJournalEntryDetailPages() []registry.Pair[string, components.PageInterface] {
 	return []registry.Pair[string, components.PageInterface]{
 		{Key: "finance_accounts.JournalEntryDetail", Value: &components.ShellScaffold{
-			Sidebar: []components.PageInterface{lamu.DynamicPage{Name: "finance_accounts.JournalEntryDetailMenu"}},
+			Sidebar: []components.PageInterface{lago.DynamicPage{Name: "finance_accounts.JournalEntryDetailMenu"}},
 			Children: []components.PageInterface{
 				&components.Detail[JournalEntry]{
 					Getter: getters.Key[JournalEntry]("journalEntry"),
@@ -469,7 +473,8 @@ func pageJournalEntryDetailPages() []registry.Pair[string, components.PageInterf
 							&components.FieldText{Getter: journalEntryDatetimeText("$row")},
 						}},
 						{Label: "Account", Name: "Account", Children: []components.PageInterface{
-							&components.FieldText{Getter: getters.Format("%d — %s",
+							&components.FieldText{Getter: getters.Format(
+								"%d — %s",
 								getters.Any(getters.Key[int]("$row.Account.Code")),
 								getters.Any(getters.Key[string]("$row.Account.Name")),
 							)},
@@ -487,7 +492,7 @@ func pageJournalEntryDetailPages() []registry.Pair[string, components.PageInterf
 func pageJournalFKSelectPages() []registry.Pair[string, components.PageInterface] {
 	return []registry.Pair[string, components.PageInterface]{
 		{Key: "finance_accounts.JournalFkSelectionFilter", Value: &components.FormComponent[Journal]{
-			Attr: getters.FormBoostedGet(lamu.RoutePath("finance_accounts.JournalSelectRoute", nil)),
+			Attr: getters.FormBoostedGet(lago.RoutePath("finance_accounts.JournalSelectRoute", nil)),
 			ChildrenInput: []components.PageInterface{
 				&components.InputText{Hidden: true, Name: "target_input", Getter: getters.Key[string]("$get.target_input")},
 				&components.InputText{Name: "Name", Label: "Name", Getter: getters.Key[string]("$get.Name")},
@@ -518,13 +523,14 @@ func pageJournalFKSelectPages() []registry.Pair[string, components.PageInterface
 					RowAttr: getters.RowAttrSelectNamed(
 						getters.IfOrElse(getters.Key[string]("$get.target_input"), getters.Static("JournalID")),
 						getters.Key[uint]("$row.ID"),
-						getters.Format("%s (#%d)",
+						getters.Format(
+							"%s (#%d)",
 							getters.Any(getters.Key[string]("$row.Name")),
 							getters.Any(getters.Key[uint]("$row.ID")),
 						),
 					),
 					Actions: []components.PageInterface{
-						&components.TableButtonFilter{Child: lamu.DynamicPage{Name: "finance_accounts.JournalFkSelectionFilter"}},
+						&components.TableButtonFilter{Child: lago.DynamicPage{Name: "finance_accounts.JournalFkSelectionFilter"}},
 					},
 					Columns: []components.TableColumn{
 						{Label: "Name", Name: "Name", Children: []components.PageInterface{

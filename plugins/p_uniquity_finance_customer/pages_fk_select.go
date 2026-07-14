@@ -1,16 +1,16 @@
 package p_uniquity_finance_customer
 
 import (
-	"github.com/UniquityVentures/lamu/components"
-	"github.com/UniquityVentures/lamu/getters"
-	"github.com/UniquityVentures/lamu/lamu"
-	"github.com/UniquityVentures/lamu/registry"
+	"github.com/lariv-in/lago"
+	"github.com/lariv-in/lago/components"
+	"github.com/lariv-in/lago/getters"
+	"github.com/lariv-in/lago/registry"
 )
 
 func pageEntriesCustomerFkSelectPages() []registry.Pair[string, components.PageInterface] {
 	return []registry.Pair[string, components.PageInterface]{
 		{Key: "finance_customers.CustomerFkSelectionFilter", Value: &components.FormComponent[Customer]{
-			Attr: getters.FormBoostedGet(lamu.RoutePath("finance_customers.CustomerFkSelectRoute", nil)),
+			Attr: getters.FormBoostedGet(lago.RoutePath("finance_customers.CustomerFkSelectRoute", nil)),
 			ChildrenInput: []components.PageInterface{
 				&components.InputText{Label: "Name", Name: "Name", Getter: getters.Key[string]("$get.Name")},
 			},
@@ -28,12 +28,13 @@ func pageEntriesCustomerFkSelectPages() []registry.Pair[string, components.PageI
 					UID:   "finance-customer-fk-select-table",
 					Title: "Select customer",
 					Data:  getters.Key[components.ObjectList[Customer]]("customers"),
-					RowAttr: getters.RowAttrSelect("CustomerID",
+					RowAttr: getters.RowAttrSelect(
+						"CustomerID",
 						getters.Key[uint]("$row.ID"),
 						getters.Key[string]("$row.Name"),
 					),
 					Actions: []components.PageInterface{
-						&components.TableButtonFilter{Child: lamu.DynamicPage{Name: "finance_customers.CustomerFkSelectionFilter"}},
+						&components.TableButtonFilter{Child: lago.DynamicPage{Name: "finance_customers.CustomerFkSelectionFilter"}},
 					},
 					Columns: []components.TableColumn{
 						{Label: "Name", Name: "Name", Children: []components.PageInterface{

@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/UniquityVentures/lamu/getters"
-	"github.com/UniquityVentures/lamu/lamu"
-	"github.com/UniquityVentures/lamu/views"
+	"github.com/lariv-in/lago"
+	"github.com/lariv-in/lago/getters"
+	"github.com/lariv-in/lago/views"
 	"gorm.io/gorm"
 )
 
@@ -18,7 +18,7 @@ const balanceTypeScopeQueryParam = "balance_type_scope"
 // AccountSelectRouteURL returns the account picker URL filtered to the given balance type.
 func AccountSelectRouteURL(balanceType BalanceType) getters.Getter[string] {
 	return func(ctx context.Context) (string, error) {
-		base, err := lamu.RoutePath("finance_accounts.AccountSelectRoute", nil)(ctx)
+		base, err := lago.RoutePath("finance_accounts.AccountSelectRoute", nil)(ctx)
 		if err != nil {
 			return "", err
 		}

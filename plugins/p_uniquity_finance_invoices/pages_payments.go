@@ -7,12 +7,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/UniquityVentures/lamu/components"
-	"github.com/UniquityVentures/lamu/fields"
-	"github.com/UniquityVentures/lamu/getters"
-	"github.com/UniquityVentures/lamu/lamu"
-	"github.com/UniquityVentures/lamu/registry"
 	finance_taxes "github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_taxes"
+	"github.com/lariv-in/lago"
+	"github.com/lariv-in/lago/components"
+	"github.com/lariv-in/lago/fields"
+	"github.com/lariv-in/lago/getters"
+	"github.com/lariv-in/lago/registry"
 	"maragu.dev/gomponents"
 )
 
@@ -49,7 +49,7 @@ func paymentCreateFormAttr(formName getters.Getter[string]) getters.Getter[gompo
 // paymentCreatePostedInvoiceReloadAttr reloads the create form via boosted GET when a posted
 // invoice is picked so the query-defaults layer can pre-fill Amount with the open balance.
 func paymentCreatePostedInvoiceReloadAttr() getters.Getter[gomponents.Node] {
-	route := lamu.RoutePath("finance_invoices.PaymentCreateRoute", nil)
+	route := lago.RoutePath("finance_invoices.PaymentCreateRoute", nil)
 	return func(ctx context.Context) (gomponents.Node, error) {
 		url, err := route(ctx)
 		if err != nil {
@@ -108,7 +108,7 @@ func paymentCreateDatetimeGetter() getters.Getter[time.Time] {
 
 func paymentCreateURLForPostedInvoiceID(postedInvoiceIDKey string) getters.Getter[string] {
 	return func(ctx context.Context) (string, error) {
-		base, err := lamu.RoutePath("finance_invoices.PaymentCreateRoute", nil)(ctx)
+		base, err := lago.RoutePath("finance_invoices.PaymentCreateRoute", nil)(ctx)
 		if err != nil {
 			return "", err
 		}
@@ -131,7 +131,7 @@ func paymentSettlementKindAndHref(ctx context.Context) (label string, href strin
 	}
 	var paid PaidInvoice
 	if err := db.Where("payment_id = ? AND deleted_at IS NULL", pid).Take(&paid).Error; err == nil {
-		href, err = lamu.RoutePath("finance_invoices.PaidInvoiceDetailRoute", map[string]getters.Getter[any]{
+		href, err = lago.RoutePath("finance_invoices.PaidInvoiceDetailRoute", map[string]getters.Getter[any]{
 			"id": getters.Any(getters.Static(paid.ID)),
 		})(ctx)
 		if err != nil {
@@ -141,7 +141,7 @@ func paymentSettlementKindAndHref(ctx context.Context) (label string, href strin
 	}
 	var partial PartiallyPaidInvoice
 	if err := db.Where("payment_id = ? AND deleted_at IS NULL", pid).Take(&partial).Error; err == nil {
-		href, err = lamu.RoutePath("finance_invoices.PartiallyPaidInvoiceDetailRoute", map[string]getters.Getter[any]{
+		href, err = lago.RoutePath("finance_invoices.PartiallyPaidInvoiceDetailRoute", map[string]getters.Getter[any]{
 			"id": getters.Any(getters.Static(partial.ID)),
 		})(ctx)
 		if err != nil {
@@ -168,7 +168,7 @@ func paymentSettlementHrefGetter() getters.Getter[string] {
 		if href != "" {
 			return href, nil
 		}
-		return lamu.RoutePath("finance_invoices.PaymentListRoute", nil)(ctx)
+		return lago.RoutePath("finance_invoices.PaymentListRoute", nil)(ctx)
 	}
 }
 
@@ -182,7 +182,7 @@ func paymentCreateFormInputs() []components.PageInterface {
 					Label:       "Posted invoice",
 					Name:        "PostedInvoiceID",
 					Required:    true,
-					Url:         lamu.RoutePath("finance_invoices.PostedInvoiceFkSelectRoute", nil),
+					Url:         lago.RoutePath("finance_invoices.PostedInvoiceFkSelectRoute", nil),
 					Display:     getters.Format("%s (#%d)", getters.Any(getters.Key[string]("$in.Number")), getters.Any(getters.Key[uint]("$in.ID"))),
 					Placeholder: "Select posted invoice…",
 					Getter:      getters.Association[PostedInvoice, uint](getters.Key[uint]("$in.PostedInvoiceID")),
@@ -208,7 +208,7 @@ func paymentCreateFormInputs() []components.PageInterface {
 					Name:        "Taxes",
 					Display:     getters.Key[string]("$in.Name"),
 					Getter:      getters.Key[[]finance_taxes.Tax]("$in.Taxes"),
-					Url:         lamu.RoutePath("finance_taxes.TaxMultiSelectRoute", nil),
+					Url:         lago.RoutePath("finance_taxes.TaxMultiSelectRoute", nil),
 					Placeholder: "Optional withholding at collection…",
 					Classes:     "w-full",
 				},
@@ -227,7 +227,7 @@ func pageEntriesPaymentPages() []registry.Pair[string, components.PageInterface]
 	createName := getters.Static("finance_invoices.PaymentCreateForm")
 	return []registry.Pair[string, components.PageInterface]{
 		{Key: "finance_invoices.PaymentTable", Value: &components.ShellScaffold{
-			Sidebar: []components.PageInterface{lamu.DynamicPage{Name: "finance_accounts.MainMenu"}},
+			Sidebar: []components.PageInterface{lago.DynamicPage{Name: "finance_accounts.MainMenu"}},
 			Children: []components.PageInterface{
 				&components.DataTable[Payment]{
 					UID:     "finance-payment-table",
@@ -235,11 +235,11 @@ func pageEntriesPaymentPages() []registry.Pair[string, components.PageInterface]
 					Data:    getters.Key[components.ObjectList[Payment]]("payments"),
 					Actions: []components.PageInterface{
 						&components.TableButtonCreate{
-							Link: lamu.RoutePath("finance_invoices.PaymentCreateRoute", nil),
+							Link: lago.RoutePath("finance_invoices.PaymentCreateRoute", nil),
 							Page: components.Page{Roles: []string{"superuser"}},
 						},
 					},
-					RowAttr: getters.RowAttrNavigate(lamu.RoutePath("finance_invoices.PaymentDetailRoute", map[string]getters.Getter[any]{
+					RowAttr: getters.RowAttrNavigate(lago.RoutePath("finance_invoices.PaymentDetailRoute", map[string]getters.Getter[any]{
 						"id": getters.Any(getters.Key[uint]("$row.ID")),
 					})),
 					Columns: []components.TableColumn{
@@ -264,11 +264,11 @@ func pageEntriesPaymentPages() []registry.Pair[string, components.PageInterface]
 		}},
 		{Key: "finance_invoices.PaymentCreateForm", Value: &components.ShellScaffold{
 			Page:    components.Page{Roles: []string{"superuser"}},
-			Sidebar: []components.PageInterface{lamu.DynamicPage{Name: "finance_accounts.MainMenu"}},
+			Sidebar: []components.PageInterface{lago.DynamicPage{Name: "finance_accounts.MainMenu"}},
 			Children: []components.PageInterface{
 				&components.FormListenBoostedPost{
 					Name:      createName,
-					ActionURL: lamu.RoutePath("finance_invoices.PaymentCreateRoute", nil),
+					ActionURL: lago.RoutePath("finance_invoices.PaymentCreateRoute", nil),
 					Children: []components.PageInterface{
 						&components.FormComponent[Payment]{
 							Attr:          paymentCreateFormAttr(createName),
@@ -284,7 +284,7 @@ func pageEntriesPaymentPages() []registry.Pair[string, components.PageInterface]
 			},
 		}},
 		{Key: "finance_invoices.PaymentDetail", Value: &components.ShellScaffold{
-			Sidebar: []components.PageInterface{lamu.DynamicPage{Name: "finance_invoices.PaymentDetailMenu"}},
+			Sidebar: []components.PageInterface{lago.DynamicPage{Name: "finance_invoices.PaymentDetailMenu"}},
 			Children: []components.PageInterface{
 				&components.ContainerError{
 					Error: getters.Key[error]("$error._global"),
@@ -312,19 +312,19 @@ func pageEntriesPaymentPages() []registry.Pair[string, components.PageInterface]
 										}},
 										&components.LabelInline{Title: "Posted invoice", Children: []components.PageInterface{
 											&components.FieldLink{
-												Href: lamu.RoutePath("finance_invoices.PostedInvoiceDetailRoute", map[string]getters.Getter[any]{
+												Href: lago.RoutePath("finance_invoices.PostedInvoiceDetailRoute", map[string]getters.Getter[any]{
 													"id": getters.Any(getters.Key[uint]("$in.PostedInvoiceID")),
 												}),
-												Label: getters.Format("%s (#%d)", getters.Any(getters.Key[string]("$in.PostedInvoice.Number")), getters.Any(getters.Key[uint]("$in.PostedInvoice.ID"))),
+												Label:   getters.Format("%s (#%d)", getters.Any(getters.Key[string]("$in.PostedInvoice.Number")), getters.Any(getters.Key[uint]("$in.PostedInvoice.ID"))),
 												Classes: "link link-hover",
 											},
 										}},
 										&components.LabelInline{Title: "Account", Children: []components.PageInterface{
 											&components.FieldLink{
-												Href: lamu.RoutePath("finance_accounts.AccountDetailRoute", map[string]getters.Getter[any]{
+												Href: lago.RoutePath("finance_accounts.AccountDetailRoute", map[string]getters.Getter[any]{
 													"id": getters.Any(getters.Key[uint]("$in.AccountID")),
 												}),
-												Label: getters.Format("%s (#%d)", getters.Any(getters.Key[string]("$in.Account.Name")), getters.Any(getters.Key[uint]("$in.Account.ID"))),
+												Label:   getters.Format("%s (#%d)", getters.Any(getters.Key[string]("$in.Account.Name")), getters.Any(getters.Key[uint]("$in.Account.ID"))),
 												Classes: "link link-hover",
 											},
 										}},
@@ -354,12 +354,12 @@ func pageEntriesPaymentPages() []registry.Pair[string, components.PageInterface]
 			Title: getters.Format("Payment #%d", getters.Any(getters.Key[uint]("payment.ID"))),
 			Back: &components.SidebarMenuItem{
 				Title: getters.Static("Payments"),
-				Url:   lamu.RoutePath("finance_invoices.PaymentListRoute", nil),
+				Url:   lago.RoutePath("finance_invoices.PaymentListRoute", nil),
 			},
 			Children: []components.PageInterface{
 				&components.SidebarMenuItem{
 					Title: getters.Static("Detail"),
-					Url: lamu.RoutePath("finance_invoices.PaymentDetailRoute", map[string]getters.Getter[any]{
+					Url: lago.RoutePath("finance_invoices.PaymentDetailRoute", map[string]getters.Getter[any]{
 						"id": getters.Any(getters.Key[uint]("payment.ID")),
 					}),
 				},

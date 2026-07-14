@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/UniquityVentures/lamu/getters"
-	"github.com/UniquityVentures/lamu/registry"
+	"github.com/lariv-in/lago/getters"
+	"github.com/lariv-in/lago/registry"
 )
 
 // Discriminator strings stored on [PaymentTerm.Type] for polymorphic backing rows.

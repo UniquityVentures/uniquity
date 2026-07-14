@@ -6,9 +6,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/UniquityVentures/lamu/getters"
-	"github.com/UniquityVentures/lamu/registry"
 	finance_fiscal_year "github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_fiscal_year"
+	"github.com/lariv-in/lago/getters"
+	"github.com/lariv-in/lago/registry"
 	"gorm.io/gorm"
 )
 

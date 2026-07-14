@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/UniquityVentures/lamu/fields"
-	"github.com/UniquityVentures/lamu/plugins/p_llm_assistant"
 	finance_taxes "github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_taxes"
+	"github.com/lariv-in/lago/fields"
+	"github.com/lariv-in/lago/plugins/p_llm_assistant"
 	"gorm.io/gorm"
 )
 

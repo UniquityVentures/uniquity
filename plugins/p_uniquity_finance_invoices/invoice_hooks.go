@@ -7,9 +7,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/UniquityVentures/lamu/fields"
 	finance_products "github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_products"
 	finance_taxes "github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_taxes"
+	"github.com/lariv-in/lago/fields"
 	"gorm.io/gorm"
 )
 

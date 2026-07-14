@@ -1,10 +1,10 @@
 package p_uniquity_finance_accounts
 
 import (
-	"github.com/UniquityVentures/lamu/components"
-	"github.com/UniquityVentures/lamu/getters"
-	"github.com/UniquityVentures/lamu/lamu"
-	"github.com/UniquityVentures/lamu/registry"
+	"github.com/lariv-in/lago"
+	"github.com/lariv-in/lago/components"
+	"github.com/lariv-in/lago/getters"
+	"github.com/lariv-in/lago/registry"
 )
 
 func pageCurrencyCRUD() []registry.Pair[string, components.PageInterface] {
@@ -39,7 +39,7 @@ func pageCurrencyCRUD() []registry.Pair[string, components.PageInterface] {
 
 	return []registry.Pair[string, components.PageInterface]{
 		{Key: "finance_accounts.CurrencyTable", Value: &components.ShellScaffold{
-			Sidebar: []components.PageInterface{lamu.DynamicPage{Name: "finance_accounts.MainMenu"}},
+			Sidebar: []components.PageInterface{lago.DynamicPage{Name: "finance_accounts.MainMenu"}},
 			Children: []components.PageInterface{
 				&components.DataTable[Currency]{
 					UID:     "finance-currencies-table",
@@ -47,13 +47,13 @@ func pageCurrencyCRUD() []registry.Pair[string, components.PageInterface] {
 					Classes: "w-full",
 					Data:    getters.Key[components.ObjectList[Currency]]("currencies"),
 					Actions: []components.PageInterface{
-						&components.TableButtonFilter{Child: lamu.DynamicPage{Name: "finance_accounts.CurrencyFilter"}},
+						&components.TableButtonFilter{Child: lago.DynamicPage{Name: "finance_accounts.CurrencyFilter"}},
 						&components.TableButtonCreate{
-							Link: lamu.RoutePath("finance_accounts.CurrencyCreateRoute", nil),
+							Link: lago.RoutePath("finance_accounts.CurrencyCreateRoute", nil),
 							Page: components.Page{Roles: []string{"superuser"}},
 						},
 					},
-					RowAttr: getters.RowAttrNavigate(lamu.RoutePath("finance_accounts.CurrencyDetailRoute", map[string]getters.Getter[any]{
+					RowAttr: getters.RowAttrNavigate(lago.RoutePath("finance_accounts.CurrencyDetailRoute", map[string]getters.Getter[any]{
 						"id": getters.Any(getters.Key[uint]("$row.ID")),
 					})),
 					Columns: []components.TableColumn{
@@ -75,11 +75,11 @@ func pageCurrencyCRUD() []registry.Pair[string, components.PageInterface] {
 		}},
 		{Key: "finance_accounts.CurrencyCreateForm", Value: &components.ShellScaffold{
 			Page:    components.Page{Roles: []string{"superuser"}},
-			Sidebar: []components.PageInterface{lamu.DynamicPage{Name: "finance_accounts.MainMenu"}},
+			Sidebar: []components.PageInterface{lago.DynamicPage{Name: "finance_accounts.MainMenu"}},
 			Children: []components.PageInterface{
 				&components.FormListenBoostedPost{
 					Name:      createName,
-					ActionURL: lamu.RoutePath("finance_accounts.CurrencyCreateRoute", nil),
+					ActionURL: lago.RoutePath("finance_accounts.CurrencyCreateRoute", nil),
 					Children: []components.PageInterface{
 						&components.FormComponent[Currency]{
 							Attr:     getters.FormBubbling(createName),
@@ -101,11 +101,11 @@ func pageCurrencyCRUD() []registry.Pair[string, components.PageInterface] {
 		}},
 		{Key: "finance_accounts.CurrencyUpdateForm", Value: &components.ShellScaffold{
 			Page:    components.Page{Roles: []string{"superuser"}},
-			Sidebar: []components.PageInterface{lamu.DynamicPage{Name: "finance_accounts.CurrencyDetailMenu"}},
+			Sidebar: []components.PageInterface{lago.DynamicPage{Name: "finance_accounts.CurrencyDetailMenu"}},
 			Children: []components.PageInterface{
 				&components.FormListenBoostedPost{
 					Name: updateName,
-					ActionURL: lamu.RoutePath("finance_accounts.CurrencyUpdateRoute", map[string]getters.Getter[any]{
+					ActionURL: lago.RoutePath("finance_accounts.CurrencyUpdateRoute", map[string]getters.Getter[any]{
 						"id": getters.Any(getters.Key[uint]("currency.ID")),
 					}),
 					Children: []components.PageInterface{
@@ -133,10 +133,10 @@ func pageCurrencyCRUD() []registry.Pair[string, components.PageInterface] {
 													Label: "Delete",
 													Icon:  "trash",
 													Name:  deleteName,
-													Url: lamu.RoutePath("finance_accounts.CurrencyDeleteRoute", map[string]getters.Getter[any]{
+													Url: lago.RoutePath("finance_accounts.CurrencyDeleteRoute", map[string]getters.Getter[any]{
 														"id": getters.Any(getters.Key[uint]("currency.ID")),
 													}),
-													FormPostURL: lamu.RoutePath("finance_accounts.CurrencyDeleteRoute", map[string]getters.Getter[any]{
+													FormPostURL: lago.RoutePath("finance_accounts.CurrencyDeleteRoute", map[string]getters.Getter[any]{
 														"id": getters.Any(getters.Key[uint]("currency.ID")),
 													}),
 													ModalUID: "finance-currency-delete-modal",
@@ -164,7 +164,7 @@ func pageCurrencyCRUD() []registry.Pair[string, components.PageInterface] {
 			},
 		}},
 		{Key: "finance_accounts.CurrencyDetail", Value: &components.ShellScaffold{
-			Sidebar: []components.PageInterface{lamu.DynamicPage{Name: "finance_accounts.CurrencyDetailMenu"}},
+			Sidebar: []components.PageInterface{lago.DynamicPage{Name: "finance_accounts.CurrencyDetailMenu"}},
 			Children: []components.PageInterface{
 				&components.Detail[Currency]{
 					Getter: getters.Key[Currency]("currency"),
@@ -195,9 +195,10 @@ func pageCurrencyCRUD() []registry.Pair[string, components.PageInterface] {
 					Title: "Select currency",
 					Data:  getters.Key[components.ObjectList[Currency]]("currencies"),
 					Actions: []components.PageInterface{
-						&components.TableButtonFilter{Child: lamu.DynamicPage{Name: "finance_accounts.CurrencySelectionFilter"}},
+						&components.TableButtonFilter{Child: lago.DynamicPage{Name: "finance_accounts.CurrencySelectionFilter"}},
 					},
-					RowAttr: getters.RowAttrSelect("CurrencyID", getters.Key[uint]("$row.ID"), getters.Format("%s — %s (%d)",
+					RowAttr: getters.RowAttrSelect("CurrencyID", getters.Key[uint]("$row.ID"), getters.Format(
+						"%s — %s (%d)",
 						getters.Any(getters.Key[string]("$row.Symbol")),
 						getters.Any(getters.Key[string]("$row.Name")),
 						getters.Any(getters.Key[int]("$row.Code")),

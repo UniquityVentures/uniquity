@@ -3,17 +3,9 @@ package main
 import (
 	"log/slog"
 
-	"github.com/UniquityVentures/lamu/lamu"
-	"github.com/UniquityVentures/lamu/registry"
+	"github.com/lariv-in/lago"
+	"github.com/lariv-in/lago/registry"
 
-	"github.com/UniquityVentures/lamu/plugins/p_dashboard"
-	"github.com/UniquityVentures/lamu/plugins/p_filesystem"
-	"github.com/UniquityVentures/lamu/plugins/p_google_genai"
-	"github.com/UniquityVentures/lamu/plugins/p_llm_assistant"
-	"github.com/UniquityVentures/lamu/plugins/p_livereloading"
-	"github.com/UniquityVentures/lamu/plugins/p_otp"
-	"github.com/UniquityVentures/lamu/plugins/p_pwa"
-	"github.com/UniquityVentures/lamu/plugins/p_users"
 	"github.com/UniquityVentures/uniquity/plugins/p_uniquity_employees"
 	"github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_accounts"
 	"github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_creditnotes"
@@ -24,10 +16,18 @@ import (
 	"github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_products"
 	"github.com/UniquityVentures/uniquity/plugins/p_uniquity_finance_taxes"
 	"github.com/UniquityVentures/uniquity/plugins/p_uniquity_video"
+	"github.com/lariv-in/lago/plugins/p_dashboard"
+	"github.com/lariv-in/lago/plugins/p_filesystem"
+	"github.com/lariv-in/lago/plugins/p_google_genai"
+	"github.com/lariv-in/lago/plugins/p_livereloading"
+	"github.com/lariv-in/lago/plugins/p_llm_assistant"
+	"github.com/lariv-in/lago/plugins/p_otp"
+	"github.com/lariv-in/lago/plugins/p_pwa"
+	"github.com/lariv-in/lago/plugins/p_users"
 )
 
 func main() {
-	plugins := []registry.Pair[string, lamu.Plugin]{
+	plugins := []registry.Pair[string, lago.Plugin]{
 		p_dashboard.GetPlugin(),
 		p_filesystem.GetPlugin(),
 		p_google_genai.GetPlugin(),
@@ -47,11 +47,11 @@ func main() {
 		p_otp.GetPlugin(),
 		p_pwa.GetPlugin(),
 	}
-	config, err := lamu.LoadConfigFromFile("uniquity.toml", plugins)
+	config, err := lago.LoadConfigFromFile("uniquity.toml", plugins)
 	if err != nil {
 		panic(err)
 	}
-	if err := lamu.Start(config, plugins); err != nil {
+	if err := lago.Start(config, plugins); err != nil {
 		slog.Error(err.Error())
 	}
 }

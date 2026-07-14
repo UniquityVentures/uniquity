@@ -6,15 +6,14 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/UniquityVentures/lamu/fields"
-	"github.com/UniquityVentures/lamu/getters"
-	"github.com/UniquityVentures/lamu/lamu"
-	"github.com/UniquityVentures/lamu/plugins/p_users"
-	"github.com/UniquityVentures/lamu/registry"
-	"github.com/UniquityVentures/lamu/views"
+	"github.com/lariv-in/lago"
+	"github.com/lariv-in/lago/fields"
+	"github.com/lariv-in/lago/getters"
+	"github.com/lariv-in/lago/plugins/p_users"
+	"github.com/lariv-in/lago/registry"
+	"github.com/lariv-in/lago/views"
 	"gorm.io/gorm"
 )
-
 
 // employeePointsTotalContextKey is where [employeeDetailPointsTotalLayer] stores the
 // display string for SUM(points) (must not contain '.' — [getters.Key] path rules).
@@ -84,12 +83,12 @@ func (PointsFormFromUserPatcher) Patch(_ views.View, r *http.Request, formData m
 	return formData, formErrors
 }
 
-func pluginViews() lamu.PluginFeatures[*views.View] {
-	return lamu.PluginFeatures[*views.View]{
+func pluginViews() lago.PluginFeatures[*views.View] {
+	return lago.PluginFeatures[*views.View]{
 		Entries: []registry.Pair[string, *views.View]{
 			{
 				Key: "employees.EmployeeListView",
-				Value: lamu.GetPageView("employees.EmployeeTable").
+				Value: lago.GetPageView("employees.EmployeeTable").
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 					WithLayer("employees.superuser", p_users.SuperuserOnlyLayer{}).
 					WithLayer("employees.employee_list", views.LayerList[Employee]{
@@ -101,7 +100,7 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 			},
 			{
 				Key: "employees.EmployeeDetailView",
-				Value: lamu.GetPageView("employees.EmployeeDetail").
+				Value: lago.GetPageView("employees.EmployeeDetail").
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 					WithLayer("employees.superuser", p_users.SuperuserOnlyLayer{}).
 					WithLayer("employees.employee_detail", views.LayerDetail[Employee]{
@@ -115,18 +114,18 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 			},
 			{
 				Key: "employees.EmployeeCreateView",
-				Value: lamu.GetPageView("employees.EmployeeCreateForm").
+				Value: lago.GetPageView("employees.EmployeeCreateForm").
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 					WithLayer("employees.superuser", p_users.SuperuserOnlyLayer{}).
 					WithLayer("employees.employee_create", views.LayerCreate[Employee]{
-						SuccessURL: lamu.RoutePath("employees.EmployeeDetailRoute", map[string]getters.Getter[any]{
+						SuccessURL: lago.RoutePath("employees.EmployeeDetailRoute", map[string]getters.Getter[any]{
 							"id": getters.Any(getters.Key[uint]("$id")),
 						}),
 					}),
 			},
 			{
 				Key: "employees.EmployeeUpdateView",
-				Value: lamu.GetPageView("employees.EmployeeUpdateForm").
+				Value: lago.GetPageView("employees.EmployeeUpdateForm").
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 					WithLayer("employees.superuser", p_users.SuperuserOnlyLayer{}).
 					WithLayer("employees.employee_detail", views.LayerDetail[Employee]{
@@ -138,12 +137,12 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 					}).
 					WithLayer("employees.employee_update", views.LayerUpdate[Employee]{
 						Key:        getters.Static("employee"),
-						SuccessURL: lamu.RoutePath("employees.DefaultRoute", nil),
+						SuccessURL: lago.RoutePath("employees.DefaultRoute", nil),
 					}),
 			},
 			{
 				Key: "employees.EmployeeDeleteView",
-				Value: lamu.GetPageView("employees.EmployeeDeleteForm").
+				Value: lago.GetPageView("employees.EmployeeDeleteForm").
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 					WithLayer("employees.superuser", p_users.SuperuserOnlyLayer{}).
 					WithLayer("employees.employee_detail", views.LayerDetail[Employee]{
@@ -155,12 +154,12 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 					}).
 					WithLayer("employees.employee_delete", views.LayerDelete[Employee]{
 						Key:        getters.Static("employee"),
-						SuccessURL: lamu.RoutePath("employees.DefaultRoute", nil),
+						SuccessURL: lago.RoutePath("employees.DefaultRoute", nil),
 					}),
 			},
 			{
 				Key: "employees.EmployeeSelectView",
-				Value: lamu.GetPageView("employees.EmployeeSelectionTable").
+				Value: lago.GetPageView("employees.EmployeeSelectionTable").
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 					WithLayer("employees.superuser", p_users.SuperuserOnlyLayer{}).
 					WithLayer("employees.employee_select_list", views.LayerList[Employee]{
@@ -172,7 +171,7 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 			},
 			{
 				Key: "employees.PointsListView",
-				Value: lamu.GetPageView("employees.PointsTransactionTable").
+				Value: lago.GetPageView("employees.PointsTransactionTable").
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 					WithLayer("employees.superuser", p_users.SuperuserOnlyLayer{}).
 					WithLayer("employees.points_list", views.LayerList[PointsTransaction]{
@@ -184,7 +183,7 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 			},
 			{
 				Key: "employees.PointsDetailView",
-				Value: lamu.GetPageView("employees.PointsTransactionDetail").
+				Value: lago.GetPageView("employees.PointsTransactionDetail").
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 					WithLayer("employees.superuser", p_users.SuperuserOnlyLayer{}).
 					WithLayer("employees.points_detail", views.LayerDetail[PointsTransaction]{
@@ -197,11 +196,11 @@ func pluginViews() lamu.PluginFeatures[*views.View] {
 			},
 			{
 				Key: "employees.PointsCreateView",
-				Value: lamu.GetPageView("employees.PointsTransactionCreateForm").
+				Value: lago.GetPageView("employees.PointsTransactionCreateForm").
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 					WithLayer("employees.superuser", p_users.SuperuserOnlyLayer{}).
 					WithLayer("employees.points_create", views.LayerCreate[PointsTransaction]{
-						SuccessURL: lamu.RoutePath("employees.PointsDetailRoute", map[string]getters.Getter[any]{
+						SuccessURL: lago.RoutePath("employees.PointsDetailRoute", map[string]getters.Getter[any]{
 							"id": getters.Any(getters.Key[uint]("$id")),
 						}),
 						FormPatchers: views.FormPatchers{

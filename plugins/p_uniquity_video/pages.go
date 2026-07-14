@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/UniquityVentures/lamu/components"
-	"github.com/UniquityVentures/lamu/fields"
-	"github.com/UniquityVentures/lamu/getters"
-	"github.com/UniquityVentures/lamu/lamu"
-	"github.com/UniquityVentures/lamu/plugins/p_filesystem"
-	"github.com/UniquityVentures/lamu/registry"
 	uniqempl "github.com/UniquityVentures/uniquity/plugins/p_uniquity_employees"
+	"github.com/lariv-in/lago"
+	"github.com/lariv-in/lago/components"
+	"github.com/lariv-in/lago/fields"
+	"github.com/lariv-in/lago/getters"
+	"github.com/lariv-in/lago/plugins/p_filesystem"
+	"github.com/lariv-in/lago/registry"
 	"gorm.io/gorm"
 )
 
@@ -75,14 +75,14 @@ func publishedVideoEditorPointsSeed(ctx context.Context) (uniqempl.PointsTransac
 	return uniqempl.PointsTransaction{ToEmployeeID: id}, nil
 }
 
-func pluginPages() lamu.PluginFeatures[components.PageInterface] {
+func pluginPages() lago.PluginFeatures[components.PageInterface] {
 	var e []registry.Pair[string, components.PageInterface]
 	e = append(e, pageEntriesVideoMenus()...)
 	e = append(e, pageEntriesHubPage()...)
 	e = append(e, pageEntriesRawPages()...)
 	e = append(e, pageEntriesEditedPages()...)
 	e = append(e, pageEntriesPublishedPages()...)
-	return lamu.PluginFeatures[components.PageInterface]{Entries: e}
+	return lago.PluginFeatures[components.PageInterface]{Entries: e}
 }
 
 func pageEntriesVideoMenus() []registry.Pair[string, components.PageInterface] {
@@ -91,13 +91,13 @@ func pageEntriesVideoMenus() []registry.Pair[string, components.PageInterface] {
 			Title: getters.Static("Video editors"),
 			Back: &components.SidebarMenuItem{
 				Title: getters.Static("Back to Home"),
-				Url:   lamu.RoutePath("dashboard.AppsPage", nil),
+				Url:   lago.RoutePath("dashboard.AppsPage", nil),
 			},
 			Children: []components.PageInterface{
-				&components.SidebarMenuItem{Title: getters.Static("Overview"), Url: lamu.RoutePath("video.DefaultRoute", nil), Icon: "home"},
-				&components.SidebarMenuItem{Title: getters.Static("Raw footage"), Url: lamu.RoutePath("video.RawListRoute", nil), Icon: "folder"},
-				&components.SidebarMenuItem{Title: getters.Static("Edited videos"), Url: lamu.RoutePath("video.EditedListRoute", nil), Icon: "scissors"},
-				&components.SidebarMenuItem{Title: getters.Static("Published"), Url: lamu.RoutePath("video.PublishedListRoute", nil), Icon: "play"},
+				&components.SidebarMenuItem{Title: getters.Static("Overview"), Url: lago.RoutePath("video.DefaultRoute", nil), Icon: "home"},
+				&components.SidebarMenuItem{Title: getters.Static("Raw footage"), Url: lago.RoutePath("video.RawListRoute", nil), Icon: "folder"},
+				&components.SidebarMenuItem{Title: getters.Static("Edited videos"), Url: lago.RoutePath("video.EditedListRoute", nil), Icon: "scissors"},
+				&components.SidebarMenuItem{Title: getters.Static("Published"), Url: lago.RoutePath("video.PublishedListRoute", nil), Icon: "play"},
 			},
 		}},
 		{Key: "video.RawDetailMenu", Value: detailMenu("rawFootage", "Raw footage", "video.RawListRoute", "video.RawDetailRoute", "video.RawUpdateRoute")},
@@ -114,18 +114,18 @@ func publishedDetailMenu() *components.SidebarMenu {
 		Title: getters.Format("%s #%d", getters.Any(getters.Static("Published video")), getters.Any(idGetter)),
 		Back: &components.SidebarMenuItem{
 			Title: getters.Static("Back to list"),
-			Url:   lamu.RoutePath("video.PublishedListRoute", nil),
+			Url:   lago.RoutePath("video.PublishedListRoute", nil),
 		},
 		Children: []components.PageInterface{
 			&components.SidebarMenuItem{
 				Title: getters.Static("Detail"),
-				Url: lamu.RoutePath("video.PublishedDetailRoute", map[string]getters.Getter[any]{
+				Url: lago.RoutePath("video.PublishedDetailRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(idGetter),
 				}),
 			},
 			&components.SidebarMenuItem{
 				Title: getters.Static("Edit"),
-				Url: lamu.RoutePath("video.PublishedUpdateRoute", map[string]getters.Getter[any]{
+				Url: lago.RoutePath("video.PublishedUpdateRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(idGetter),
 				}),
 			},
@@ -133,7 +133,7 @@ func publishedDetailMenu() *components.SidebarMenu {
 				Page:  components.Page{Roles: []string{"superuser"}},
 				Title: getters.Static("Give points to editor"),
 				Icon:  "currency-dollar",
-				Url: lamu.RoutePath("video.PublishedEditorPointsCreateRoute", map[string]getters.Getter[any]{
+				Url: lago.RoutePath("video.PublishedEditorPointsCreateRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(idGetter),
 				}),
 			},
@@ -146,16 +146,16 @@ func detailMenu(ctxKey, title, listRoute, detailRoute, updateRoute string) *comp
 		Title: getters.Format("%s #%d", getters.Any(getters.Static(title)), getters.Any(getters.Key[uint](ctxKey+".ID"))),
 		Back: &components.SidebarMenuItem{
 			Title: getters.Static("Back to list"),
-			Url:   lamu.RoutePath(listRoute, nil),
+			Url:   lago.RoutePath(listRoute, nil),
 		},
 		Children: []components.PageInterface{
 			&components.SidebarMenuItem{
 				Title: getters.Static("Detail"),
-				Url:   lamu.RoutePath(detailRoute, map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint](ctxKey + ".ID"))}),
+				Url:   lago.RoutePath(detailRoute, map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint](ctxKey + ".ID"))}),
 			},
 			&components.SidebarMenuItem{
 				Title: getters.Static("Edit"),
-				Url:   lamu.RoutePath(updateRoute, map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint](ctxKey + ".ID"))}),
+				Url:   lago.RoutePath(updateRoute, map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint](ctxKey + ".ID"))}),
 			},
 		},
 	}
@@ -164,7 +164,7 @@ func detailMenu(ctxKey, title, listRoute, detailRoute, updateRoute string) *comp
 func pageEntriesHubPage() []registry.Pair[string, components.PageInterface] {
 	return []registry.Pair[string, components.PageInterface]{
 		{Key: "video.HubPage", Value: &components.ShellScaffold{
-			Sidebar: []components.PageInterface{lamu.DynamicPage{Name: "video.MainMenu"}},
+			Sidebar: []components.PageInterface{lago.DynamicPage{Name: "video.MainMenu"}},
 			Children: []components.PageInterface{
 				&components.ContainerColumn{
 					Classes: "p-6 max-w-2xl",
@@ -211,7 +211,7 @@ func pageEntriesRawPages() []registry.Pair[string, components.PageInterface] {
 		},
 		&components.InputForeignKey[uniqempl.Employee]{
 			Name: "AssignedToID", Label: "Assigned to", Required: true,
-			Url:     lamu.RoutePath("video.EmployeeSelectRoute", nil),
+			Url:     lago.RoutePath("video.EmployeeSelectRoute", nil),
 			Display: getters.Key[string]("$in.User.Name"), Placeholder: "Select employee…",
 			Getter: assignedToEmployeeGetter,
 		},
@@ -219,15 +219,15 @@ func pageEntriesRawPages() []registry.Pair[string, components.PageInterface] {
 
 	return []registry.Pair[string, components.PageInterface]{
 		{Key: "video.RawFootageTable", Value: &components.ShellScaffold{
-			Sidebar: []components.PageInterface{lamu.DynamicPage{Name: "video.MainMenu"}},
+			Sidebar: []components.PageInterface{lago.DynamicPage{Name: "video.MainMenu"}},
 			Children: []components.PageInterface{
 				&components.DataTable[RawFootage]{
 					UID: "raw-footage-table", Classes: "w-full",
 					Data: getters.Key[components.ObjectList[RawFootage]]("rawFootages"),
 					Actions: []components.PageInterface{
-						&components.TableButtonCreate{Link: lamu.RoutePath("video.RawCreateRoute", nil)},
+						&components.TableButtonCreate{Link: lago.RoutePath("video.RawCreateRoute", nil)},
 					},
-					RowAttr: getters.RowAttrNavigate(lamu.RoutePath("video.RawDetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$row.ID"))})),
+					RowAttr: getters.RowAttrNavigate(lago.RoutePath("video.RawDetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$row.ID"))})),
 					Columns: []components.TableColumn{
 						{Label: "Title", Name: "Title", Children: []components.PageInterface{&components.FieldText{Getter: getters.Key[string]("$row.Title")}}},
 						{Label: "Assigned to", Name: "AssignedTo", Children: []components.PageInterface{&components.FieldText{Getter: getters.Key[string]("$row.AssignedTo.User.Name")}}},
@@ -237,10 +237,10 @@ func pageEntriesRawPages() []registry.Pair[string, components.PageInterface] {
 		}},
 
 		{Key: "video.RawFootageCreateForm", Value: &components.ShellScaffold{
-			Sidebar: []components.PageInterface{lamu.DynamicPage{Name: "video.MainMenu"}},
+			Sidebar: []components.PageInterface{lago.DynamicPage{Name: "video.MainMenu"}},
 			Children: []components.PageInterface{
 				&components.FormListenBoostedPost{
-					Name: createN, ActionURL: lamu.RoutePath("video.RawCreateRoute", nil),
+					Name: createN, ActionURL: lago.RoutePath("video.RawCreateRoute", nil),
 					Children: []components.PageInterface{
 						&components.FormComponent[RawFootage]{
 							Attr: getters.FormBubbling(createN), Title: "New raw footage",
@@ -253,11 +253,11 @@ func pageEntriesRawPages() []registry.Pair[string, components.PageInterface] {
 		}},
 
 		{Key: "video.RawFootageUpdateForm", Value: &components.ShellScaffold{
-			Sidebar: []components.PageInterface{lamu.DynamicPage{Name: "video.RawDetailMenu"}},
+			Sidebar: []components.PageInterface{lago.DynamicPage{Name: "video.RawDetailMenu"}},
 			Children: []components.PageInterface{
 				&components.FormListenBoostedPost{
 					Name: updateN,
-					ActionURL: lamu.RoutePath("video.RawUpdateRoute", map[string]getters.Getter[any]{
+					ActionURL: lago.RoutePath("video.RawUpdateRoute", map[string]getters.Getter[any]{
 						"id": getters.Any(getters.Key[uint]("rawFootage.ID")),
 					}),
 					Children: []components.PageInterface{
@@ -271,10 +271,10 @@ func pageEntriesRawPages() []registry.Pair[string, components.PageInterface] {
 										&components.ButtonSubmit{Label: "Update"},
 										&components.ButtonModalForm{
 											Label: "Delete", Icon: "trash", Name: deleteN,
-											Url: lamu.RoutePath("video.RawDeleteRoute", map[string]getters.Getter[any]{
+											Url: lago.RoutePath("video.RawDeleteRoute", map[string]getters.Getter[any]{
 												"id": getters.Any(getters.Key[uint]("rawFootage.ID")),
 											}),
-											FormPostURL: lamu.RoutePath("video.RawDeleteRoute", map[string]getters.Getter[any]{
+											FormPostURL: lago.RoutePath("video.RawDeleteRoute", map[string]getters.Getter[any]{
 												"id": getters.Any(getters.Key[uint]("rawFootage.ID")),
 											}),
 											ModalUID: "raw-delete-modal", Classes: "btn-error",
@@ -299,7 +299,7 @@ func pageEntriesRawPages() []registry.Pair[string, components.PageInterface] {
 		}},
 
 		{Key: "video.RawFootageDetail", Value: &components.ShellScaffold{
-			Sidebar: []components.PageInterface{lamu.DynamicPage{Name: "video.RawDetailMenu"}},
+			Sidebar: []components.PageInterface{lago.DynamicPage{Name: "video.RawDetailMenu"}},
 			Children: []components.PageInterface{
 				&components.Detail[RawFootage]{
 					Getter: getters.Key[RawFootage]("rawFootage"),
@@ -321,7 +321,7 @@ func pageEntriesRawPages() []registry.Pair[string, components.PageInterface] {
 									&components.InputForeignKey[uniqempl.Employee]{
 										Name: "AssignedToID", Label: "", Required: true,
 										Classes:     "pointer-events-none",
-										Url:         lamu.RoutePath("video.EmployeeSelectRoute", nil),
+										Url:         lago.RoutePath("video.EmployeeSelectRoute", nil),
 										Display:     getters.Key[string]("$in.User.Name"),
 										Placeholder: "—",
 										Getter:      assignedToEmployeeGetter,
@@ -383,7 +383,7 @@ func pageEntriesEditedPages() []registry.Pair[string, components.PageInterface] 
 			Children: []components.PageInterface{
 				&components.InputForeignKey[RawFootage]{
 					Name: "RawFootageID", Label: "Raw footage", Required: true,
-					Url:     lamu.RoutePath("video.RawSelectRoute", nil),
+					Url:     lago.RoutePath("video.RawSelectRoute", nil),
 					Display: getters.Key[string]("$in.Title"), Placeholder: "Select raw footage…",
 					Getter: getters.Association[RawFootage, uint](getters.Key[uint]("$in.RawFootageID")),
 				},
@@ -413,15 +413,15 @@ func pageEntriesEditedPages() []registry.Pair[string, components.PageInterface] 
 
 	return []registry.Pair[string, components.PageInterface]{
 		{Key: "video.EditedVideoTable", Value: &components.ShellScaffold{
-			Sidebar: []components.PageInterface{lamu.DynamicPage{Name: "video.MainMenu"}},
+			Sidebar: []components.PageInterface{lago.DynamicPage{Name: "video.MainMenu"}},
 			Children: []components.PageInterface{
 				&components.DataTable[EditedVideo]{
 					UID: "edited-video-table", Classes: "w-full",
 					Data: getters.Key[components.ObjectList[EditedVideo]]("editedVideos"),
 					Actions: []components.PageInterface{
-						&components.TableButtonCreate{Link: lamu.RoutePath("video.EditedCreateRoute", nil)},
+						&components.TableButtonCreate{Link: lago.RoutePath("video.EditedCreateRoute", nil)},
 					},
-					RowAttr: getters.RowAttrNavigate(lamu.RoutePath("video.EditedDetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$row.ID"))})),
+					RowAttr: getters.RowAttrNavigate(lago.RoutePath("video.EditedDetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$row.ID"))})),
 					Columns: []components.TableColumn{
 						{Label: "Raw title", Name: "Raw", Children: []components.PageInterface{&components.FieldText{Getter: getters.Key[string]("$row.RawFootage.Title")}}},
 						{Label: "Output file", Name: "VNode", Children: []components.PageInterface{&p_filesystem.FieldFile{
@@ -433,10 +433,10 @@ func pageEntriesEditedPages() []registry.Pair[string, components.PageInterface] 
 		}},
 
 		{Key: "video.EditedVideoCreateForm", Value: &components.ShellScaffold{
-			Sidebar: []components.PageInterface{lamu.DynamicPage{Name: "video.MainMenu"}},
+			Sidebar: []components.PageInterface{lago.DynamicPage{Name: "video.MainMenu"}},
 			Children: []components.PageInterface{
 				&components.FormListenBoostedPost{
-					Name: createN, ActionURL: lamu.RoutePath("video.EditedCreateRoute", nil),
+					Name: createN, ActionURL: lago.RoutePath("video.EditedCreateRoute", nil),
 					Children: []components.PageInterface{
 						&components.FormComponent[EditedVideo]{
 							Attr: getters.FormBubbling(createN), Title: "New edited video",
@@ -449,11 +449,11 @@ func pageEntriesEditedPages() []registry.Pair[string, components.PageInterface] 
 		}},
 
 		{Key: "video.EditedVideoUpdateForm", Value: &components.ShellScaffold{
-			Sidebar: []components.PageInterface{lamu.DynamicPage{Name: "video.EditedDetailMenu"}},
+			Sidebar: []components.PageInterface{lago.DynamicPage{Name: "video.EditedDetailMenu"}},
 			Children: []components.PageInterface{
 				&components.FormListenBoostedPost{
 					Name: updateN,
-					ActionURL: lamu.RoutePath("video.EditedUpdateRoute", map[string]getters.Getter[any]{
+					ActionURL: lago.RoutePath("video.EditedUpdateRoute", map[string]getters.Getter[any]{
 						"id": getters.Any(getters.Key[uint]("editedVideo.ID")),
 					}),
 					Children: []components.PageInterface{
@@ -467,10 +467,10 @@ func pageEntriesEditedPages() []registry.Pair[string, components.PageInterface] 
 										&components.ButtonSubmit{Label: "Update"},
 										&components.ButtonModalForm{
 											Label: "Delete", Icon: "trash", Name: deleteN,
-											Url: lamu.RoutePath("video.EditedDeleteRoute", map[string]getters.Getter[any]{
+											Url: lago.RoutePath("video.EditedDeleteRoute", map[string]getters.Getter[any]{
 												"id": getters.Any(getters.Key[uint]("editedVideo.ID")),
 											}),
-											FormPostURL: lamu.RoutePath("video.EditedDeleteRoute", map[string]getters.Getter[any]{
+											FormPostURL: lago.RoutePath("video.EditedDeleteRoute", map[string]getters.Getter[any]{
 												"id": getters.Any(getters.Key[uint]("editedVideo.ID")),
 											}),
 											ModalUID: "edited-delete-modal", Classes: "btn-error",
@@ -495,7 +495,7 @@ func pageEntriesEditedPages() []registry.Pair[string, components.PageInterface] 
 		}},
 
 		{Key: "video.EditedVideoDetail", Value: &components.ShellScaffold{
-			Sidebar: []components.PageInterface{lamu.DynamicPage{Name: "video.EditedDetailMenu"}},
+			Sidebar: []components.PageInterface{lago.DynamicPage{Name: "video.EditedDetailMenu"}},
 			Children: []components.PageInterface{
 				&components.Detail[EditedVideo]{
 					Getter: getters.Key[EditedVideo]("editedVideo"),
@@ -503,14 +503,14 @@ func pageEntriesEditedPages() []registry.Pair[string, components.PageInterface] 
 						&components.ContainerColumn{Classes: "p-4 gap-2", Children: []components.PageInterface{
 							&components.LabelInline{Title: "Raw footage", Children: []components.PageInterface{&components.FieldLink{
 								Classes: "link link-hover",
-								Href: lamu.RoutePath("video.RawDetailRoute", map[string]getters.Getter[any]{
+								Href: lago.RoutePath("video.RawDetailRoute", map[string]getters.Getter[any]{
 									"id": getters.Any(getters.Key[uint]("$in.RawFootageID")),
 								}),
 								Label: getters.Key[string]("$in.RawFootage.Title"),
 							}}},
 							&components.LabelInline{Title: "Assigned to", Children: []components.PageInterface{&components.FieldLink{
 								Classes: "link link-hover",
-								Href: lamu.RoutePath("employees.EmployeeDetailRoute", map[string]getters.Getter[any]{
+								Href: lago.RoutePath("employees.EmployeeDetailRoute", map[string]getters.Getter[any]{
 									"id": getters.Any(getters.Key[uint]("$in.RawFootage.AssignedToID")),
 								}),
 								Label: getters.Key[string]("$in.RawFootage.AssignedTo.User.Name"),
@@ -558,7 +558,7 @@ func pageEntriesPublishedPages() []registry.Pair[string, components.PageInterfac
 	inputs := []components.PageInterface{
 		&components.InputForeignKey[EditedVideo]{
 			Name: "EditedVideoID", Label: "Edited video", Required: true,
-			Url:     lamu.RoutePath("video.EditedSelectRoute", nil),
+			Url:     lago.RoutePath("video.EditedSelectRoute", nil),
 			Display: getters.Key[string]("$in.RawFootage.Title"), Placeholder: "Select edited cut…",
 			Getter: editedVideoForPublishedFKGetter,
 		},
@@ -575,15 +575,15 @@ func pageEntriesPublishedPages() []registry.Pair[string, components.PageInterfac
 
 	return []registry.Pair[string, components.PageInterface]{
 		{Key: "video.PublishedVideoTable", Value: &components.ShellScaffold{
-			Sidebar: []components.PageInterface{lamu.DynamicPage{Name: "video.MainMenu"}},
+			Sidebar: []components.PageInterface{lago.DynamicPage{Name: "video.MainMenu"}},
 			Children: []components.PageInterface{
 				&components.DataTable[PublishedVideo]{
 					UID: "published-video-table", Classes: "w-full",
 					Data: getters.Key[components.ObjectList[PublishedVideo]]("publishedVideos"),
 					Actions: []components.PageInterface{
-						&components.TableButtonCreate{Link: lamu.RoutePath("video.PublishedCreateRoute", nil)},
+						&components.TableButtonCreate{Link: lago.RoutePath("video.PublishedCreateRoute", nil)},
 					},
-					RowAttr: getters.RowAttrNavigate(lamu.RoutePath("video.PublishedDetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$row.ID"))})),
+					RowAttr: getters.RowAttrNavigate(lago.RoutePath("video.PublishedDetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$row.ID"))})),
 					Columns: []components.TableColumn{
 						{Label: "YouTube ID", Name: "YT", Children: []components.PageInterface{&components.FieldText{Getter: getters.Key[string]("$row.YouTubeVideoID")}}},
 						{Label: "Raw title", Name: "Raw", Children: []components.PageInterface{&components.FieldText{Getter: getters.Key[string]("$row.EditedVideo.RawFootage.Title")}}},
@@ -593,10 +593,10 @@ func pageEntriesPublishedPages() []registry.Pair[string, components.PageInterfac
 		}},
 
 		{Key: "video.PublishedVideoCreateForm", Value: &components.ShellScaffold{
-			Sidebar: []components.PageInterface{lamu.DynamicPage{Name: "video.MainMenu"}},
+			Sidebar: []components.PageInterface{lago.DynamicPage{Name: "video.MainMenu"}},
 			Children: []components.PageInterface{
 				&components.FormListenBoostedPost{
-					Name: createN, ActionURL: lamu.RoutePath("video.PublishedCreateRoute", nil),
+					Name: createN, ActionURL: lago.RoutePath("video.PublishedCreateRoute", nil),
 					Children: []components.PageInterface{
 						&components.FormComponent[PublishedVideo]{
 							Attr: getters.FormBubbling(createN), Title: "New published video",
@@ -609,11 +609,11 @@ func pageEntriesPublishedPages() []registry.Pair[string, components.PageInterfac
 		}},
 
 		{Key: "video.PublishedVideoUpdateForm", Value: &components.ShellScaffold{
-			Sidebar: []components.PageInterface{lamu.DynamicPage{Name: "video.PublishedDetailMenu"}},
+			Sidebar: []components.PageInterface{lago.DynamicPage{Name: "video.PublishedDetailMenu"}},
 			Children: []components.PageInterface{
 				&components.FormListenBoostedPost{
 					Name: updateN,
-					ActionURL: lamu.RoutePath("video.PublishedUpdateRoute", map[string]getters.Getter[any]{
+					ActionURL: lago.RoutePath("video.PublishedUpdateRoute", map[string]getters.Getter[any]{
 						"id": getters.Any(getters.Key[uint]("publishedVideo.ID")),
 					}),
 					Children: []components.PageInterface{
@@ -627,10 +627,10 @@ func pageEntriesPublishedPages() []registry.Pair[string, components.PageInterfac
 										&components.ButtonSubmit{Label: "Update"},
 										&components.ButtonModalForm{
 											Label: "Delete", Icon: "trash", Name: deleteN,
-											Url: lamu.RoutePath("video.PublishedDeleteRoute", map[string]getters.Getter[any]{
+											Url: lago.RoutePath("video.PublishedDeleteRoute", map[string]getters.Getter[any]{
 												"id": getters.Any(getters.Key[uint]("publishedVideo.ID")),
 											}),
-											FormPostURL: lamu.RoutePath("video.PublishedDeleteRoute", map[string]getters.Getter[any]{
+											FormPostURL: lago.RoutePath("video.PublishedDeleteRoute", map[string]getters.Getter[any]{
 												"id": getters.Any(getters.Key[uint]("publishedVideo.ID")),
 											}),
 											ModalUID: "published-delete-modal", Classes: "btn-error",
@@ -655,7 +655,7 @@ func pageEntriesPublishedPages() []registry.Pair[string, components.PageInterfac
 		}},
 
 		{Key: "video.PublishedVideoDetail", Value: &components.ShellScaffold{
-			Sidebar: []components.PageInterface{lamu.DynamicPage{Name: "video.PublishedDetailMenu"}},
+			Sidebar: []components.PageInterface{lago.DynamicPage{Name: "video.PublishedDetailMenu"}},
 			Children: []components.PageInterface{
 				&components.Detail[PublishedVideo]{
 					Getter: getters.Key[PublishedVideo]("publishedVideo"),
@@ -712,7 +712,7 @@ func pageEntriesPublishedPages() []registry.Pair[string, components.PageInterfac
 							&components.LabelInline{Title: "Edited from (raw)", Children: []components.PageInterface{&components.FieldText{Getter: getters.Key[string]("$in.EditedVideo.RawFootage.Title")}}},
 							&components.LabelInline{Title: "Assigned to", Children: []components.PageInterface{&components.FieldLink{
 								Classes: "link link-hover",
-								Href: lamu.RoutePath("employees.EmployeeDetailRoute", map[string]getters.Getter[any]{
+								Href: lago.RoutePath("employees.EmployeeDetailRoute", map[string]getters.Getter[any]{
 									"id": getters.Any(getters.Key[uint]("$in.EditedVideo.RawFootage.AssignedToID")),
 								}),
 								Label: getters.Key[string]("$in.EditedVideo.RawFootage.AssignedTo.User.Name"),
@@ -725,11 +725,11 @@ func pageEntriesPublishedPages() []registry.Pair[string, components.PageInterfac
 
 		{Key: "video.PublishedEditorPointsForm", Value: &components.ShellScaffold{
 			Page:    components.Page{Roles: []string{"superuser"}},
-			Sidebar: []components.PageInterface{lamu.DynamicPage{Name: "video.PublishedDetailMenu"}},
+			Sidebar: []components.PageInterface{lago.DynamicPage{Name: "video.PublishedDetailMenu"}},
 			Children: []components.PageInterface{
 				&components.FormListenBoostedPost{
 					Name: editorPointsN,
-					ActionURL: lamu.RoutePath("video.PublishedEditorPointsCreateRoute", map[string]getters.Getter[any]{
+					ActionURL: lago.RoutePath("video.PublishedEditorPointsCreateRoute", map[string]getters.Getter[any]{
 						"id": getters.Any(getters.Key[uint]("publishedVideo.ID")),
 					}),
 					Children: []components.PageInterface{
